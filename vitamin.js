@@ -35,6 +35,49 @@
     }
     
     /**
+     * Validator of schema property
+     * 
+     * @param {Object} property descriptor
+     * @param {any} value
+     */
+    function validate(prop, value) {
+      if ( value == null && prop.required === true ) return false;
+      
+      var valid = true,
+          type = prop.type;
+      
+      if ( type ) {
+        // boolean values
+        if ( type === Boolean ) valid = _.isBoolean(value);
+        
+        // string values
+        else if ( type === String ) valid = _.isString(value);
+        
+        // numeric values
+        else if ( type === Number ) valid = _.isNumber(value);
+        
+        // date values
+        else if ( type === Date ) valid = _.isDate(value);
+        
+        // object values
+        else if ( type === Object ) valid = _.isObject(value);
+        
+        // array values
+        else if ( type === Array ) valid = _.isArray(value);
+        
+        // custom types
+        else { valid = value instanceof type }
+      }
+      
+      // use custom validator
+      if ( prop.validator ) {
+        valid = prop.validator.call(null, value);
+      }
+      
+      return valid;
+    }
+    
+    /**
      * A setter/getter for primary key attribute
      */
     Model.prototype.pk = function primaryKey(id) {
@@ -48,9 +91,8 @@
      */
     Model.prototype.set = function set(attr, val, options) {
       if ( _.isEmpty(attr) ) return this;
-        
-      var attributes = {},
-          silent = !! (options || (options = {})).silent;
+      
+      var attributes = {};
         
       if ( _.isObject(attr) ) {
         attributes = attr;
@@ -60,9 +102,10 @@
         attributes[attr] = val;
       }
       
-      var changing = this.$state.changing;
+      options = _.extend({validate: true}, options);
       
       // update model state
+      var changing = this.$state.changing;
       this.$state.changing = true;
       if (! changing ) {
         this.$state.previous = this.toJSON();
@@ -74,7 +117,7 @@
         val = attributes[attr];
         
         // set the attribute's new value
-        if( this._set(attr, val, silent) ) this.$state.changed[attr] = val;
+        this._set(attr, val, options); 
         
         // define a proxy for that attribute
         if (! _.has(this, attr) ) proxy(this, attr);
@@ -84,10 +127,11 @@
       if ( changing ) return this;
       
       // trigger global change event
-      if ( !silent && this.hasChanged() ) {
+      if ( !options.silent && this.hasChanged() ) {
         this.emit('change', this.$state.changed, this, options);
       }
       
+      // remove changing state
       this.$state.changing = false;
       
       return this;
@@ -141,20 +185,44 @@
     }
     
     /**
-     * @return {Boolean} true if the attribute has been changed
+     * Validate and set attribute value
+     * 
+     * @return {boolean} false if no changes made
+     * @private
      */
-    Model.prototype._set = function _set(key, newVal, silent) {
-      var oldVal = this.$data[key];
+    Model.prototype._set = function _set(key, newVal, options) {
+      var oldVal = this.$data[key],
+          prop = this.$options.schema[key] || {};
       
-      // TODO validation
+      // validate the new value
+      if ( options.validate && validate(prop, newVal) ) return false;
       
       // if no changes, return false
       if ( oldVal === newVal ) return false;
       
       this.$data[key] = newVal;
-      if (! silent ) this.emit('change:' + key, newVal, this);
+      this.$state.changed[key] = newVal;
       
-      return true;
+      if (! options.silent ) this.emit('change:' + key, newVal, this);
+    }
+    
+    /**
+     * Normalize schema object and set default attributes
+     * 
+     * @private
+     */
+    Model.prototype._initSchema = function _initSchema() {
+      var props = this.$options.schema;
+      
+      _.each(props, function(options, name) {
+        // normalize schema object format
+        if ( _.isFunction(options) ) props[name] = {'type': options};
+        
+        // set attribute default value
+        if ( _.has(options, 'default') ) {
+          this.set(name, options.default, {silent: true})
+        }
+      }, this)
     }
     
   }
@@ -356,6 +424,9 @@
    */
   Vitamin.options = {
     
+    // model schema definition
+    'schema': {},
+    
     // primary key name
     'pk': "id"
     
@@ -436,6 +507,9 @@
     
     // register events
     this._initEvents();
+    
+    // init model schema
+    this._initSchema();
     
     // set data
     this.set(data);
