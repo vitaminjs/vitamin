@@ -11,7 +11,7 @@
 		module.exports = factory(require('underscore'));
 	}
 	else {
-		factory(root._);
+		root.Vitamin = factory(root._);
 	}
 	
 })(this, function(_) {
