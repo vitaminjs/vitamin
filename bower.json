@@ -1,0 +1,13 @@
+{
+  "name": "vitamin",
+  
+  "description": "A lightweight Model library for JavaScript applications",
+   
+  "dependencies": {
+    "underscore": "*"
+  },
+  
+  "devDependencies": {
+    "qunit": "*"
+  }
+}
