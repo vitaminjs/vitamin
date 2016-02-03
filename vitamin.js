@@ -70,11 +70,22 @@
       }
       
       // use custom validator
-      if ( prop.validator ) {
+      if ( _.isFunction(prop.validator) ) {
         valid = prop.validator.call(null, value);
       }
       
       return valid;
+    }
+    
+    /**
+     * Coerce attribute value
+     */
+    function coerce(prop, value) {
+      if ( _.isFunction(prop.coerce) ) {
+        return prop.coerce.call(null, value)
+      }
+      
+      return value;
     }
     
     /**
@@ -187,12 +198,15 @@
     /**
      * Validate and set attribute value
      * 
-     * @return {boolean} false if no changes made
+     * @return {boolean} false if no changes made or invalid value
      * @private
      */
     Model.prototype._set = function _set(key, newVal, options) {
       var oldVal = this.$data[key],
           prop = this.$options.schema[key] || {};
+      
+      // coerce value
+      newVal = coerce(prop, newVal);
       
       // validate the new value
       if ( options.validate && validate(prop, newVal) ) return false;
