@@ -27,10 +27,10 @@
      */
     function proxy(obj, key) {
       Object.defineProperty(obj, key, {
-          enumerable: true,
-          configurable: true,
-          set: function setter(value) { this.set(key, value) },
-          get: function getter() { return this.get(key) }
+        enumerable: true,
+        configurable: true,
+        set: function setter(value) { this.set(key, value) },
+        get: function getter() { return this.get(key) }
       })
     }
     
@@ -166,14 +166,14 @@
      * 
      */
     Model.prototype.isNew = function isNew() {
-        return !this.has(this.$options.pk);
+      return !this.has(this.$options.pk);
     }
     
     /**
      * 
      */
     Model.prototype.toJSON = function toJSON() {
-        return _.clone(this.$data);
+      return _.clone(this.$data);
     }
     
     /**
@@ -189,10 +189,10 @@
      * 
      */
     Model.prototype.clear = function clear(options) {
-        var attrs = {};
-        
-        for ( var key in this.$data ) attrs[key] = void 0;
-        this.set(attrs, options);
+      var attrs = {};
+      
+      for ( var key in this.$data ) attrs[key] = void 0;
+      this.set(attrs, options);
     }
     
     /**
@@ -289,27 +289,27 @@
        */
       Channel.prototype.unsubscribe = function unsubscribe(event, fn) {
         // all events
-        if (! arguments.length ) {
-            this.events = {};
-            return;
+        if (! event ) {
+          this.events = {};
+          return;
         }
         
         // specific event
-        var cbs = this.events[event];
-        if ( cbs ) {
-            this.events[event] = null;
-            return;
+        if (! fn ) {
+          this.events[event] = null;
+          return;
         }
         
         // specific handler
+        var cbs = this.events[event];
         var i = cbs.length;
         while ( i-- ) {
-            var cb = cbs[i];
-            
-            if ( cb === fn || cb.fn === fn ) {
-                cbs.splice(i, 1);
-                return;
-            }
+          var cb = cbs[i];
+          
+          if ( cb === fn || cb.fn === fn ) {
+            cbs.splice(i, 1);
+            return;
+          }
         }
       }
       
