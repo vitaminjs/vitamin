@@ -321,7 +321,12 @@
      * 
      */
     Model.prototype.on = function on(event, fn, context) {
-      this.$options.channel.subscribe(event, _.bind(fn, context || this));
+      var model = this;
+      
+      function on() { fn.apply(context || model, arguments) }
+      
+      on.fn = fn;
+      this.$options.channel.subscribe(event, on);
       
       return this;
     }
