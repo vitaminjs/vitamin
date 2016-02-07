@@ -438,7 +438,7 @@
   /**
    * 
    */
-  function persistanceAPI(Model) {
+  function persistenceAPI(Model) {
     
     function storageError() {
       throw new Error("A storage option must be specified")
@@ -568,33 +568,24 @@
   }
   
   /**
-   * Use a plugin as many as necessary
+   * Use a plugin
    * 
    * @param {Function|Object} an object with `install` method, or simply a function
    */
   Vitamin.use = function use(plugin) {
-      if ( plugin.installed === true ) return this;
-      
-      var args = _.rest(arguments);
-      
-      args.unshift(this);
-      
-      if ( _.isFunction(plugin.install) ) {
-          plugin.install.apply(null, args);
-      }
-      else {
-          plugin.apply(null, args);
-      }
-      
-      return this;
-  }
-  
-  /**
-   * Use a plugin once
-   */
-  Vitamin.useOnce = function useOnce(plugin) {
-    this.use(plugin);
+    if ( plugin.installed === true ) return this;
     
+    var args = _.rest(arguments);
+    
+    args.unshift(this);
+    
+    if ( _.isFunction(plugin.install) ) {
+      plugin.install.apply(null, args);
+    }
+    else if ( _.isFunction(plugin) ) {
+      plugin.apply(null, args);
+    }
+  
     // prevent reuse the same plugin next time
     plugin.installed = true;
     
@@ -629,9 +620,9 @@
   };
   
   Vitamin
-    .useOnce(dataAPI)
-    .useOnce(eventsAPI)
-    .useOnce(persistanceAPI)
+    .use(dataAPI)
+    .use(eventsAPI)
+    .use(persistenceAPI)
   
   // module exports
   return Vitamin;
