@@ -92,9 +92,9 @@
      * A setter/getter for primary key attribute
      */
     Model.prototype.pk = function primaryKey(id) {
-      if ( id ) this.set(this.$options.pk, id);
+      var pk = this.$options.pk;
       
-      return this.get(this.$options.pk);
+      return ( id ) ? this.set(pk, id) : this.get(pk);
     }
     
     /**
@@ -372,8 +372,10 @@
     
     /**
      * init and register event callbacks
+     * 
+     * @private
      */
-    Model.prototype._initEvents = function() {
+    Model.prototype._initEvents = function _initEvents() {
       var self = this;
       
       function register(cbs, event) {
@@ -432,6 +434,95 @@
     
     return options;
   }
+  
+  /**
+   * 
+   */
+  function persistanceAPI(Model) {
+    
+    function storageError() {
+      throw new Error("A storage option must be specified")
+    }
+    
+    /**
+     * Find all models from storage
+     * 
+     * @param {object} options
+     * @return Promise
+     */
+    Model.fetchAll = function fetchAll(options) {
+      if (! this.options.storage ) storageError();
+      
+      return this.options.storage.fetchAll(this, options);
+    }
+    
+    /**
+     * Find a model by primary key
+     * 
+     * @param {mixed} a model id or a model instance
+     * @param {object} options
+     * @return Promise
+     */
+    Model.find = function find(id, options) {
+      var Self = this;
+      
+      return (new Self).pk(id).fetch(options);
+    }
+    
+    /**
+     * Create and save a new model
+     * 
+     * @param {Object|Vitamin} a model instance or data object
+     * @param {Object} options
+     * @return Promise
+     */
+    Model.create = function create(model, options) {
+      var Self = this;
+      
+      if (! (model instanceof Vitamin) ) model = new Self(model);
+      
+      return model.save(options);
+    }
+    
+    /**
+     * Fetch fresh data from data store
+     * 
+     * @param {object} options
+     * @return Promise
+     */
+    Model.prototype.fetch = function fetch(options) {
+      if (! this.$options.storage ) storageError();
+            
+      return this.$options.storage.fetch(this, options);
+    }
+    
+    /**
+     * Save the model data
+     * 
+     * @param {object} hash of attributes and values
+     * @param {object} options
+     * @return Promise
+     */
+    Model.prototype.save = function save(data, options) {
+      if (! this.$options.storage ) storageError();
+      
+      return this.$options.storage.save(this, options);
+    }
+    
+    /**
+     * Destroy the model
+     * 
+     * @param {object} options
+     * @return Promise
+     */
+    Model.prototype.destroy = function destroy(options) {
+      if (! this.$options.storage ) storageError();
+      
+      return this.$options.storage.destroy(this, options);
+    }
+    
+  }
+  
   
   /**
    * Vitamin model constructor
@@ -522,7 +613,7 @@
     });
     
     // define a unique client identifier
-    Object.defineProperty(this, 'cid', { value: _.uniqueId('___') });
+    Object.defineProperty(this, '$cid', { value: _.uniqueId('___') });
     
     // register events
     this._initEvents();
@@ -540,6 +631,7 @@
   Vitamin
     .useOnce(dataAPI)
     .useOnce(eventsAPI)
+    .useOnce(persistanceAPI)
   
   // module exports
   return Vitamin;
