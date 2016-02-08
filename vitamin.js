@@ -209,7 +209,10 @@
       newVal = coerce(prop, newVal);
       
       // validate the new value
-      if ( options.validate && validate(prop, newVal) ) return false;
+      if ( options.validate && validate(prop, newVal) ) {
+        this.emit('invalid', key, newVal, this, options);
+        return false;
+      }
       
       // if no changes, return false
       if ( oldVal === newVal ) return false;
@@ -453,7 +456,7 @@
     Model.fetchAll = function fetchAll(options) {
       if (! this.options.storage ) storageError();
       
-      return this.options.storage.fetchAll(this, options);
+      return this.options.storage.fetchAll(this, options || {});
     }
     
     /**
@@ -466,7 +469,7 @@
     Model.find = function find(id, options) {
       var Self = this;
       
-      return (new Self).pk(id).fetch(options);
+      return (new Self).pk(id).fetch(options || {});
     }
     
     /**
@@ -481,7 +484,7 @@
       
       if (! (model instanceof Vitamin) ) model = new Self(model);
       
-      return model.save(options);
+      return model.save(options || {});
     }
     
     /**
@@ -491,9 +494,15 @@
      * @return Promise
      */
     Model.prototype.fetch = function fetch(options) {
-      if (! this.$options.storage ) storageError();
+      var storage = this.$options.storage;
+      
+      if (! storage ) storageError();
+      
+      function callback(model, options) {
+        model.emit('sync', model, options);
+      }
             
-      return this.$options.storage.fetch(this, options);
+      return storage.fetch(this, options || {}).done(callback);
     }
     
     /**
@@ -503,10 +512,16 @@
      * @param {object} options
      * @return Promise
      */
-    Model.prototype.save = function save(data, options) {
-      if (! this.$options.storage ) storageError();
+    Model.prototype.save = function save(options) {
+      var storage = this.$options.storage;
       
-      return this.$options.storage.save(this, options);
+      if (! storage ) storageError();
+      
+      function callback(model, options) {
+        model.emit('sync', model, options);
+      }
+      
+      return storage.save(this, options || {}).done(callback);
     }
     
     /**
@@ -516,9 +531,15 @@
      * @return Promise
      */
     Model.prototype.destroy = function destroy(options) {
-      if (! this.$options.storage ) storageError();
+      var storage = this.$options.storage;
       
-      return this.$options.storage.destroy(this, options);
+      if (! storage ) storageError();
+      
+      function callback(model, options) {
+        model.emit('destroy', model, options)
+      }
+      
+      return storage.destroy(this, options || {}).done(callback);
     }
     
   }
