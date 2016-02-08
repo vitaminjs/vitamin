@@ -209,7 +209,10 @@
       newVal = coerce(prop, newVal);
       
       // validate the new value
-      if ( options.validate && validate(prop, newVal) ) return false;
+      if ( options.validate && validate(prop, newVal) ) {
+        this.emit('invalid', key, newVal, this, options);
+        return false;
+      }
       
       // if no changes, return false
       if ( oldVal === newVal ) return false;
@@ -503,7 +506,7 @@
      * @param {object} options
      * @return Promise
      */
-    Model.prototype.save = function save(data, options) {
+    Model.prototype.save = function save(options) {
       if (! this.$options.storage ) storageError();
       
       return this.$options.storage.save(this, options);
