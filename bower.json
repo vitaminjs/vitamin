@@ -1,0 +1,24 @@
+{
+  "name": "Vitamin",
+  "description": "A lightweight Model library for JavaScript applications",
+  "main": "vitamin.js",
+  "authors": [
+    "absolux"
+  ],
+  "dependencies": {
+    "underscore": "^1.8.3"
+  },
+  "license": "MIT",
+  "keywords": [
+    "Model"
+  ],
+  "homepage": "https://github.com/vitaminjs/vitamin",
+  "moduleType": [],
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
