@@ -100,26 +100,18 @@
     /**
      * Set model attributes
      */
-    Model.prototype.set = function set(attr, val, options) {
+    Model.prototype.set = function set(attr, val) {
       if ( _.isEmpty(attr) ) return this;
       
       var attributes = {};
-        
-      if ( _.isObject(attr) ) {
-        attributes = attr;
-        options = val;
-      }
-      else {
-        attributes[attr] = val;
-      }
-      
-      options = _.extend({validate: true}, options);
+      if ( _.isObject(attr) ) { attributes = attr }
+      else { attributes[attr] = val }
       
       // update model state
       var changing = this.$state.changing;
       this.$state.changing = true;
       if (! changing ) {
-        this.$state.previous = this.toJSON();
+        this.$state.previous = _.clone(this.$data);
         this.$state.changed = {};
       }
       
@@ -128,7 +120,7 @@
         val = attributes[attr];
         
         // set the attribute's new value
-        this._set(attr, val, options); 
+        this._set(attr, val);
         
         // define a proxy for that attribute
         if (! _.has(this, attr) ) proxy(this, attr);
@@ -138,8 +130,8 @@
       if ( changing ) return this;
       
       // trigger global change event
-      if ( !options.silent && this.hasChanged() ) {
-        this.emit('change', this.$state.changed, this, options);
+      if ( this.hasChanged() ) {
+        this.emit('change', this.$state.changed, this);
       }
       
       // remove changing state
@@ -188,11 +180,12 @@
     /**
      * 
      */
-    Model.prototype.clear = function clear(options) {
+    Model.prototype.clear = function clear() {
       var attrs = {};
       
       for ( var key in this.$data ) attrs[key] = void 0;
-      this.set(attrs, options);
+      
+      this.set(attrs);
     }
     
     /**
@@ -201,7 +194,7 @@
      * @return {boolean} false if no changes made or invalid value
      * @private
      */
-    Model.prototype._set = function _set(key, newVal, options) {
+    Model.prototype._set = function _set(key, newVal) {
       var oldVal = this.$data[key],
           prop = this.$options.schema[key] || {};
       
@@ -209,8 +202,8 @@
       newVal = coerce(prop, newVal);
       
       // validate the new value
-      if ( options.validate && validate(prop, newVal) ) {
-        this.emit('invalid', key, newVal, this, options);
+      if (! validate(prop, newVal) ) {
+        this.emit('invalid:' + key, newVal, this);
         return false;
       }
       
@@ -219,8 +212,7 @@
       
       this.$data[key] = newVal;
       this.$state.changed[key] = newVal;
-      
-      if (! options.silent ) this.emit('change:' + key, newVal, this);
+      this.emit('change:' + key, newVal, this);
     }
     
     /**
@@ -237,7 +229,7 @@
         
         // set attribute default value
         if ( _.has(options, 'default') ) {
-          this.set(name, options.default, {silent: true})
+          this.set(name, options.default);
         }
       }, this)
     }
