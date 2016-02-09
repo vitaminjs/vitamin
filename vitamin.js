@@ -413,6 +413,120 @@
   }
   
   /**
+   * 
+   */
+  function persistenceAPI(Model) {
+    
+    function storageError() {
+      throw new Error("A storage option must be specified")
+    }
+    
+    /**
+     * Find all models from storage
+     * 
+     * @param {object} options
+     * @return Promise
+     */
+    Model.fetchAll = function fetchAll(options) {
+      var Self = this;
+      var storage = this.options.storage;
+      
+      if (! storage ) storageError();
+      
+      function finish(list, options) {
+        return _.map(list, function(data) { return Self.factory(data) });
+      }
+      
+      return storage.fetchAll(options).then(finish);
+    }
+    
+    /**
+     * Find a model by primary key
+     * 
+     * @param {mixed} a model id or a model instance
+     * @param {object} options
+     * @return Promise
+     */
+    Model.find = function find(id, options) {
+      return this.factory(id).fetch(options);
+    }
+    
+    /**
+     * Create and save a new model
+     * 
+     * @param {Object|Vitamin} a model instance or data object
+     * @param {Object} options
+     * @return Promise
+     */
+    Model.create = function create(model, options) {
+      if (! (model instanceof Vitamin) ) model = this.factory(model);
+      
+      return model.save(options);
+    }
+    
+    /**
+     * Fetch fresh data from data store
+     * 
+     * @param {object} options
+     * @return Promise
+     */
+    Model.prototype.fetch = function fetch(options) {
+      var model = this;
+      var storage = this.$options.storage;
+      
+      if (! storage ) storageError();
+      
+      function finish(data, options) {
+        return model.set(data).emit('sync', model, options);
+      }
+            
+      return storage.fetch(this, options).then(finish);
+    }
+    
+    /**
+     * Save the model data
+     * 
+     * @param {object} hash of attributes and values
+     * @param {object} options
+     * @return Promise
+     */
+    Model.prototype.save = function save(options) {
+      var model = this;
+      var storage = this.$options.storage;
+      
+      if (! storage ) storageError();
+      
+      function finish(data, options) {
+        return model.set(data).emit('sync', model, options);
+      }
+      
+      return storage.save(this, options).then(finish);
+    }
+    
+    /**
+     * Destroy the model
+     * 
+     * @param {object} options
+     * @return Promise
+     */
+    Model.prototype.destroy = function destroy(options) {
+      var model = this;
+      var storage = this.$options.storage;
+      
+      if (! storage ) storageError();
+      
+      function finish(data, options) {
+        model.emit('destroy', model, options)
+        return model;
+      }
+      
+      return storage.destroy(this, options).then(finish);
+    }
+    
+  }
+  
+  
+  /**
    * Helper to merge options from parent class to subclasses
    */
   function mergeOptions(parent, child) {
@@ -451,113 +565,6 @@
     
     return options;
   }
-  
-  /**
-   * 
-   */
-  function persistenceAPI(Model) {
-    
-    function storageError() {
-      throw new Error("A storage option must be specified")
-    }
-    
-    /**
-     * Find all models from storage
-     * 
-     * @param {object} options
-     * @return Promise
-     */
-    Model.fetchAll = function fetchAll(options) {
-      if (! this.options.storage ) storageError();
-      
-      return this.options.storage.fetchAll(this, options || {});
-    }
-    
-    /**
-     * Find a model by primary key
-     * 
-     * @param {mixed} a model id or a model instance
-     * @param {object} options
-     * @return Promise
-     */
-    Model.find = function find(id, options) {
-      var Self = this;
-      
-      return (new Self).pk(id).fetch(options || {});
-    }
-    
-    /**
-     * Create and save a new model
-     * 
-     * @param {Object|Vitamin} a model instance or data object
-     * @param {Object} options
-     * @return Promise
-     */
-    Model.create = function create(model, options) {
-      var Self = this;
-      
-      if (! (model instanceof Vitamin) ) model = new Self(model);
-      
-      return model.save(options || {});
-    }
-    
-    /**
-     * Fetch fresh data from data store
-     * 
-     * @param {object} options
-     * @return Promise
-     */
-    Model.prototype.fetch = function fetch(options) {
-      var storage = this.$options.storage;
-      
-      if (! storage ) storageError();
-      
-      function callback(model, options) {
-        model.emit('sync', model, options);
-      }
-            
-      return storage.fetch(this, options || {}).done(callback);
-    }
-    
-    /**
-     * Save the model data
-     * 
-     * @param {object} hash of attributes and values
-     * @param {object} options
-     * @return Promise
-     */
-    Model.prototype.save = function save(options) {
-      var storage = this.$options.storage;
-      
-      if (! storage ) storageError();
-      
-      function callback(model, options) {
-        model.emit('sync', model, options);
-      }
-      
-      return storage.save(this, options || {}).done(callback);
-    }
-    
-    /**
-     * Destroy the model
-     * 
-     * @param {object} options
-     * @return Promise
-     */
-    Model.prototype.destroy = function destroy(options) {
-      var storage = this.$options.storage;
-      
-      if (! storage ) storageError();
-      
-      function callback(model, options) {
-        model.emit('destroy', model, options)
-      }
-      
-      return storage.destroy(this, options || {}).done(callback);
-    }
-    
-  }
-  
   
   /**
    * Vitamin model constructor
