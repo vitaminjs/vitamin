@@ -165,7 +165,21 @@
      * 
      */
     Model.prototype.toJSON = function toJSON() {
-      return _.clone(this.$data);
+      var json = {}, val;
+      
+      for (var key in this.$data) {
+        val = this.$data[key];
+        
+        // skip unsetted properties
+        if ( _.isUndefined(val) ) continue;
+        
+        // if the attribute is a nested model, call its `toJSON`
+        if ( _.isObject(val) && _.isFunction(val.toJSON) ) val = val.toJSON();
+        
+        json[key] = val;
+      }
+      
+      return json;
     }
     
     /**
