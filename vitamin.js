@@ -181,11 +181,19 @@
      * 
      */
     Model.prototype.clear = function clear() {
-      var attrs = {};
+      // save the previous state
+      this.$state.previous = _.clone(this.$data);
+      this.$state.changed = {};
       
-      for ( var key in this.$data ) attrs[key] = void 0;
+      // unset all attributes
+      for ( var key in this.$data ) {
+        this.$data[key] = this.$state.changed[key] = void 0;
+      }
       
-      this.set(attrs);
+      // trigger `change` event to notify observers
+      this.emit('change', this);
+      
+      return this;
     }
     
     /**
