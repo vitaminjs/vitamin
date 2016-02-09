@@ -626,6 +626,22 @@
     
     return this;
   }
+  
+  /**
+   * 
+   */
+  Vitamin.factory = function factory(data, options) {
+    var Self = this;
+    
+    // data can be a primary key
+    if ( _.isString(data) || _.isNumber(data) ) {
+      var id = data;
+      
+      (data = {})[this.options.pk] = id;
+    }
+    
+    return new Self(data, options);
+  }
     
   /**
    * 
