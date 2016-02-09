@@ -100,26 +100,18 @@
     /**
      * Set model attributes
      */
-    Model.prototype.set = function set(attr, val, options) {
+    Model.prototype.set = function set(attr, val) {
       if ( _.isEmpty(attr) ) return this;
       
       var attributes = {};
-        
-      if ( _.isObject(attr) ) {
-        attributes = attr;
-        options = val;
-      }
-      else {
-        attributes[attr] = val;
-      }
-      
-      options = _.extend({validate: true}, options);
+      if ( _.isObject(attr) ) { attributes = attr }
+      else { attributes[attr] = val }
       
       // update model state
       var changing = this.$state.changing;
       this.$state.changing = true;
       if (! changing ) {
-        this.$state.previous = this.toJSON();
+        this.$state.previous = _.clone(this.$data);
         this.$state.changed = {};
       }
       
@@ -128,7 +120,7 @@
         val = attributes[attr];
         
         // set the attribute's new value
-        this._set(attr, val, options); 
+        this._set(attr, val);
         
         // define a proxy for that attribute
         if (! _.has(this, attr) ) proxy(this, attr);
@@ -138,8 +130,8 @@
       if ( changing ) return this;
       
       // trigger global change event
-      if ( !options.silent && this.hasChanged() ) {
-        this.emit('change', this.$state.changed, this, options);
+      if ( this.hasChanged() ) {
+        this.emit('change', this.$state.changed, this);
       }
       
       // remove changing state
@@ -173,7 +165,21 @@
      * 
      */
     Model.prototype.toJSON = function toJSON() {
-      return _.clone(this.$data);
+      var json = {}, val;
+      
+      for (var key in this.$data) {
+        val = this.$data[key];
+        
+        // skip unsetted properties
+        if ( _.isUndefined(val) ) continue;
+        
+        // if the attribute is a nested model, call its `toJSON`
+        if ( _.isObject(val) && _.isFunction(val.toJSON) ) val = val.toJSON();
+        
+        json[key] = val;
+      }
+      
+      return json;
     }
     
     /**
@@ -188,11 +194,20 @@
     /**
      * 
      */
-    Model.prototype.clear = function clear(options) {
-      var attrs = {};
+    Model.prototype.clear = function clear() {
+      // save the previous state
+      this.$state.previous = _.clone(this.$data);
+      this.$state.changed = {};
       
-      for ( var key in this.$data ) attrs[key] = void 0;
-      this.set(attrs, options);
+      // unset all attributes
+      for ( var key in this.$data ) {
+        this.$data[key] = this.$state.changed[key] = void 0;
+      }
+      
+      // trigger `change` event to notify observers
+      this.emit('change', this);
+      
+      return this;
     }
     
     /**
@@ -201,7 +216,7 @@
      * @return {boolean} false if no changes made or invalid value
      * @private
      */
-    Model.prototype._set = function _set(key, newVal, options) {
+    Model.prototype._set = function _set(key, newVal) {
       var oldVal = this.$data[key],
           prop = this.$options.schema[key] || {};
       
@@ -209,8 +224,8 @@
       newVal = coerce(prop, newVal);
       
       // validate the new value
-      if ( options.validate && validate(prop, newVal) ) {
-        this.emit('invalid', key, newVal, this, options);
+      if (! validate(prop, newVal) ) {
+        this.emit('invalid:' + key, newVal, this);
         return false;
       }
       
@@ -219,8 +234,7 @@
       
       this.$data[key] = newVal;
       this.$state.changed[key] = newVal;
-      
-      if (! options.silent ) this.emit('change:' + key, newVal, this);
+      this.emit('change:' + key, newVal, this);
     }
     
     /**
@@ -237,7 +251,7 @@
         
         // set attribute default value
         if ( _.has(options, 'default') ) {
-          this.set(name, options.default, {silent: true})
+          this.set(name, options.default);
         }
       }, this)
     }
@@ -399,6 +413,120 @@
   }
   
   /**
+   * 
+   */
+  function persistenceAPI(Model) {
+    
+    function storageError() {
+      throw new Error("A storage option must be specified")
+    }
+    
+    /**
+     * Find all models from storage
+     * 
+     * @param {object} options
+     * @return Promise
+     */
+    Model.fetchAll = function fetchAll(options) {
+      var Self = this;
+      var storage = this.options.storage;
+      
+      if (! storage ) storageError();
+      
+      function finish(list, options) {
+        return _.map(list, function(data) { return Self.factory(data) });
+      }
+      
+      return storage.fetchAll(options).then(finish);
+    }
+    
+    /**
+     * Find a model by primary key
+     * 
+     * @param {mixed} a model id or a model instance
+     * @param {object} options
+     * @return Promise
+     */
+    Model.find = function find(id, options) {
+      return this.factory(id).fetch(options);
+    }
+    
+    /**
+     * Create and save a new model
+     * 
+     * @param {Object|Vitamin} a model instance or data object
+     * @param {Object} options
+     * @return Promise
+     */
+    Model.create = function create(model, options) {
+      if (! (model instanceof Vitamin) ) model = this.factory(model);
+      
+      return model.save(options);
+    }
+    
+    /**
+     * Fetch fresh data from data store
+     * 
+     * @param {object} options
+     * @return Promise
+     */
+    Model.prototype.fetch = function fetch(options) {
+      var model = this;
+      var storage = this.$options.storage;
+      
+      if (! storage ) storageError();
+      
+      function finish(data, options) {
+        return model.set(data).emit('sync', model, options);
+      }
+            
+      return storage.fetch(this, options).then(finish);
+    }
+    
+    /**
+     * Save the model data
+     * 
+     * @param {object} hash of attributes and values
+     * @param {object} options
+     * @return Promise
+     */
+    Model.prototype.save = function save(options) {
+      var model = this;
+      var storage = this.$options.storage;
+      
+      if (! storage ) storageError();
+      
+      function finish(data, options) {
+        return model.set(data).emit('sync', model, options);
+      }
+      
+      return storage.save(this, options).then(finish);
+    }
+    
+    /**
+     * Destroy the model
+     * 
+     * @param {object} options
+     * @return Promise
+     */
+    Model.prototype.destroy = function destroy(options) {
+      var model = this;
+      var storage = this.$options.storage;
+      
+      if (! storage ) storageError();
+      
+      function finish(data, options) {
+        model.emit('destroy', model, options)
+        return model;
+      }
+      
+      return storage.destroy(this, options).then(finish);
+    }
+    
+  }
+  
+  
+  /**
    * Helper to merge options from parent class to subclasses
    */
   function mergeOptions(parent, child) {
@@ -437,113 +565,6 @@
     
     return options;
   }
-  
-  /**
-   * 
-   */
-  function persistenceAPI(Model) {
-    
-    function storageError() {
-      throw new Error("A storage option must be specified")
-    }
-    
-    /**
-     * Find all models from storage
-     * 
-     * @param {object} options
-     * @return Promise
-     */
-    Model.fetchAll = function fetchAll(options) {
-      if (! this.options.storage ) storageError();
-      
-      return this.options.storage.fetchAll(this, options || {});
-    }
-    
-    /**
-     * Find a model by primary key
-     * 
-     * @param {mixed} a model id or a model instance
-     * @param {object} options
-     * @return Promise
-     */
-    Model.find = function find(id, options) {
-      var Self = this;
-      
-      return (new Self).pk(id).fetch(options || {});
-    }
-    
-    /**
-     * Create and save a new model
-     * 
-     * @param {Object|Vitamin} a model instance or data object
-     * @param {Object} options
-     * @return Promise
-     */
-    Model.create = function create(model, options) {
-      var Self = this;
-      
-      if (! (model instanceof Vitamin) ) model = new Self(model);
-      
-      return model.save(options || {});
-    }
-    
-    /**
-     * Fetch fresh data from data store
-     * 
-     * @param {object} options
-     * @return Promise
-     */
-    Model.prototype.fetch = function fetch(options) {
-      var storage = this.$options.storage;
-      
-      if (! storage ) storageError();
-      
-      function callback(model, options) {
-        model.emit('sync', model, options);
-      }
-            
-      return storage.fetch(this, options || {}).done(callback);
-    }
-    
-    /**
-     * Save the model data
-     * 
-     * @param {object} hash of attributes and values
-     * @param {object} options
-     * @return Promise
-     */
-    Model.prototype.save = function save(options) {
-      var storage = this.$options.storage;
-      
-      if (! storage ) storageError();
-      
-      function callback(model, options) {
-        model.emit('sync', model, options);
-      }
-      
-      return storage.save(this, options || {}).done(callback);
-    }
-    
-    /**
-     * Destroy the model
-     * 
-     * @param {object} options
-     * @return Promise
-     */
-    Model.prototype.destroy = function destroy(options) {
-      var storage = this.$options.storage;
-      
-      if (! storage ) storageError();
-      
-      function callback(model, options) {
-        model.emit('destroy', model, options)
-      }
-      
-      return storage.destroy(this, options || {}).done(callback);
-    }
-    
-  }
-  
   
   /**
    * Vitamin model constructor
@@ -611,6 +632,22 @@
     plugin.installed = true;
     
     return this;
+  }
+  
+  /**
+   * 
+   */
+  Vitamin.factory = function factory(data, options) {
+    var Self = this;
+    
+    // data can be a primary key
+    if ( _.isString(data) || _.isNumber(data) ) {
+      var id = data;
+      
+      (data = {})[this.options.pk] = id;
+    }
+    
+    return new Self(data, options);
   }
     
   /**

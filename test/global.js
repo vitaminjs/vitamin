@@ -63,28 +63,6 @@ describe("Vitamin global API", function() {
     
   })
   
-  describe("Vitamin.useOnce", function() {
-    
-    var times = 0;
-    var aPlugin = {
-      install: function(Klass) {
-        Klass.property = "value";
-        
-        Klass.prototype.method = _.noop
-        
-        times++
-      }
-    }
-    
-    it("should be used only once", function() {
-      Model.useOnce(aPlugin)
-      Model.useOnce(aPlugin)
-      
-      assert.equal(times, 1)
-    })
-    
-  })
-  
   describe("Vitamin#$options", function() {
     
     var model1, model2
