@@ -162,12 +162,17 @@
     }
     
     /**
+     * Returns a json representation of all attributes,
+     * or only changed ones if true given as param
      * 
+     * @param {Boolean} changed
      */
-    Model.prototype.toJSON = function toJSON() {
-      var json = {}, val;
+    Model.prototype.toJSON = function toJSON(changed) {
+      var json = {}, val, attrs = this.$data;
       
-      for (var key in this.$data) {
+      if ( changed  && this.hasChanged() ) attrs = this.$state.changed;
+      
+      for (var key in attrs) {
         val = this.$data[key];
         
         // skip unsetted properties
