@@ -1,6 +1,6 @@
 {
-  "name": "Vitamin",
-  "version": "0.0.1",
+  "name": "vitamin",
+  "version": "0.2.0",
   "description": "A lightweight Model library for JavaScript applications",
   "main": "src/vitamin.js",
   "directories": {
