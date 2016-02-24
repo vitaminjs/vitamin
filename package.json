@@ -1,6 +1,6 @@
 {
   "name": "vitamin",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "A lightweight Model library for JavaScript applications",
   "main": "src/vitamin.js",
   "directories": {
@@ -21,7 +21,7 @@
     "url": "https://github.com/vitaminjs/vitamin.git"
   },
   "keywords": [
-    "Model"
+    "model"
   ],
   "author": "absolux",
   "license": "MIT",
