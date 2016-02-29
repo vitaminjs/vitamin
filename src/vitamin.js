@@ -69,7 +69,8 @@ Vitamin.options = {
 
 /**
  * Set up correctly the prototype chain for subclasses
- * possible options
+ * 
+ * Possible options
  *  * pk
  *  * schema
  *  * methods
@@ -104,7 +105,7 @@ Vitamin.extend = function extend(options) {
 }
 
 /**
- * 
+ * Factory function to instantiate new models without `new` operator
  * 
  * @static
  */
@@ -125,6 +126,7 @@ Vitamin.factory = function factory(data, options) {
  * Use a plugin
  * 
  * @param {Function|Object} an object with `install` method, or simply a function
+ * 
  * @static
  */
 Vitamin.use = function use(plugin) {
@@ -149,7 +151,10 @@ Vitamin.use = function use(plugin) {
 }
 
 /**
+ * Called by the constructor when creating a new instance
  * 
+ * @param {Object} model data
+ * @param {Object} options
  */
 Vitamin.prototype.init = function init(data, options) {
   // define model dynamic options
