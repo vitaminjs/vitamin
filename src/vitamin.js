@@ -69,11 +69,21 @@ Vitamin.options = {
 
 /**
  * Set up correctly the prototype chain for subclasses
+ * possible options
+ *  * pk
+ *  * schema
+ *  * methods
+ *  * adapter
+ *  * events
+ * 
+ * @param {Object} inheritance options
  * 
  * @static
  */
-Vitamin.extend = function extend(props, options) {
-  var Super = this;
+Vitamin.extend = function extend(options) {
+  var Super = this
+  
+  options = options || {}
     
   // Default constructor simply calls the parent constructor
   function Model() { Super.apply(this, arguments) }
@@ -83,9 +93,10 @@ Vitamin.extend = function extend(props, options) {
   
   // Add static and instance properties
   _.extend(Model, Super)
-  _.extend(Model.prototype, props)
+  _.extend(Model.prototype, options.methods)
   
   // merge options
+  delete options.methods
   Model.options = mergeOptions(Super.options, options)
   
   // return the final product
