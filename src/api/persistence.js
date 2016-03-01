@@ -16,15 +16,16 @@ function persistenceAPI(Model) {
    * @static
    */
   Model.all = function all(options) {
-    var Self = this
+    var Self = this, 
+        adapter = this.options.adapter
     
-    if (! this.$adapter ) storageError()
+    if (! adapter ) storageError()
     
     function finish(list) {
       return _.map(list, function(data) { return Self.factory(data) })
     }
     
-    return this.$adapter.all(options).then(finish)
+    return adapter.all(options).then(finish)
   }
   
   /**
@@ -70,7 +71,7 @@ function persistenceAPI(Model) {
       return model.set(data).emit('sync', model)
     }
           
-    return this.$adapter.fetch(model, options).then(finish);
+    return this.$adapter.fetch(model, options).then(finish)
   }
   
   /**
@@ -116,9 +117,7 @@ function persistenceAPI(Model) {
    */
   Model.prototype._initAdapter = function _initAdapter(adapter) {
     // define adapter property
-    Object.defineProperty(this, '$adapter', {
-      value: adapter, writable: true
-    })
+    Object.defineProperty(this, '$adapter', { value: adapter })
   }
   
 }
