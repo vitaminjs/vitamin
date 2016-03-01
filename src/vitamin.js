@@ -168,11 +168,8 @@ Vitamin.prototype.init = function init(data, options) {
   // register events
   this._initEvents(this.$options.events)
   
-  // init model schema
-  this._initSchema(this.$options.schema)
-  
   // set data
-  this._initData(data)
+  this._initData(data, this.$options.schema)
   
   // init storage adapter
   this._initAdapter(this.$options.adapter)

@@ -214,7 +214,7 @@ function dataAPI(Model) {
    * 
    * @private
    */
-  Model.prototype._initData = function _initData(data) {
+  Model.prototype._initData = function _initData(data, schema) {
     // define model data container
     Object.defineProperty(this, '$data', { value: {} })
     
@@ -230,6 +230,9 @@ function dataAPI(Model) {
         return this.get(this.$options.pk)
       }
     })
+  
+    // init model schema
+    this._initSchema(schema)
     
     // set data
     this.set(data)
