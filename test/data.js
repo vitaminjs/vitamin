@@ -2,7 +2,7 @@
 
 var assert = require('chai').assert;
 var _ = require('underscore');
-var Vitamin = require('../vitamin');
+var Vitamin = require('../src/vitamin');
 
 describe("Vitamin data API", function() {
   

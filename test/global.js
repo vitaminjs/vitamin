@@ -2,7 +2,7 @@
 
 var assert = require('chai').assert;
 var _ = require('underscore');
-var Vitamin = require('../vitamin');
+var Vitamin = require('../src/vitamin');
 
 describe("Vitamin global API", function() {
   
@@ -12,11 +12,12 @@ describe("Vitamin global API", function() {
     Model = Vitamin.extend()
     
     SubModel = Model.extend({
-      foo: function() {}
-    }, {
       pk: '_id',
       schema: {
         'name': String
+      },
+      methods: {
+        foo: function() {}
       }
     })
   })

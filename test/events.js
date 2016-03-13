@@ -2,7 +2,7 @@
 
 var assert = require('chai').assert;
 var _ = require('underscore');
-var Vitamin = require('../vitamin');
+var Vitamin = require('../src/vitamin');
 
 describe("Vitamin events API", function() {
   
@@ -50,7 +50,7 @@ describe("Vitamin events API", function() {
       model.once('once:event', _.noop)
       model.emit('once:event', "a tag")
       
-      assert.lengthOf(model.$options.channel.events['once:event'], 0)
+      assert.lengthOf(model.$emitter._events['once:event'], 0)
     })
     
   })
