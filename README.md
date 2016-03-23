@@ -1,2 +1,2 @@
 # vitamin
-A lightweight Model library to use in JavaScript applications
+Active Record library for node.js applications

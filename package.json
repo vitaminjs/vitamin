@@ -1,7 +1,7 @@
 {
   "name": "vitamin",
   "version": "0.2.1",
-  "description": "A lightweight Model library for JavaScript applications",
+  "description": "Active Record library for node.js applications",
   "main": "src/vitamin.js",
   "directories": {
     "test": "test"
