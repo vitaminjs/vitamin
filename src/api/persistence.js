@@ -1,125 +1,81 @@
 
 var _ = require('underscore')
 
-function storageError() {
-  throw new Error("A storage adapter must be specified")
-}
+module.exports = persistenceAPI
 
-function persistenceAPI(Model) {
+function persistenceAPI(Vitamin) {
   
   /**
-   * Find all models from storage
+   * Get all models from database
    * 
-   * @param {Object} options
-   * @return Promise
+   * @param {Object} conditions
+   * @param {Function} callback
    * 
    * @static
    */
-  Model.all = function all(options) {
-    var Self = this, 
-        adapter = this.options.adapter
+  Vitamin.all = function all(query, cb) {
+    var adapter = this.prototype.$adapter
+    var from = this.options.source
     
-    if (! adapter ) storageError()
+    query = _.extend(query, { $from: from })
     
-    function finish(list) {
-      return _.map(list, function(data) { return Self.factory(data) })
-    }
-    
-    return adapter.all(options).then(finish)
+    return adapter.all(query, cb)
   }
   
   /**
-   * Find a model by primary key
+   * Find one model
    * 
-   * @param {mixed} model's id
-   * @param {Object} options
-   * @return Promise
+   * @param {Object} conditions
+   * @param {Function} callback
    * 
    * @static
    */
-  Model.find = function find(id, options) {
-    return this.factory(id).fetch(options)
+  Vitamin.find = function find(query, cb) {
+    var adapter = this.prototype.$adapter
+    var from = this.options.source
+    
+    query = _.extend(query, { $from: from })
+    
+    return adapter.find(query, cb)
   }
   
   /**
    * Create and save a new model
    * 
-   * @param {Object|Vitamin} a model instance or data object
-   * @param {Object} options
-   * @return Promise
+   * @param {Object} data object
+   * @param {Function} callback
    * 
    * @static
    */
-  Model.create = function create(model, options) {
-    if (! (model instanceof Model) ) model = this.factory(model)
-      
-    return model.save(options)
+  Vitamin.create = function create(data, cb) {
+    return this.factory(data).save(cb)
   }
   
   /**
-   * Fetch fresh data from data source
+   * Fetch fresh data from database
    * 
-   * @param {object} options
-   * @return Promise
+   * @param {Function} callback
    */
-  Model.prototype.fetch = function fetch(options) {
-    var model = this
-    
-    if (! this.$adapter ) storageError()
-    
-    function finish(data) {
-      return model.set(data).emit('sync', model)
-    }
-          
-    return this.$adapter.fetch(model, options).then(finish)
+  Vitamin.prototype.fetch = function fetch(cb) {
+    return this.$adapter.fetch(this, cb)
   }
   
   /**
-   * Save the model's data
+   * Save the model attributes
    * 
-   * @param {object} hash of attributes and values
-   * @param {object} options
-   * @return Promise
+   * @param {Function} callback
    */
-  Model.prototype.save = function save(options) {
-    var model = this
-    
-    if (! this.$adapter ) storageError()
-    
-    function finish(data) {
-      return model.set(data).emit('sync', model)
-    }
-    
-    return this.$adapter.save(model, options).then(finish)
+  Vitamin.prototype.save = function save(cb) {
+    return this.$adapter.save(this, cb)
   }
   
   /**
    * Destroy the model
    * 
-   * @param {object} options
-   * @return Promise
+   * @param {Function} callback
    */
-  Model.prototype.destroy = function destroy(options) {
-    var model = this
-    
-    if (! this.$adapter ) storageError();
-    
-    function finish(data) {
-      return model.emit('destroy', model)
-    }
-    
-    return this.$adapter.destroy(model, options).then(finish)
-  }
-  
-  /**
-   * 
-   * @private
-   */
-  Model.prototype._initAdapter = function _initAdapter(adapter) {
-    // define adapter property
-    Object.defineProperty(this, '$adapter', { value: adapter })
+  Vitamin.prototype.destroy = function destroy(cb) {
+    return this.$adapter.destroy(this, cb)
   }
   
 }
-
-module.exports = persistenceAPI
