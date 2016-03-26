@@ -1,5 +1,6 @@
 
 var _ = require('underscore')
+var mergeOptions = require('./helpers').mergeOptions
 
 module.exports = Vitamin
 
@@ -66,8 +67,7 @@ Vitamin.extend = function extend(options = {}) {
   _.extend(Model.prototype, options.methods)
   
   // merge options
-  options = _.omit(options, 'methods', 'statics')
-  Model.options = _.extend(Super.options, options)
+  Model.options = mergeOptions(Super.options, options)
   
   // return the final product
   return Model
