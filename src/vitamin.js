@@ -110,6 +110,9 @@ Vitamin.prototype.init = function init(attributes) {
   // define model properties
   Object.defineProperty(this, '$data', { value: {} })
   Object.defineProperty(this, '$original', { value: {} })
+  Object.defineProperty(this, 'id', { 
+    get: function ID() { return this.get(this.option('pk')) }
+  })
   
   this._initSchema()
   
@@ -120,7 +123,7 @@ Vitamin.prototype.init = function init(attributes) {
  * Retrieve an option by name
  * 
  * @param {String} name
- * @apram {Mixed} defaults
+ * @param {Mixed} defaults
  */
 Vitamin.prototype.option = function option(name, defaults) {
   return _.result(this.constructor.options, name, defaults)
@@ -162,14 +165,14 @@ Vitamin.prototype.get = function get(attr) {
  * @param {String} attr name
  */
 Vitamin.prototype.has = function has(attr) {
-  return !_.isUndefined(this.$data[attr])
+  return !_.isUndefined(this.get(attr))
 }
 
 /**
  * 
  */
 Vitamin.prototype.isNew = function isNew() {
-  return !this.has(this.$options.pk)
+  return !this.has(this.option('pk'))
 }
 
 /**
@@ -192,7 +195,8 @@ Vitamin.prototype.isDirty = function isDirty(attr) {
 }
 
 /**
- * Validate and set attribute value
+ * Attribute value setter 
+ * used internally
  * 
  * @param {String} key attribute name
  * @param {Mixed} newVal value
@@ -225,7 +229,6 @@ Vitamin.prototype._initSchema = function _initSchema() {
     // normalize schema object format
     if ( _.isFunction(options) ) {
       schema[name] = { 'type': options }
-      return
     }
     
     // set attribute default value
@@ -234,3 +237,6 @@ Vitamin.prototype._initSchema = function _initSchema() {
     }
   }, this)
 }
+
+// use persistence API
+Vitamin.use(require('./persistence/api'))
