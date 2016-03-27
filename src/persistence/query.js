@@ -43,8 +43,8 @@ Query.prototype.where = function where(key, val) {
  * 
  * @param {Object} args
  */
-Query.prototype.orWhere = function orWhere(...args) {
-  return this.where({ $or: args })
+Query.prototype.orWhere = function orWhere(args) {
+  return this.where({ $or: _.toArray(arguments) })
 }
 
 Query.prototype.from = function from(from) {
@@ -52,7 +52,9 @@ Query.prototype.from = function from(from) {
   return this
 }
 
-Query.prototype.select = function select(...args) {
+Query.prototype.select = function select() {
+  var args = _.toArray(arguments)
+  
   this.q.$select = _.compact(this.q.$select.concat(args))
   return this
 }
@@ -67,7 +69,9 @@ Query.prototype.skip = function skip(n) {
   return this
 }
 
-Query.prototype.order = function order(...args) {
+Query.prototype.order = function order() {
+  var args = _.toArray(arguments)
+  
   this.q.$order = _.compact(this.q.$order.concat(args))
   return this
 }

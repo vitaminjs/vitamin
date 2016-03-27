@@ -53,8 +53,10 @@ Vitamin.factory = function factory(attributes) {
  * 
  * @static
  */
-Vitamin.extend = function extend(options = {}) {
+Vitamin.extend = function extend(options) {
   var Super = this
+  
+  options = options || {}
   
   // Default constructor simply calls the parent constructor
   function Model() { Super.apply(this, arguments) }
