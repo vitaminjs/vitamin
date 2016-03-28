@@ -117,22 +117,12 @@ Vitamin.prototype.init = function init(attributes) {
   Object.defineProperty(this, '$data', { value: {} })
   Object.defineProperty(this, '$original', { value: {} })
   Object.defineProperty(this, 'id', { 
-    get: function ID() { return this.get(this.option('pk')) }
+    get: function getId() { return this.get(this.$options.pk) }
   })
   
   this._initSchema()
   
   this.set(attributes)
-}
-
-/**
- * Retrieve an option by name
- * 
- * @param {String} name
- * @param {Mixed} defaults
- */
-Vitamin.prototype.option = function option(name, defaults) {
-  return _.result(this.constructor.options, name, defaults)
 }
 
 /**
@@ -178,7 +168,7 @@ Vitamin.prototype.has = function has(attr) {
  * 
  */
 Vitamin.prototype.isNew = function isNew() {
-  return !this.has(this.option('pk'))
+  return !this.has(this.$options.pk)
 }
 
 /**
@@ -229,7 +219,7 @@ Vitamin.prototype._set = function _set(key, newVal) {
  * @private
  */
 Vitamin.prototype._initSchema = function _initSchema() {
-  var schema = this.option('schema')
+  var schema = this.$options.schema
   
   _.each(schema, function(options, name) {
     // normalize schema object format
@@ -243,6 +233,15 @@ Vitamin.prototype._initSchema = function _initSchema() {
     }
   }, this)
 }
+
+// ---------------------------------------
+// ------------ SETUP VITAMIN ------------
+// ---------------------------------------
+
+// 
+Object.defineProperty(Vitamin.prototype, '$options', {
+  get: function getOptions() { return this.constructor.options }
+})
 
 // init hooks
 Vitamin.hooks = new Hooks(Vitamin, false)

@@ -58,7 +58,7 @@ function extension(Model) {
    * @param {Function} callback
    */
   Model.prototype.fetch = function fetch(cb) {
-    return newQuery(this).where(this.option('pk'), this.id).fetch(this)
+    return newQuery(this).where(this.$options.pk, this.id).fetch(this)
   }
   
   /**
