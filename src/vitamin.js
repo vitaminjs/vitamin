@@ -1,5 +1,6 @@
 
 var _ = require('underscore')
+var Hooks = require('./hooks')
 var mergeOptions = require('./helpers').mergeOptions
 
 module.exports = Vitamin
@@ -58,18 +59,21 @@ Vitamin.extend = function extend(options) {
   
   options = options || {}
   
-  // Default constructor simply calls the parent constructor
+  // default constructor simply calls the parent constructor
   function Model() { Super.apply(this, arguments) }
   
-  // Set the prototype chain to inherit from `parent`
+  // set the prototype chain to inherit from `parent`
   Model.prototype = Object.create(Super.prototype, { constructor: { value: Model } })
   
-  // Add static and instance properties
+  // add static and instance properties
   _.extend(Model, Super, options.statics)
   _.extend(Model.prototype, options.methods)
   
   // merge options
   Model.options = mergeOptions(Super.options, options)
+  
+  // init the model hooks
+  Model.hooks = Super.hooks.clone(Model)
   
   // return the final product
   return Model
@@ -239,6 +243,9 @@ Vitamin.prototype._initSchema = function _initSchema() {
     }
   }, this)
 }
+
+// init hooks
+Vitamin.hooks = new Hooks(Vitamin, false)
 
 // use persistence API
 Vitamin.use(require('./persistence/api'))
