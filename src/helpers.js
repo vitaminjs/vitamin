@@ -28,9 +28,7 @@ function mergeOptions(parent, child) {
 function mergeField(key, newVal, oldVal) {
   switch (key) {
     case 'schema':
-      // using new schema object,
-      // prevent object reference issues
-      return _.extend({}, oldVal, newVal)
+      return mergeSchema(newVal, oldVal)
       
     case 'methods':
     case 'statics':
@@ -39,4 +37,20 @@ function mergeField(key, newVal, oldVal) {
     default: 
       return newVal
   }
+}
+
+/**
+ * 
+ */
+function mergeSchema(newVal, oldVal) {
+  var schema = _.extend({}, oldVal)
+  
+  _.each(newVal, function(options, field) {
+    // normalize schema object format
+    if ( _.isFunction(options) ) {
+      schema[field] = { 'type': options }
+    }
+  })
+  
+  return schema
 }

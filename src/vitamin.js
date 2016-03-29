@@ -10,7 +10,7 @@ module.exports = Vitamin
  * 
  * @constructor
  */
-function Vitamin(attributes) { this.init(attributes) }
+function Vitamin() { this.init.apply(this, arguments) }
 
 /**
  * Vitamin default options
@@ -110,141 +110,27 @@ Vitamin.use = function use(plugin) {
 /**
  * Called by the constructor when creating a new instance
  * 
- * @param {Object} attributes
+ * @param {Object} data
  */
-Vitamin.prototype.init = function init(attributes) {
-  // define model properties
-  Object.defineProperty(this, '$data', { value: {} })
-  Object.defineProperty(this, '$original', { value: {} })
-  Object.defineProperty(this, 'id', { 
-    get: function getId() { return this.get(this.$options.pk) }
-  })
-  
-  this._initSchema()
-  
-  this.set(attributes)
+Vitamin.prototype.init = function init(data) {
+  this._initData(data)
 }
 
-/**
- * Set model attributes
- */
-Vitamin.prototype.set = function set(attr, val) {
-  if ( _.isEmpty(attr) ) return this
-  
-  var attributes = {}
-  if ( _.isObject(attr) ) { attributes = attr }
-  else { attributes[attr] = val }
-  
-  // set current state
-  for ( attr in attributes ) {
-    val = attributes[attr]
-    
-    // set the attribute's new value
-    this._set(attr, val)
-  }
-  
-  return this
-}
-
-/**
- * Get the value of an attribute.
- * 
- * @param {String} attr name
- */
-Vitamin.prototype.get = function get(attr) {
-  return this.$data[attr]
-}
-
-/**
- * 
- * 
- * @param {String} attr name
- */
-Vitamin.prototype.has = function has(attr) {
-  return !_.isUndefined(this.get(attr))
-}
-
-/**
- * 
- */
-Vitamin.prototype.isNew = function isNew() {
-  return !this.has(this.$options.pk)
-}
-
-/**
- * 
- */
-Vitamin.prototype.toJSON = function toJSON() {
-  return _.clone(this.$data)
-}
-
-/**
- * 
- * 
- * @param {String} attr name
- */
-Vitamin.prototype.isDirty = function isDirty(attr) {
-  return 
-    (attr == null) ?
-    !_.isEmpty(this.$original) : 
-    _.has(this.$original, attr)
-}
-
-/**
- * Attribute value setter 
- * used internally
- * 
- * @param {String} key attribute name
- * @param {Mixed} newVal value
- * @return {boolean} false if no changes made or invalid value
- * 
- * @private
- */
-Vitamin.prototype._set = function _set(key, newVal) {
-  var oldVal = this.$data[key]
-  
-  // if no changes, return false
-  if ( oldVal === newVal ) return false
-  
-  // set the new value
-  this.$data[key] = newVal
-  
-  // set original value
-  if (! _.isUndefined(oldVal) ) this.$original[key] = oldVal
-}
-
-/**
- * Normalize schema object and set default attributes
- * 
- * @private
- */
-Vitamin.prototype._initSchema = function _initSchema() {
-  var schema = this.$options.schema
-  
-  _.each(schema, function(options, name) {
-    // normalize schema object format
-    if ( _.isFunction(options) ) {
-      schema[name] = { 'type': options }
-    }
-    
-    // set attribute default value
-    if ( _.has(options, 'default') ) {
-      this.set(name, options.default)
-    }
-  }, this)
-}
 
 // ---------------------------------------
 // ------------ SETUP VITAMIN ------------
 // ---------------------------------------
 
-// 
+// options object alias
 Object.defineProperty(Vitamin.prototype, '$options', {
   get: function getOptions() { return this.constructor.options }
 })
 
 // init hooks
 Vitamin.hooks = new Hooks(Vitamin, false)
+
+// use data API
+Vitamin.use(require('./data/api'))
 
 // use persistence API
 Vitamin.use(require('./persistence/api'))
