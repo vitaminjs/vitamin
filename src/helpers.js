@@ -1,56 +1,30 @@
 
 var _ = require('underscore')
 
-module.exports.mergeOptions = mergeOptions
+module.exports.usePlugin = usePlugin
 
 /**
- * Helper to merge options from parent class to subclasses
- */
-function mergeOptions(parent, child) {
-  var options = _.extend({}, parent)
-  
-  if (! child ) return options
-  if (! parent ) return child
-  
-  // iterate over child options
-  _.each(child, function(val, key) {
-    
-    options[key] = mergeField(key, val, options[key])
-    
-  })
-  
-  return options
-}
-
-/**
+ * Use a plugin
  * 
+ * @param {Function|Object} plugin object with `install` method, or simply a function
  */
-function mergeField(key, newVal, oldVal) {
-  switch (key) {
-    case 'schema':
-      return mergeSchema(newVal, oldVal)
-      
-    case 'methods':
-    case 'statics':
-      return undefined
-    
-    default: 
-      return newVal
+function usePlugin(plugin) {
+  if ( plugin.installed === true ) return this
+  
+  var args = _.rest(arguments)
+  
+  // prepend Vitamin as first argument
+  args.unshift(this)
+  
+  if ( _.isFunction(plugin.install) ) {
+    plugin.install.apply(null, args)
   }
-}
-
-/**
- * 
- */
-function mergeSchema(newVal, oldVal) {
-  var schema = _.extend({}, oldVal)
+  else if ( _.isFunction(plugin) ) {
+    plugin.apply(null, args)
+  }
   
-  _.each(newVal, function(options, field) {
-    // normalize schema object format
-    if ( _.isFunction(options) ) {
-      schema[field] = { 'type': options }
-    }
-  })
+  // prevent reuse the same plugin next time
+  plugin.installed = true
   
-  return schema
+  return this
 }
