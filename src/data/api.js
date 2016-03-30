@@ -63,9 +63,11 @@ function dataAPI(Model) {
    * @private
    */
   Model.prototype._initData = function _initData(data) {
+    var DataClass = this.$options.dataClass || DataContainer
+    
     // define model's data object
     Object.defineProperty(this, '$data', {
-      value: new DataContainer(this, data || {})
+      value: new DataClass(this, data || {})
     })
   }
   

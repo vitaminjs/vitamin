@@ -35,6 +35,9 @@ function globlaAPI(Model) {
     // table or collection name
     'source': undefined,
     
+    // data class constructor
+    'dataClass': undefined,
+    
   }
 
   /**
