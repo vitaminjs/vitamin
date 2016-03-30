@@ -1,9 +1,9 @@
 
 var Query = require('./query')
 
-module.exports = extension
+module.exports = persistenceAPI
 
-function extension(Model) {
+function persistenceAPI(Model) {
   
   /**
    * Get all models from database
@@ -26,12 +26,13 @@ function extension(Model) {
    * @static
    */
   Model.find = function find(id, cb) {
-    return this.where(this.options.pk, id).fetch(null, cb)
+    var pk = this.options.pk
+    return this.where(pk, id).fetch(null, cb)
   }
   
   /**
    * 
-   * @param {String|Object} key attribute name or query object
+   * @param {String|Object} key attribute name or constraints object
    * @param {Mixed} value attribute value
    * 
    * @return Query
@@ -58,7 +59,8 @@ function extension(Model) {
    * @param {Function} callback
    */
   Model.prototype.fetch = function fetch(cb) {
-    return newQuery(this).where(this.$options.pk, this.id).fetch(this)
+    var pk = this.$options.pk
+    return newQuery(this).where(pk, this.$id).fetch(this, cb)
   }
   
   /**

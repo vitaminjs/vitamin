@@ -1,14 +1,14 @@
 
 var DataContainer = require('./container')
 
-module.exports = extension
+module.exports = dataAPI
 
-function extension(Model) {
+function dataAPI(Model) {
   
   /**
-   * 
+   * Define a universe id getter
    */
-  Object.defineProperty(Model.prototype, 'id', { 
+  Object.defineProperty(Model.prototype, '$id', { 
     get: function getId() { return this.get(this.$options.pk) }
   })
   

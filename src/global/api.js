@@ -2,9 +2,9 @@
 var _ = require('underscore')
 var Hooks = require('./hooks')
 
-module.exports = extension
+module.exports = globlaAPI
 
-function extension(Model) {
+function globlaAPI(Model) {
 
   /**
    * Vitamin hooks

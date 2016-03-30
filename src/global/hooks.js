@@ -39,6 +39,10 @@ Hooks.prototype.post = function post() {
 Hooks.prototype.create = function create(name, useLegacyPost) {
   var fn = this.proto[name]
   
+  // no function found in prototype
+  // may be we should throw an Error !
+  if (! fn ) return this
+  
   // prevent rehook the same method
   if ( fn._hooked === true ) return this
   
