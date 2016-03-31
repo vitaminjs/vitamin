@@ -6,11 +6,19 @@ module.exports = dataAPI
 function dataAPI(Model) {
   
   /**
-   * Define a universe id getter
+   * Identifier getter
    */
-  Object.defineProperty(Model.prototype, '$id', { 
-    get: function getId() { return this.get(this.$options.pk) }
-  })
+  Model.prototype.getId = function getId() { 
+    return this.get(this.$options.pk) 
+  }
+  
+  /**
+   * Identifier setter
+   */
+  Model.prototype.setId = function setId(id) {
+    this.set(this.$options.pk, id)
+    return this
+  }
   
   /**
    * Set model attributes
