@@ -1,6 +1,4 @@
 
-var DataContainer = require('./container')
-
 module.exports = dataAPI
 
 function dataAPI(Model) {
@@ -9,14 +7,14 @@ function dataAPI(Model) {
    * Identifier getter
    */
   Model.prototype.getId = function getId() { 
-    return this.get(this.$options.pk) 
+    return this.get(this.getOption('pk'))
   }
   
   /**
    * Identifier setter
    */
   Model.prototype.setId = function setId(id) {
-    this.set(this.$options.pk, id)
+    this.set(this.getOption('pk'), id)
     return this
   }
   
@@ -48,7 +46,7 @@ function dataAPI(Model) {
    * 
    */
   Model.prototype.isNew = function isNew() {
-    return !this.has(this.$options.pk)
+    return !this.has(this.getOption('pk'))
   }
 
   /**
@@ -71,7 +69,7 @@ function dataAPI(Model) {
    * @private
    */
   Model.prototype._initData = function _initData(data) {
-    var DataClass = this.$options.dataClass || DataContainer
+    var DataClass = this.getOption('dataClass', require('./container'))
     
     // define model's data object
     Object.defineProperty(this, '$data', {

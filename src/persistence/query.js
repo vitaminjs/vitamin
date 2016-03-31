@@ -3,15 +3,15 @@ var _ = require('underscore')
 
 module.exports = Query
 
-function Query(Ctor) {
-  this.o = Ctor
-  this.d = Ctor.driver
-  this.s = Ctor.options.schema
+function Query(model) {
+  this.o = model
+  this.d = model.driver
+  this.s = model.getOption('schema')
   this.q = {
     $where: [],
     $order: [],
     $select: [],
-    $from: [Ctor.options.source]
+    $from: [model.getOption('source')]
   }
 }
 

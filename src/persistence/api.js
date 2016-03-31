@@ -59,7 +59,7 @@ function persistenceAPI(Model) {
    * @param {Function} callback
    */
   Model.prototype.fetch = function fetch(cb) {
-    var pk = this.$options.pk
+    var pk = this.getOption('pk')
     return newQuery(this).where(pk, this.getId()).fetch(this, cb)
   }
   

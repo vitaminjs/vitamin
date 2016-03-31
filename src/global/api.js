@@ -91,12 +91,19 @@ function globlaAPI(Model) {
   Model.prototype.init = function init(data) {
     this._initData(data)
   }
-
-  // define options object alias
-  // each model instance has access to constructor options
-  Object.defineProperty(Model.prototype, '$options', {
-    get: function getOptions() { return this.constructor.options }
-  })
+  
+  /**
+   * Get model option by name
+   * 
+   * @param {String} name
+   * @param {Mixed} defaults optional
+   */
+  Model.prototype.getOption = function getOption(name, defaults) {
+    // we cannot use `_.result()` here,
+    // because a function or constructor can be
+    // provided as model option.
+    return this.constructor.options[name] || defaults
+  }
   
 }
 
