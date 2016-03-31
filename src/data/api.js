@@ -7,14 +7,14 @@ function dataAPI(Model) {
    * Identifier getter
    */
   Model.prototype.getId = function getId() { 
-    return this.get(this.getOption('pk'))
+    return this.get(this.getKeyName())
   }
   
   /**
    * Identifier setter
    */
   Model.prototype.setId = function setId(id) {
-    this.set(this.getOption('pk'), id)
+    this.set(this.getKeyName(), id)
     return this
   }
   
@@ -46,7 +46,7 @@ function dataAPI(Model) {
    * 
    */
   Model.prototype.isNew = function isNew() {
-    return !this.has(this.getOption('pk'))
+    return !this.has(this.getKeyName())
   }
 
   /**

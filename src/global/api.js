@@ -105,6 +105,15 @@ function globlaAPI(Model) {
     return this.constructor.options[name] || defaults
   }
   
+  /**
+   * Return the primary key name
+   * 
+   * @return {String}
+   */
+  Model.prototype.getKeyName = function getKeyName() {
+    return this.getOption('pk')
+  }
+  
 }
 
 /**
