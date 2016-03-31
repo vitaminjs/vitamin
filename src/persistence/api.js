@@ -14,11 +14,11 @@ function persistenceAPI(Model) {
    * @static
    */
   Model.all = function all(cb) {
-    return newQuery(this).fetchAll(cb)
+    return this.factory().newQuery().fetchAll(cb)
   }
   
   /**
-   * Find a model by ID
+   * Find a model by its primary key
    * 
    * @param {Mixed} id
    * @param {Function} cb
@@ -26,8 +26,7 @@ function persistenceAPI(Model) {
    * @static
    */
   Model.find = function find(id, cb) {
-    var pk = this.options.pk
-    return this.where(pk, id).fetch(null, cb)
+    return this.where(this.options.pk, id).fetch(cb)
   }
   
   /**
@@ -38,7 +37,7 @@ function persistenceAPI(Model) {
    * @return Query
    */
   Model.where = function where(key, value) {
-    return newQuery(this).where(key, value)
+    return this.factory().newQuery().where(key, value)
   }
   
   /**
@@ -60,7 +59,8 @@ function persistenceAPI(Model) {
    */
   Model.prototype.fetch = function fetch(cb) {
     var pk = this.getKeyName()
-    return newQuery(this).where(pk, this.getId()).fetch(this, cb)
+    
+    return this.newQuery().where(pk, this.getId()).fetch(cb)
   }
   
   /**
@@ -78,29 +78,30 @@ function persistenceAPI(Model) {
    * @param {Function} callback
    */
   Model.prototype.destroy = function destroy(cb) {
-    return newQuery(this).destroy(this, cb)
+    return this.newQuery().destroy(cb)
   }
   
   /**
    * 
    */
   Model.prototype.insert = function insert(cb) {
-    return newQuery(this).insert(this, cb)
+    return this.newQuery().insert(cb)
   }
   
   /**
    * 
    */
   Model.prototype.update = function update(cb) {
-    return newQuery(this).update(this, cb)
+    return this.newQuery().update(cb)
   }
-}
-
-/**
- * Create a new query for the provided model
- * 
- * @return Query builder object
- */
-function newQuery(o) {
-  return new Query(o.prototype ? o : o.constructor)
+  
+  /**
+   * Create a new query for the provided model
+   * 
+   * @return Query builder object
+   */
+  Model.prototype.newQuery = function newQuery() {
+    return new Query(this, this.getOption('driver'))
+  }
+  
 }

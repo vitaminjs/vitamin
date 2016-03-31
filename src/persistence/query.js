@@ -3,16 +3,41 @@ var _ = require('underscore')
 
 module.exports = Query
 
-function Query(model) {
-  this.o = model
-  this.d = model.driver
-  this.s = model.getOption('schema')
-  this.q = {
-    $where: [],
-    $order: [],
-    $select: [],
-    $from: [model.getOption('source')]
-  }
+/**
+ * Vitamin query builder constructor
+ * 
+ * @param {Object} model
+ * @param {Object} driver
+ */
+function Query(model, driver) {
+  this._select = []
+  this._from   = undefined
+  this._where  = []
+  this._order  = []
+  this._skip   = 0
+  this._limit  = 50
+  
+  this.setModel(model)
+  this.setDriver(driver)
+}
+
+/**
+ * 
+ * 
+ * @param {Object} model
+ */
+Query.prototype.setModel = function setModel(model) {
+  this.from(model.getOption('source'))
+  this._model = model
+  return this
+}
+
+/**
+ * 
+ */
+Query.prototype.setDriver = function setDriver(driver) {
+  this._driver = driver
+  return this
 }
 
 /**
@@ -32,7 +57,7 @@ Query.prototype.where = function where(key, val) {
     if ( _.isObject(key) ) cond = key
     else cond[key] = val
     
-    this.q.$where.push(cond)
+    this._where.push(cond)
   }
   
   return this
@@ -43,78 +68,148 @@ Query.prototype.where = function where(key, val) {
  * 
  * @param {Object} args
  */
-Query.prototype.orWhere = function orWhere(args) {
+Query.prototype.orWhere = function orWhere() {
   return this.where({ $or: _.toArray(arguments) })
 }
 
+/**
+ * 
+ */
 Query.prototype.from = function from(from) {
-  this.q.$from.push(from)
+  this._from = from
   return this
 }
 
+/**
+ * 
+ */
 Query.prototype.select = function select() {
   var args = _.toArray(arguments)
   
-  this.q.$select = _.compact(this.q.$select.concat(args))
+  this._select = _.compact(this._select.concat(args))
   return this
 }
 
+/**
+ * 
+ */
 Query.prototype.take = function take(n) {
-  this.q.$take = n
+  this._limit = n
   return this
 }
 
+/**
+ * 
+ */
 Query.prototype.skip = function skip(n) {
-  this.q.$skip = n
+  this._skip = n
   return this
 }
 
+/**
+ * 
+ */
 Query.prototype.order = function order() {
   var args = _.toArray(arguments)
   
-  this.q.$order = _.compact(this.q.$order.concat(args))
+  this._order = _.compact(this._order.concat(args))
   return this
 }
 
 /**
- * @todo use promises
+ * 
  */
-Query.prototype.fetch = function fetch(model, cb) {
-  var factory = this.o.factory.bind(this.o)
+Query.prototype.fetch = function fetch(cb) {
+  var promise, model = this._model
   
-  function _done(err, data) {
-    if ( model ) cb(err, err ? null : model.set(data))
-    else cb(err, err ? null : factory(data))
-  }
-    
-  return this.d.fetch(this, _done)
+  promise = this._driver.fetch(this).then(function(data) {
+    return model.set(data)
+  })
+  
+  // if a callback is provided, use it
+  if (! _.isFunction(cb) ) return promise
+  else promise.then(function(result) { cb(null, result) }, cb)
 }
 
 /**
- * @todo use promises
+ * 
  */
 Query.prototype.fetchAll = function fetchAll(cb) {
-  var factory = this.o.factory.bind(this.o)
+  var
+    promise,
+    ctor = this._model.constructor,
+    factory = ctor.factory.bind(ctor)
   
-  function _done(err, list) {
-    cb(err, err ? null : _.map(list, factory))
+  promise = this._driver.fetchAll(this).then(function(list) {
+    return _.map(list, factory)
+  })
+  
+  // if a callback is provided, use it
+  if (! _.isFunction(cb) ) return promise
+  else promise.then(function(result) { cb(null, result) }, cb)
+}
+
+/**
+ * 
+ */
+Query.prototype.insert = function insert(cb) {
+  var 
+    promise, 
+    model = this._model,
+    data = this._model.data.serialize()
+  
+  promise = this._driver.insert(this, data).then(function() {
+    // TODO use last inserted id
+    return model
+  })
+  
+  // if a callback is provided, use it
+  if (! _.isFunction(cb) ) return promise
+  else promise.then(function(result) { cb(null, result) }, cb)
+}
+
+/**
+ * 
+ */
+Query.prototype.update = function update(cb) {
+  var 
+    promise, model = this._model,
+    data = this._model.data.serialize()
+  
+  promise = this._driver.update(this, data).then(function() {
+    return model
+  })
+  
+  // if a callback is provided, use it
+  if (! _.isFunction(cb) ) return promise
+  else promise.then(function(result) { cb(null, result) }, cb)
+}
+
+/**
+ * 
+ */
+Query.prototype.destroy = function remove(cb) {
+  var promise, model = this._model
+  
+  promise = this._driver.remove(this).then(function() {
+    return model
+  })
+  
+  if (! _.isFunction(cb) ) return promise
+  else promise.then(function(result) { cb(null, result) }, cb)
+}
+
+/**
+ * 
+ * @return {Object}
+ */
+Query.prototype.assemble = function assemble() {
+  return {
+    select: this._select,
+    from:   this._from,
+    where:  this._where,
+    order:  this._order,
+    offset: this._skip,
+    limit:  this._limit
   }
-  
-  return this.d.fetchAll(this, _done)
 }
-
-Query.prototype.insert = function insert(model, cb) {
-  // TODO add model data
-  return this.d.insert(this, cb)
-}
-
-Query.prototype.update = function update(model, cb) {
-  // TODO add model data
-  return this.d.update(this, cb)
-}
-
-Query.prototype.remove = function remove(model, cb) {
-  // TODO add model id
-  return this.d.remove(this, cb)
-}
-
