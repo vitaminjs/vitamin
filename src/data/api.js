@@ -22,7 +22,8 @@ function dataAPI(Model) {
    * Set model attributes
    */
   Model.prototype.set = function set(key, val) {
-    this.$data.set(key, val)
+    if ( _.isObject(key) ) this.data.fill(key)
+    else this.data.set(key, val)
     return this
   }
 
@@ -32,14 +33,14 @@ function dataAPI(Model) {
    * @param {String} attr name
    */
   Model.prototype.get = function get(attr) {
-    return this.$data.get(attr)
+    return this.data.get(attr)
   }
 
   /**
    * @param {String} attr name
    */
   Model.prototype.has = function has(attr) {
-    return this.$data.has(attr)
+    return this.data.has(attr)
   }
 
   /**
@@ -53,14 +54,21 @@ function dataAPI(Model) {
    * 
    */
   Model.prototype.toJSON = function toJSON() {
-    return this.$data.toJSON()
+    return this.data.toJSON()
   }
 
   /**
    * @param {String} attr name
    */
   Model.prototype.isDirty = function isDirty(attr) {
-    return this.$data.isDirty(attr)
+    return this.data.isDirty(attr)
+  }
+  
+  /**
+   * 
+   */
+  Model.prototype.getDirty = function getDirty() {
+    return this.data.getDirty()
   }
   
   /**
@@ -72,9 +80,7 @@ function dataAPI(Model) {
     var DataClass = this.getOption('dataClass', require('./container'))
     
     // define model's data object
-    Object.defineProperty(this, '$data', {
-      value: new DataClass(this, data || {})
-    })
+    this.data = new DataClass(this, data || {})
   }
   
 }

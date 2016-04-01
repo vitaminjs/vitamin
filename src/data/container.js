@@ -76,6 +76,10 @@ Container.prototype.has = function has(attr) {
  * 
  */
 Container.prototype.toJSON = function toJSON() {
+  return this.serialize()
+}
+
+Container.prototype.serialize = function serialize() {
   return _.clone(this._data)
 }
 
