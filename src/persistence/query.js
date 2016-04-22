@@ -14,8 +14,8 @@ function Query(model, driver) {
   this._from   = undefined
   this._where  = []
   this._order  = []
-  this._skip   = 0
-  this._limit  = 50
+  this._skip   = undefined
+  this._limit  = undefined
   
   this.setModel(model)
   this.setDriver(driver)
@@ -94,7 +94,7 @@ Query.prototype.select = function select() {
  * 
  */
 Query.prototype.take = function take(n) {
-  this._limit = n
+  this._limit = Number(n)
   return this
 }
 
@@ -102,7 +102,7 @@ Query.prototype.take = function take(n) {
  * 
  */
 Query.prototype.skip = function skip(n) {
-  this._skip = n
+  this._skip = Number(n)
   return this
 }
 
@@ -122,7 +122,7 @@ Query.prototype.order = function order() {
 Query.prototype.fetch = function fetch(cb) {
   var promise, model = this._model
   
-  promise = this._driver.fetch(this).then(function(data) {
+  promise = this._driver.fetch(this.limit(1)).then(function(data) {
     return model.set(data)
   })
   
@@ -201,15 +201,17 @@ Query.prototype.destroy = function remove(cb) {
 
 /**
  * 
+ * 
  * @return {Object}
  */
 Query.prototype.assemble = function assemble() {
-  return {
-    select: this._select,
-    from:   this._from,
-    where:  this._where,
-    order:  this._order,
-    offset: this._skip,
-    limit:  this._limit
+  var q = {}, key
+  
+  for ( key in ['select', 'from', 'where', 'order', 'skip', 'limit'] ) {
+    if ( _.isEmpty(this['_' + key]) ) continue
+    
+    q[key] = _.clone(this['_' + key])
   }
+  
+  return q
 }

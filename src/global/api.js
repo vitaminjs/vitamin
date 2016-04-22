@@ -38,6 +38,9 @@ function globlaAPI(Model) {
     // data class constructor
     'dataClass': undefined,
     
+    // database driver adapter
+    'driver': undefined
+    
   }
 
   /**
