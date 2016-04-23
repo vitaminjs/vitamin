@@ -35,11 +35,11 @@ function globlaAPI(Model) {
     // table or collection name
     'source': undefined,
     
+    // database driver adapter
+    'driver': undefined,
+    
     // data class constructor
     'dataClass': undefined,
-    
-    // database driver adapter
-    'driver': undefined
     
   }
 
@@ -84,6 +84,32 @@ function globlaAPI(Model) {
     
     // return the final product
     return Model
+  }
+  
+  /**
+   * Use a plugin
+   * 
+   * @param {Function|Object} plugin object with `install` method, or simply a function
+   */
+  Model.use = function use(plugin) {
+    if ( plugin.installed === true ) return this
+    
+    var args = _.rest(arguments)
+    
+    // prepend Model as first argument
+    args.unshift(this)
+    
+    if ( _.isFunction(plugin.install) ) {
+      plugin.install.apply(null, args)
+    }
+    else if ( _.isFunction(plugin) ) {
+      plugin.apply(null, args)
+    }
+    
+    // prevent reuse the same plugin next time
+    plugin.installed = true
+    
+    return this
   }
 
   /**

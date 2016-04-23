@@ -1,8 +1,4 @@
 
-var helpers = require('./helpers')
-
-module.exports = Vitamin
-
 /**
  * Vitamin model constructor
  * 
@@ -10,14 +6,14 @@ module.exports = Vitamin
  */
 function Vitamin() { this.init.apply(this, arguments) }
 
-// add plugin usage feature
-Vitamin.use = helpers.usePlugin
-
 // use global API
-Vitamin.use(require('./global/api'))
+require('./global/api')(Vitamin)
 
 // use data API
-Vitamin.use(require('./data/api'))
+require('./data/api')(Vitamin)
 
 // use persistence API
-Vitamin.use(require('./persistence/api'))
+require('./persistence/api')(Vitamin)
+
+// export
+module.exports = Vitamin
