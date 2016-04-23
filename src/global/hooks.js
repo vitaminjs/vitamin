@@ -1,6 +1,6 @@
 
 var Kareem = require('kareem')
-var slice = Array.prototype.slice
+var _ = require('underscore')
 
 module.exports = Hooks
 
@@ -15,16 +15,16 @@ function Hooks(model, manager) {
 /**
  * 
  */
-Hooks.prototype.pre = function pre() {
-  this.manager.pre.apply(this.manager, arguments)
+Hooks.prototype.pre = function pre(name, async, fn) {
+  this.manager.pre(name, async, fn)
   return this
 }
 
 /**
  * 
  */
-Hooks.prototype.post = function post() {
-  this.manager.post.apply(this.manager, arguments)
+Hooks.prototype.post = function post(name, fn) {
+  this.manager.post(name, fn)
   return this
 }
 
@@ -48,7 +48,7 @@ Hooks.prototype.create = function create(name, useLegacyPost) {
   
   function fnWrapper() {
     var 
-      args = slice.call(arguments),
+      args = _.toArray(arguments), 
       manager = this.constructor.hooks.manager
     
     return manager.wrap(name, fn, this, args, useLegacyPost)
@@ -65,4 +65,37 @@ Hooks.prototype.create = function create(name, useLegacyPost) {
  */
 Hooks.prototype.clone = function clone(model) {
    return new Hooks(model, this.manager.clone())
+}
+
+/**
+ * remove("name", [fn])
+ * remove("pre:name", [fn])
+ * remove("post:name", [fn])
+ * 
+ * @param {String} name
+ * @param {Function} fn optional
+ */
+Hooks.prototype.remove = function remove(name, fn) {
+  var isPre = name.indexOf('post:') !== 0
+  var isPost = name.indexOf('pre:') !== 0
+  
+  function _remove(source, name, fn) {
+    if (! source[name] ) return
+    
+    if (! fn ) { delete source[name]; return }
+    
+    source[name].forEach(function(cb, idx, list) {
+      if ( fn === cb ) list.splice(idx, 1)
+    })
+  }
+  
+  name = name.replace(/^(pre:|post:)/i, '')
+  
+  // remove pre callbacks
+  if ( isPre ) _remove(this.manager._pres, name, fn)
+  
+  // remove post callbacks
+  if ( isPost ) _remove(this.manager._posts, name, fn)
+  
+  return this
 }
