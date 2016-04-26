@@ -1,4 +1,3 @@
-/* global process */
 
 var Promise = require('promise')
 var _ = require('underscore')
@@ -120,58 +119,56 @@ Hooks.prototype.remove = function remove(name, fn) {
  * 
  */
 function _wrap(hooks, name, fn, context, args) {
-  var useCallback = _.isFunction(_.last(args))
-  var callback = useCallback ? args.pop() : null
-  
-  _pre(hooks.pres[name] || [], context, args, function (err) {
-    if ( err ) return useCallback ? callback(err) : null
+  var 
+    useCallback = _.isFunction(_.last(args)),
+    callback = useCallback ? args.pop() : null,
+    promise = _pre(hooks.pres[name] || [], context, args)
     
-    fn.apply(context, args.concat(function(err, result) {
-      if ( useCallback ) callback(err, result)
+  return promise
+    .then(function () {
+      if ( useCallback ) fn = Promise.denodeify(fn)
+        
+      return fn.apply(context, args)
+    })
+    .then(function(result) {
+      _post(hooks.posts[name] || [], context, [result])
       
-      if (! err ) _post(hooks.posts[name] || [], context, [result])
-    }))
-  })
+      return result
+    })
+    .nodeify(callback)
 }
 
 /**
  * call pre callbacks
  */
-function _pre(pres, context, args, callback) {
-  var 
-    asyncPresLeft = pres.numAsync || 0, 
-    i = -1, done = false
+function _pre(pres, context, args) {
+  var i = -1, asyncPresLeft = pres.numAsync || 0
   
-  function next() {
-    var pre = pres[++i]
-    
-    // No available pre callbacks
-    if ( !pre ) return asyncPresLeft ? void 0 : callback()
-    
-    if ( pre.async === true )
-      pre.apply(context, [_next, _done].concat(args))
-    else
-      pre.apply(context, [_next].concat(args))
-  }
-  
-  function _next(err) {
-    if ( err ) _error(err)
-    else next()
-  }
-  
-  function _done(err) {
-    if ( err ) _error(err)
-    else if ( --asyncPresLeft === 0 ) callback()
-  }
-  
-  function _error(e) {
-    if (! done ) {
-      done = true
-      callback(e)
+  return new Promise(function(resolve, reject) {
+    function next() {
+      var pre = pres[++i]
+      
+      // No available pre callbacks
+      if ( !pre ) return asyncPresLeft ? void 0 : resolve()
+      
+      if ( pre.async === true )
+        pre.apply(context, [_next, _done].concat(args))
+      else
+        pre.apply(context, [_next].concat(args))
     }
-  }
-  
-  next()
+    
+    function _next(err) {
+      if ( err ) reject(err)
+      else next()
+    }
+    
+    function _done(err) {
+      if ( err ) return reject(err)
+      if ( --asyncPresLeft === 0 ) resolve()
+    }
+    
+    next()
+  })
 }
 
 /**
