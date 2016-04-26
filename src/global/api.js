@@ -11,7 +11,7 @@ function globlaAPI(Model) {
    * 
    * @static
    */ 
-  Model.hooks = new Hooks(Model, false)
+  Model.hooks = new Hooks(Model)
   
   /**
    * Vitamin default options
