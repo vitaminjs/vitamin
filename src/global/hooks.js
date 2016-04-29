@@ -93,29 +93,6 @@ Hooks.prototype.clone = function clone(model) {
 }
 
 /**
- * remove("name", [fn])
- * remove("pre:name", [fn])
- * remove("post:name", [fn])
- * 
- * @param {String} name
- * @param {Function} fn optional
- */
-Hooks.prototype.remove = function remove(name, fn) {
-  var isPre = name.indexOf('post:') !== 0
-  var isPost = name.indexOf('pre:') !== 0
-  
-  name = name.replace(/^(pre:|post:)/i, '')
-  
-  // remove pre callbacks
-  if ( isPre ) _remove(this.pres, name, fn)
-  
-  // remove post callbacks
-  if ( isPost ) _remove(this.posts, name, fn)
-  
-  return this
-}
-
-/**
  * 
  */
 function _wrap(hooks, name, fn, context, args) {
@@ -187,17 +164,4 @@ function _post(posts, context, args) {
   }
   
   next()
-}
-
-/**
- * remove all or specific callback from the hash 
- */
-function _remove(source, name, fn) {
-  if (! source[name] ) return
-  
-  if (! fn ) { delete source[name]; return }
-  
-  source[name].forEach(function(cb, idx, list) {
-    if ( fn === cb ) list.splice(idx, 1)
-  })
 }
