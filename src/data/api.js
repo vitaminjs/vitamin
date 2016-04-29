@@ -72,7 +72,7 @@ function dataAPI(Model) {
   }
   
   /**
-   * Normalize schema object and set default attributes
+   * Setup model's data
    * 
    * @private
    */

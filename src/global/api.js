@@ -136,6 +136,8 @@ function globlaAPI(Model) {
    * @param {Object} data
    */
   Model.prototype.init = function init(data) {
+    // creating hooks for this method prevent handling errors, 
+    // because it is invoked automaticaly by the constructor
     this._initData(data)
   }
   
