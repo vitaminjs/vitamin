@@ -64,7 +64,7 @@ Hooks.prototype.create = function create(name) {
   if ( fn._hooked === true ) return this
   
   function fnWrapper() {
-    var hooks = this.constructor.hooks
+    var hooks = this.constructor._hooks
     
     return _wrap(hooks, name, fn, this, _.toArray(arguments))
   }

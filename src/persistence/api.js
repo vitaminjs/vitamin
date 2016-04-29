@@ -26,7 +26,7 @@ function persistenceAPI(Model) {
    * @static
    */
   Model.find = function find(id, cb) {
-    return this.where(this.options.pk, id).fetch(cb)
+    return this.where(this._options.pk, id).fetch(cb)
   }
   
   /**

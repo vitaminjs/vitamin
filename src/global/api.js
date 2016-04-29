@@ -10,15 +10,17 @@ function globlaAPI(Model) {
    * Vitamin hooks
    * 
    * @static
+   * @private
    */ 
-  Model.hooks = new Hooks(Model)
+  Model._hooks = new Hooks(Model)
   
   /**
    * Vitamin default options
    * 
    * @static
+   * @private
    */
-  Model.options = {
+  Model._options = {
     
     // primary key name
     'pk': "id",
@@ -77,10 +79,10 @@ function globlaAPI(Model) {
     _.extend(Model.prototype, options.methods)
     
     // merge options
-    Model.options = mergeOptions(Super.options, options)
+    Model._options = mergeOptions(Super._options, options)
     
     // init the model hooks
-    Model.hooks = Super.hooks.clone(Model)
+    Model._hooks = Super._hooks.clone(Model)
     
     // return the final product
     return Model
@@ -111,6 +113,22 @@ function globlaAPI(Model) {
     
     return this
   }
+  
+  /**
+   * 
+   */
+  Model.pre = function pre(name, async, fn) {
+    this._hooks.create(name).pre(name, async, fn)
+    return this
+  }
+  
+  /**
+   * 
+   */
+  Model.post = function post(name, fn) {
+    this._hooks.create(name).post(name, fn)
+    return this
+  }
 
   /**
    * Called by the constructor when creating a new instance
@@ -131,7 +149,7 @@ function globlaAPI(Model) {
     // we cannot use `_.result()` here,
     // because a function or constructor can be
     // provided as model option.
-    return this.constructor.options[name] || defaults
+    return this.constructor._options[name] || defaults
   }
   
   /**
