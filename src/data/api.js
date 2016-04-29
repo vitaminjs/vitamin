@@ -1,4 +1,7 @@
 
+var _ = require('underscore')
+var DataContainer = require('./container')
+
 module.exports = dataAPI
 
 function dataAPI(Model) {
@@ -77,7 +80,7 @@ function dataAPI(Model) {
    * @private
    */
   Model.prototype._initData = function _initData(data) {
-    var DataClass = this.getOption('dataClass', require('./container'))
+    var DataClass = this.getOption('dataClass', DataContainer)
     
     // define model's data object
     this.data = new DataClass(this, data || {})
