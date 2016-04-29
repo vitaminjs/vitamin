@@ -9,7 +9,7 @@ module.exports = Query
  * @param {Object} model
  * @param {Object} driver
  */
-function Query(model, driver) {
+function Query(model) {
   this._select = []
   this._from   = undefined
   this._where  = []
@@ -18,7 +18,6 @@ function Query(model, driver) {
   this._limit  = undefined
   
   this.setModel(model)
-  this.setDriver(driver)
 }
 
 /**
@@ -27,16 +26,9 @@ function Query(model, driver) {
  * @param {Object} model
  */
 Query.prototype.setModel = function setModel(model) {
-  this.from(model.getOption('source'))
-  this._model = model
-  return this
-}
-
-/**
- * 
- */
-Query.prototype.setDriver = function setDriver(driver) {
-  this._driver = driver
+  this._from   = model.getOption('source')
+  this.driver  = model.getOption('driver')
+  this.model   = model
   return this
 }
 
@@ -120,83 +112,66 @@ Query.prototype.order = function order() {
  * 
  */
 Query.prototype.fetch = function fetch(cb) {
-  var promise, model = this._model
+  var model = this.model, 
+      promise = this.driver.fetch(this.limit(1))
   
-  promise = this._driver.fetch(this.limit(1)).then(function(data) {
+  function _mapOne(data) {
     return model.set(data)
-  })
+  }
   
-  // if a callback is provided, use it
-  if (! _.isFunction(cb) ) return promise
-  else promise.then(function(result) { cb(null, result) }, cb)
+  return promise.then(_mapOne).nodeify(cb)
 }
 
 /**
  * 
  */
 Query.prototype.fetchAll = function fetchAll(cb) {
-  var
-    promise,
-    ctor = this._model.constructor,
-    factory = ctor.factory.bind(ctor)
+  var ctor = this.model.constructor,
+      factory = ctor.factory.bind(ctor),
+      promise = this.driver.fetchAll(this)
   
-  promise = this._driver.fetchAll(this).then(function(list) {
+  function _mapAll(list) {
     return _.map(list, factory)
-  })
+  }
   
-  // if a callback is provided, use it
-  if (! _.isFunction(cb) ) return promise
-  else promise.then(function(result) { cb(null, result) }, cb)
+  return promise.then(_mapAll).nodeify(cb)
 }
 
 /**
  * 
  */
 Query.prototype.insert = function insert(cb) {
-  var 
-    promise, 
-    model = this._model,
-    data = this._model.data.serialize()
+  var model = this.model,
+      data = this.model.data.serialize(),
+      promise = this.driver.insert(this, data)
   
-  promise = this._driver.insert(this, data).then(function() {
+  function _handleInsert(id) {
     // TODO use last inserted id
     return model
-  })
+  }
   
-  // if a callback is provided, use it
-  if (! _.isFunction(cb) ) return promise
-  else promise.then(function(result) { cb(null, result) }, cb)
+  return promise.then(_handleInsert).nodeify(cb)
 }
 
 /**
  * 
  */
 Query.prototype.update = function update(cb) {
-  var 
-    promise, model = this._model,
-    data = this._model.data.serialize()
+  var model = this.model,
+      data = this.model.data.serialize(),
+      promise = this.driver.update(this, data)
   
-  promise = this._driver.update(this, data).then(function() {
-    return model
-  })
-  
-  // if a callback is provided, use it
-  if (! _.isFunction(cb) ) return promise
-  else promise.then(function(result) { cb(null, result) }, cb)
+  return promise.then(function() { return model }).nodeify(cb)
 }
 
 /**
  * 
  */
 Query.prototype.destroy = function remove(cb) {
-  var promise, model = this._model
+  var model = this.model, 
+      promise = this.driver.remove(this)
   
-  promise = this._driver.remove(this).then(function() {
-    return model
-  })
-  
-  if (! _.isFunction(cb) ) return promise
-  else promise.then(function(result) { cb(null, result) }, cb)
+  return promise.then(function() { return model }).nodeify(cb)
 }
 
 /**

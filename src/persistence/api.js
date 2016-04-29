@@ -101,7 +101,7 @@ function persistenceAPI(Model) {
    * @return Query builder object
    */
   Model.prototype.newQuery = function newQuery() {
-    return new Query(this, this.getOption('driver'))
+    return new Query(this)
   }
   
 }
