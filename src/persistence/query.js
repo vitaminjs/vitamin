@@ -3,16 +3,33 @@ var _ = require('underscore')
 
 module.exports = Query
 
-function Query(Ctor) {
-  this.o = Ctor
-  this.d = Ctor.driver
-  this.s = Ctor.options.schema
-  this.q = {
-    $where: [],
-    $order: [],
-    $select: [],
-    $from: [Ctor.options.source]
-  }
+/**
+ * Vitamin query builder constructor
+ * 
+ * @param {Object} model
+ * @param {Object} driver
+ */
+function Query(model) {
+  this._select = []
+  this._from   = undefined
+  this._where  = []
+  this._order  = []
+  this._skip   = undefined
+  this._limit  = undefined
+  
+  this.setModel(model)
+}
+
+/**
+ * 
+ * 
+ * @param {Object} model
+ */
+Query.prototype.setModel = function setModel(model) {
+  this._from   = model.getOption('source')
+  this.driver  = model.getOption('driver')
+  this.model   = model
+  return this
 }
 
 /**
@@ -32,7 +49,7 @@ Query.prototype.where = function where(key, val) {
     if ( _.isObject(key) ) cond = key
     else cond[key] = val
     
-    this.q.$where.push(cond)
+    this._where.push(cond)
   }
   
   return this
@@ -43,78 +60,133 @@ Query.prototype.where = function where(key, val) {
  * 
  * @param {Object} args
  */
-Query.prototype.orWhere = function orWhere(args) {
+Query.prototype.orWhere = function orWhere() {
   return this.where({ $or: _.toArray(arguments) })
 }
 
+/**
+ * 
+ */
 Query.prototype.from = function from(from) {
-  this.q.$from.push(from)
+  this._from = from
   return this
 }
 
+/**
+ * 
+ */
 Query.prototype.select = function select() {
   var args = _.toArray(arguments)
   
-  this.q.$select = _.compact(this.q.$select.concat(args))
+  this._select = _.compact(this._select.concat(args))
   return this
 }
 
+/**
+ * 
+ */
 Query.prototype.take = function take(n) {
-  this.q.$take = n
+  this._limit = Number(n)
   return this
 }
 
+/**
+ * 
+ */
 Query.prototype.skip = function skip(n) {
-  this.q.$skip = n
+  this._skip = Number(n)
   return this
 }
 
+/**
+ * 
+ */
 Query.prototype.order = function order() {
   var args = _.toArray(arguments)
   
-  this.q.$order = _.compact(this.q.$order.concat(args))
+  this._order = _.compact(this._order.concat(args))
   return this
 }
 
 /**
- * @todo use promises
+ * 
  */
-Query.prototype.fetch = function fetch(model, cb) {
-  var factory = this.o.factory.bind(this.o)
+Query.prototype.fetch = function fetch(cb) {
+  var model = this.model, 
+      promise = this.driver.fetch(this.limit(1))
   
-  function _done(err, data) {
-    if ( model ) cb(err, err ? null : model.set(data))
-    else cb(err, err ? null : factory(data))
+  function _mapOne(data) {
+    return model.set(data)
   }
-    
-  return this.d.fetch(this, _done)
+  
+  return promise.then(_mapOne).nodeify(cb)
 }
 
 /**
- * @todo use promises
+ * 
  */
 Query.prototype.fetchAll = function fetchAll(cb) {
-  var factory = this.o.factory.bind(this.o)
+  var ctor = this.model.constructor,
+      factory = ctor.factory.bind(ctor),
+      promise = this.driver.fetchAll(this)
   
-  function _done(err, list) {
-    cb(err, err ? null : _.map(list, factory))
+  function _mapAll(list) {
+    return _.map(list, factory)
   }
   
-  return this.d.fetchAll(this, _done)
+  return promise.then(_mapAll).nodeify(cb)
 }
 
-Query.prototype.insert = function insert(model, cb) {
-  // TODO add model data
-  return this.d.insert(this, cb)
+/**
+ * 
+ */
+Query.prototype.insert = function insert(cb) {
+  var model = this.model,
+      data = this.model.data.serialize(),
+      promise = this.driver.insert(this, data)
+  
+  function _handleInsert(id) {
+    // TODO use last inserted id
+    return model
+  }
+  
+  return promise.then(_handleInsert).nodeify(cb)
 }
 
-Query.prototype.update = function update(model, cb) {
-  // TODO add model data
-  return this.d.update(this, cb)
+/**
+ * 
+ */
+Query.prototype.update = function update(cb) {
+  var model = this.model,
+      data = this.model.data.serialize(),
+      promise = this.driver.update(this, data)
+  
+  return promise.then(function() { return model }).nodeify(cb)
 }
 
-Query.prototype.remove = function remove(model, cb) {
-  // TODO add model id
-  return this.d.remove(this, cb)
+/**
+ * 
+ */
+Query.prototype.destroy = function remove(cb) {
+  var model = this.model, 
+      promise = this.driver.remove(this)
+  
+  return promise.then(function() { return model }).nodeify(cb)
 }
 
+/**
+ * 
+ * 
+ * @return {Object}
+ */
+Query.prototype.assemble = function assemble() {
+  var q = {}, key
+  
+  for ( key in ['select', 'from', 'where', 'order', 'skip', 'limit'] ) {
+    if ( _.isEmpty(this['_' + key]) ) continue
+    
+    q[key] = _.clone(this['_' + key])
+  }
+  
+  return q
+}

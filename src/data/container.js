@@ -10,26 +10,46 @@ function Container(owner, data) {
   this._data = {}
   this._original = {}
   
-  this.set(data)
+  this.fill(data)
 }
 
 /**
- * Set model attributes
+ * 
  */
-Container.prototype.set = function set(attr, val) {
-  if ( _.isEmpty(attr) ) return this
+Container.prototype.fill = function fill(attributes) {
+  var attr, val
   
-  var attributes = {}
-  if ( _.isObject(attr) ) { attributes = attr }
-  else { attributes[attr] = val }
+  if ( _.isEmpty(attributes) ) return this
   
-  // set current state
   for ( attr in attributes ) {
     val = attributes[attr]
     
     // set the attribute's new value
-    this._set(attr, val)
+    this.set(attr, val)
   }
+  
+  return this
+}
+
+/**
+ * Set model's attribute value
+ * 
+ * @param {String} attr field name
+ * @param {Mixed} val the value
+ */
+Container.prototype.set = function set(attr, val) {
+  var oldVal = this._data[attr]
+  
+  if ( _.isEmpty(attr) ) return this
+  
+  // if no changes, return
+  if ( oldVal === val ) return this
+  
+  // set the new value
+  this._data[attr] = val
+  
+  // set original value
+  if (! _.isUndefined(oldVal) ) this._original[attr] = oldVal
   
   return this
 }
@@ -56,6 +76,10 @@ Container.prototype.has = function has(attr) {
  * 
  */
 Container.prototype.toJSON = function toJSON() {
+  return this.serialize()
+}
+
+Container.prototype.serialize = function serialize() {
   return _.clone(this._data)
 }
 
@@ -72,24 +96,10 @@ Container.prototype.isDirty = function isDirty(attr) {
 }
 
 /**
- * Attribute value setter 
- * used internally
+ * Return a hash of dirty fields
  * 
- * @param {String} key attribute name
- * @param {Mixed} newVal value
- * @return {boolean} false if no changes made or invalid value
- * 
- * @private
+ * @return {Object}
  */
-Container.prototype._set = function _set(key, newVal) {
-  var oldVal = this._data[key]
-  
-  // if no changes, return false
-  if ( oldVal === newVal ) return false
-  
-  // set the new value
-  this._data[key] = newVal
-  
-  // set original value
-  if (! _.isUndefined(oldVal) ) this._original[key] = oldVal
+Container.prototype.getDirty = function getDirty() {
+  return _.pick(this._data, _.keys(this._original))
 }

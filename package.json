@@ -7,6 +7,7 @@
     "test": "test"
   },
   "dependencies": {
+    "promise": "^7.1.1",
     "underscore": "^1.8.3"
   },
   "devDependencies": {

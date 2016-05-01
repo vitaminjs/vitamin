@@ -10,15 +10,17 @@ function globlaAPI(Model) {
    * Vitamin hooks
    * 
    * @static
+   * @private
    */ 
-  Model.hooks = new Hooks(Model, false)
+  Model._hooks = new Hooks(Model)
   
   /**
    * Vitamin default options
    * 
    * @static
+   * @private
    */
-  Model.options = {
+  Model._options = {
     
     // primary key name
     'pk': "id",
@@ -34,6 +36,9 @@ function globlaAPI(Model) {
     
     // table or collection name
     'source': undefined,
+    
+    // database driver adapter
+    'driver': undefined,
     
     // data class constructor
     'dataClass': undefined,
@@ -74,13 +79,55 @@ function globlaAPI(Model) {
     _.extend(Model.prototype, options.methods)
     
     // merge options
-    Model.options = mergeOptions(Super.options, options)
+    Model._options = mergeOptions(Super._options, options)
     
     // init the model hooks
-    Model.hooks = Super.hooks.clone(Model)
+    Model._hooks = Super._hooks.clone(Model)
     
     // return the final product
     return Model
+  }
+  
+  /**
+   * Use a plugin
+   * 
+   * @param {Function|Object} plugin object with `install` method, or simply a function
+   */
+  Model.use = function use(plugin) {
+    if ( plugin.installed === true ) return this
+    
+    var args = _.rest(arguments)
+    
+    // prepend Model as first argument
+    args.unshift(this)
+    
+    if ( _.isFunction(plugin.install) ) {
+      plugin.install.apply(null, args)
+    }
+    else if ( _.isFunction(plugin) ) {
+      plugin.apply(null, args)
+    }
+    
+    // prevent reuse the same plugin next time
+    plugin.installed = true
+    
+    return this
+  }
+  
+  /**
+   * 
+   */
+  Model.pre = function pre(name, async, fn) {
+    this._hooks.create(name).pre(name, async, fn)
+    return this
+  }
+  
+  /**
+   * 
+   */
+  Model.post = function post(name, fn) {
+    this._hooks.create(name).post(name, fn)
+    return this
   }
 
   /**
@@ -89,14 +136,32 @@ function globlaAPI(Model) {
    * @param {Object} data
    */
   Model.prototype.init = function init(data) {
+    // creating hooks for this method prevent handling errors, 
+    // because it is invoked automaticaly by the constructor
     this._initData(data)
   }
-
-  // define options object alias
-  // each model instance has access to constructor options
-  Object.defineProperty(Model.prototype, '$options', {
-    get: function getOptions() { return this.constructor.options }
-  })
+  
+  /**
+   * Get model option by name
+   * 
+   * @param {String} name
+   * @param {Mixed} defaults optional
+   */
+  Model.prototype.getOption = function getOption(name, defaults) {
+    // we cannot use `_.result()` here,
+    // because a function or constructor can be
+    // provided as model option.
+    return this.constructor._options[name] || defaults
+  }
+  
+  /**
+   * Return the primary key name
+   * 
+   * @return {String}
+   */
+  Model.prototype.getKeyName = function getKeyName() {
+    return this.getOption('pk')
+  }
   
 }
 
