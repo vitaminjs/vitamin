@@ -116,7 +116,7 @@ Query.prototype.fetch = function fetch(cb) {
       promise = this.driver.fetch(this.limit(1))
   
   function _mapOne(data) {
-    return model.set(data)
+    return _.isEmpty(data) ? null : model.set(data)
   }
   
   return promise.then(_mapOne).nodeify(cb)
