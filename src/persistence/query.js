@@ -22,12 +22,24 @@ function Query(model) {
 
 /**
  * 
+ */
+Object.defineProperty(Query.prototype, 'driver', {
+  get: function getDriver() {
+    var driver = this.model.constructor.driver
+    
+    if ( driver ) return driver
+    
+    throw "Undefined database driver"
+  }
+})
+
+/**
+ * 
  * 
  * @param {Object} model
  */
 Query.prototype.setModel = function setModel(model) {
   this._from   = model.getOption('source')
-  this.driver  = model.getOption('driver')
   this.model   = model
   return this
 }

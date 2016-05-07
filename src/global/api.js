@@ -5,6 +5,11 @@ var Hooks = require('./hooks')
 module.exports = globlaAPI
 
 function globlaAPI(Model) {
+  
+  /**
+   * Database driver adapter
+   */
+  Model.driver = undefined
 
   /**
    * Vitamin hooks
@@ -36,9 +41,6 @@ function globlaAPI(Model) {
     
     // table or collection name
     'source': undefined,
-    
-    // database driver adapter
-    'driver': undefined,
     
     // data class constructor
     'dataClass': undefined,
