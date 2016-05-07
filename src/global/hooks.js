@@ -1,5 +1,5 @@
 
-var Promise = require('promise')
+var Promise = require('bluebird')
 var _ = require('underscore')
 
 module.exports = Hooks
@@ -34,10 +34,12 @@ Hooks.prototype.pre = function pre(name, fn, async) {
 
 /**
  * 
+ * 
+ * @return {Promise}
  */
 Hooks.prototype.callPres = function callPres(name, context, args) {
   var i = -1,
-      pres = this.pres[name], 
+      pres = this.pres[name] || [], 
       asyncPresLeft = pres.numAsync || 0
   
   return new Promise(function(resolve, reject) {
@@ -83,7 +85,7 @@ Hooks.prototype.post = function post(name, fn) {
  * 
  */
 Hooks.prototype.callPosts = function callPosts(name, context, args) {
-  var posts = this.posts[name]
+  var posts = this.posts[name] || []
   
   _.each(posts, function(post) { 
     post.apply(context, args) 
@@ -143,7 +145,7 @@ function _wrap(hooks, name, fn, context, args) {
   return hooks
     .callPres(name, context, args)
     .then(function () {
-      if ( useCallback ) fn = Promise.denodeify(fn)
+      if ( useCallback ) fn = Promise.promisify(fn)
       
       return fn.apply(context, args)
     })

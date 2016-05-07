@@ -1,4 +1,5 @@
 
+var Promise = require('bluebird')
 var _ = require('underscore')
 
 module.exports = Query
@@ -124,65 +125,61 @@ Query.prototype.order = function order() {
  * 
  */
 Query.prototype.fetch = function fetch(cb) {
-  var model = this.model, 
-      promise = this.driver.fetch(this.limit(1))
+  var pending = this.driver.fetch(this.limit(1).assemble())
   
   function _mapOne(data) {
-    return _.isEmpty(data) ? null : model.set(data)
+    return _.isEmpty(data) ? Promise.reject(null) : this.model.set(data)
   }
   
-  return promise.then(_mapOne).nodeify(cb)
+  return Promise.bind(this).resolve(pending).then(_mapOne).nodeify(cb)
 }
 
 /**
  * 
  */
 Query.prototype.fetchAll = function fetchAll(cb) {
-  var ctor = this.model.constructor,
-      factory = ctor.factory.bind(ctor),
-      promise = this.driver.fetchAll(this)
+  var pending = this.driver.fetchAll(this.assemble())
   
   function _mapAll(list) {
-    return _.map(list, factory)
+    var Model = this.model.constructor
+    
+    return _.map(list, Model.factory.bind(Model))
   }
   
-  return promise.then(_mapAll).nodeify(cb)
+  return Promise.bind(this).resolve(pending).then(_mapAll).nodeify(cb)
 }
 
 /**
  * 
  */
 Query.prototype.insert = function insert(cb) {
-  var model = this.model,
-      data = this.model.data.serialize(),
-      promise = this.driver.insert(this, data)
+  var data = this.model.serialize(),
+      pending = this.driver.insert(this.assemble(), data)
   
-  function _handleInsert(id) {
-    return model.setId(id[0])
+  function _handle(id) {
+    return this.model.setId(id[0])
   }
   
-  return promise.then(_handleInsert).nodeify(cb)
+  return Promise.bind(this).resolve(pending).then(_handle).nodeify(cb)
 }
 
 /**
  * 
  */
 Query.prototype.update = function update(cb) {
-  var model = this.model,
-      data = this.model.data.serialize(),
-      promise = this.driver.update(this, data)
+  var data = this.model.serialize(),
+      pending = this.driver.update(this.assemble(), data)
   
-  return promise.then(function() { return model }).nodeify(cb)
+  return Promise.resolve(pending).return(this.model).nodeify(cb)
 }
 
 /**
  * 
  */
 Query.prototype.destroy = function destroy(cb) {
-  var model = this.model, 
-      promise = this.driver.remove(this)
+  var pending = this.driver.remove(this.assemble())
   
-  return promise.then(function() { return model }).nodeify(cb)
+  return Promise.resolve(pending).return(this.model).nodeify(cb)
 }
 
 /**

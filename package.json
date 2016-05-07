@@ -7,7 +7,7 @@
     "test": "test"
   },
   "dependencies": {
-    "promise": "^7.1.1",
+    "bluebird": "^3.3.5",
     "underscore": "^1.8.3"
   },
   "devDependencies": {
