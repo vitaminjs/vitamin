@@ -117,6 +117,12 @@ function globlaAPI(Model) {
    * 
    */
   Model.pre = function pre(name, fn, async) {
+    if ( name === 'init' ) {
+      // creating hooks for `init` method prevent handling errors, 
+      // because it is invoked automaticaly by the constructor
+      throw "`init` method cannot accept pre callbacks"
+    }
+    
     this._hooks.create(name).pre(name, fn, async)
     return this
   }
@@ -125,7 +131,9 @@ function globlaAPI(Model) {
    * 
    */
   Model.post = function post(name, fn) {
-    this._hooks.create(name).post(name, fn)
+    if ( name !== 'init' ) this._hooks.create(name)
+    
+    this._hooks.post(name, fn)
     return this
   }
 
@@ -135,9 +143,9 @@ function globlaAPI(Model) {
    * @param {Object} data
    */
   Model.prototype.init = function init(data) {
-    // creating hooks for this method prevent handling errors, 
-    // because it is invoked automaticaly by the constructor
     this._initData(data)
+    
+    this.constructor._hooks.callPosts('init', this, arguments)
   }
   
   /**

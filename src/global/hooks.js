@@ -35,6 +35,41 @@ Hooks.prototype.pre = function pre(name, fn, async) {
 /**
  * 
  */
+Hooks.prototype.callPres = function callPres(name, context, args) {
+  var i = -1,
+      pres = this.pres[name], 
+      asyncPresLeft = pres.numAsync || 0
+  
+  return new Promise(function(resolve, reject) {
+    function next() {
+      var pre = pres[++i]
+      
+      // No available pre callbacks
+      if (! pre ) return asyncPresLeft ? void 0 : resolve()
+      
+      if ( pre.async === true )
+        pre.apply(context, [_next, _done].concat(args))
+      else
+        pre.apply(context, [_next].concat(args))
+    }
+    
+    function _next(err) {
+      if ( err ) reject(err)
+      else next()
+    }
+    
+    function _done(err) {
+      if ( err ) return reject(err)
+      if ( --asyncPresLeft === 0 ) resolve()
+    }
+    
+    next()
+  })
+}
+
+/**
+ * 
+ */
 Hooks.prototype.post = function post(name, fn) {
   var posts = (this.posts[name] = this.posts[name] || [])
   
@@ -42,6 +77,17 @@ Hooks.prototype.post = function post(name, fn) {
   posts.push(fn)
   
   return this
+}
+
+/**
+ * 
+ */
+Hooks.prototype.callPosts = function callPosts(name, context, args) {
+  var posts = this.posts[name]
+  
+  _.each(posts, function(post) { 
+    post.apply(context, args) 
+  })
 }
 
 /**
@@ -91,63 +137,19 @@ Hooks.prototype.clone = function clone(model) {
  * 
  */
 function _wrap(hooks, name, fn, context, args) {
-  var 
-    useCallback = _.isFunction(_.last(args)),
-    callback = useCallback ? args.pop() : null,
-    promise = _pre(hooks.pres[name] || [], context, args)
+  var useCallback = _.isFunction(_.last(args)),
+      callback = useCallback ? args.pop() : null
     
-  return promise
+  return hooks
+    .callPres(name, context, args)
     .then(function () {
       if ( useCallback ) fn = Promise.denodeify(fn)
-        
+      
       return fn.apply(context, args)
     })
     .then(function(result) {
-      _post(hooks.posts[name] || [], context, [result])
-      
+      hooks.callPosts(name, context, [result])
       return result
     })
     .nodeify(callback)
-}
-
-/**
- * call pre callbacks
- */
-function _pre(pres, context, args) {
-  var i = -1, asyncPresLeft = pres.numAsync || 0
-  
-  return new Promise(function(resolve, reject) {
-    function next() {
-      var pre = pres[++i]
-      
-      // No available pre callbacks
-      if ( !pre ) return asyncPresLeft ? void 0 : resolve()
-      
-      if ( pre.async === true )
-        pre.apply(context, [_next, _done].concat(args))
-      else
-        pre.apply(context, [_next].concat(args))
-    }
-    
-    function _next(err) {
-      if ( err ) reject(err)
-      else next()
-    }
-    
-    function _done(err) {
-      if ( err ) return reject(err)
-      if ( --asyncPresLeft === 0 ) resolve()
-    }
-    
-    next()
-  })
-}
-
-/**
- * call post callbacks
- */
-function _post(posts, context, args) {
-  _.each(posts, function(post) { 
-    post.apply(context, args) 
-  })
 }
