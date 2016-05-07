@@ -90,7 +90,7 @@ Query.prototype.from = function from(from) {
 Query.prototype.select = function select() {
   var args = _.toArray(arguments)
   
-  this._select = _.compact(this._select.concat(args))
+  this._select = _.uniq(this._select.concat(args))
   return this
 }
 
@@ -116,7 +116,7 @@ Query.prototype.skip = function skip(n) {
 Query.prototype.order = function order() {
   var args = _.toArray(arguments)
   
-  this._order = _.compact(this._order.concat(args))
+  this._order = _.uniq(this._order.concat(args))
   return this
 }
 
@@ -158,8 +158,7 @@ Query.prototype.insert = function insert(cb) {
       promise = this.driver.insert(this, data)
   
   function _handleInsert(id) {
-    // TODO use last inserted id
-    return model
+    return model.setId(id[0])
   }
   
   return promise.then(_handleInsert).nodeify(cb)
@@ -179,7 +178,7 @@ Query.prototype.update = function update(cb) {
 /**
  * 
  */
-Query.prototype.destroy = function remove(cb) {
+Query.prototype.destroy = function destroy(cb) {
   var model = this.model, 
       promise = this.driver.remove(this)
   
@@ -192,13 +191,13 @@ Query.prototype.destroy = function remove(cb) {
  * @return {Object}
  */
 Query.prototype.assemble = function assemble() {
-  var q = {}, key
+  var q = {}, 
+      props = ['select', 'from', 'where', 'order', 'skip', 'limit']
   
-  for ( key in ['select', 'from', 'where', 'order', 'skip', 'limit'] ) {
-    if ( _.isEmpty(this['_' + key]) ) continue
-    
-    q[key] = _.clone(this['_' + key])
-  }
+  _.each(props, function _assemblePieces(name) {
+    if (! _.isEmpty(this['_' + name]) ) 
+      q[name] = _.clone(this['_' + name])
+  }, this)
   
   return q
 }

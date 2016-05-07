@@ -116,8 +116,8 @@ function globlaAPI(Model) {
   /**
    * 
    */
-  Model.pre = function pre(name, async, fn) {
-    this._hooks.create(name).pre(name, async, fn)
+  Model.pre = function pre(name, fn, async) {
+    this._hooks.create(name).pre(name, fn, async)
     return this
   }
   

@@ -16,13 +16,8 @@ function Hooks(model) {
 /**
  * 
  */
-Hooks.prototype.pre = function pre(name, async, fn) {
+Hooks.prototype.pre = function pre(name, fn, async) {
   var pres = (this.pres[name] = this.pres[name] || [])
-  
-  if ( _.isFunction(async) ) {
-    fn = async
-    async = false
-  }
   
   // increment async callbacks count
   if ( async === true ) {
@@ -152,16 +147,7 @@ function _pre(pres, context, args) {
  * call post callbacks
  */
 function _post(posts, context, args) {
-  var i = 0
-  
-  function next() {
-    var post = posts[i++]
-    
-    if ( post ) {
-      post.apply(context, args)
-      next()
-    }
-  }
-  
-  next()
+  _.each(posts, function(post) { 
+    post.apply(context, args) 
+  })
 }
