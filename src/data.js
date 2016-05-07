@@ -1,22 +1,22 @@
 
 var _ = require('underscore')
 
-module.exports = Container
+module.exports = Data
 
 /**
  * 
  */
-function Container(owner, data) {
+function Data(owner, attributes) {
   this._data = {}
   this._original = {}
   
-  this.fill(data)
+  this.fill(attributes)
 }
 
 /**
  * 
  */
-Container.prototype.fill = function fill(attributes) {
+Data.prototype.fill = function fill(attributes) {
   var attr, val
   
   if ( _.isEmpty(attributes) ) return this
@@ -37,7 +37,7 @@ Container.prototype.fill = function fill(attributes) {
  * @param {String} attr field name
  * @param {Mixed} val the value
  */
-Container.prototype.set = function set(attr, val) {
+Data.prototype.set = function set(attr, val) {
   var oldVal = this._data[attr]
   
   if ( _.isEmpty(attr) ) return this
@@ -59,7 +59,7 @@ Container.prototype.set = function set(attr, val) {
  * 
  * @param {String} attr name
  */
-Container.prototype.get = function get(attr) {
+Data.prototype.get = function get(attr) {
   return this._data[attr]
 }
 
@@ -68,21 +68,21 @@ Container.prototype.get = function get(attr) {
  * 
  * @param {String} attr name
  */
-Container.prototype.has = function has(attr) {
+Data.prototype.has = function has(attr) {
   return !_.isUndefined(this.get(attr))
 }
 
 /**
  * 
  */
-Container.prototype.toJSON = function toJSON() {
+Data.prototype.toJSON = function toJSON() {
   return this.serialize()
 }
 
 /**
  * 
  */
-Container.prototype.serialize = function serialize() {
+Data.prototype.serialize = function serialize() {
   return _.clone(this._data)
 }
 
@@ -91,7 +91,7 @@ Container.prototype.serialize = function serialize() {
  * 
  * @param {String} attr name
  */
-Container.prototype.isDirty = function isDirty(attr) {
+Data.prototype.isDirty = function isDirty(attr) {
   return 
     (attr == null) ?
     !_.isEmpty(this._original) : 
@@ -103,6 +103,6 @@ Container.prototype.isDirty = function isDirty(attr) {
  * 
  * @return {Object}
  */
-Container.prototype.getDirty = function getDirty() {
+Data.prototype.getDirty = function getDirty() {
   return _.pick(this._data, _.keys(this._original))
 }

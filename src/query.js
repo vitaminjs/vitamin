@@ -10,15 +10,16 @@ module.exports = Query
  * @param {Object} model
  * @param {Object} driver
  */
-function Query(model) {
+function Query(model, driver) {
   this._select = []
-  this._from   = undefined
   this._where  = []
   this._order  = []
   this._skip   = undefined
   this._limit  = undefined
   
-  this.setModel(model)
+  this._from   = model.getOption('source')
+  this._model  = model
+  this._driver = driver
 }
 
 /**
@@ -26,24 +27,18 @@ function Query(model) {
  */
 Object.defineProperty(Query.prototype, 'driver', {
   get: function getDriver() {
-    var driver = this.model.constructor.driver
-    
-    if ( driver ) return driver
-    
-    throw "Undefined database driver"
+    return this._driver
   }
 })
 
 /**
  * 
- * 
- * @param {Object} model
  */
-Query.prototype.setModel = function setModel(model) {
-  this._from   = model.getOption('source')
-  this.model   = model
-  return this
-}
+Object.defineProperty(Query.prototype, 'model', {
+  get: function getModel() {
+    return this._model
+  }
+})
 
 /**
  * 
