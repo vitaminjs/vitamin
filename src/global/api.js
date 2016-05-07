@@ -42,9 +42,6 @@ function globlaAPI(Model) {
     // table or collection name
     'source': undefined,
     
-    // data class constructor
-    'dataClass': undefined,
-    
   }
 
   /**
@@ -150,10 +147,7 @@ function globlaAPI(Model) {
    * @param {Mixed} defaults optional
    */
   Model.prototype.getOption = function getOption(name, defaults) {
-    // we cannot use `_.result()` here,
-    // because a function or constructor can be
-    // provided as model option.
-    return this.constructor._options[name] || defaults
+    return _.result(this.constructor._options, name, defaults)
   }
   
   /**
