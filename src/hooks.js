@@ -16,14 +16,14 @@ function Hooks(model) {
 /**
  * 
  */
-Hooks.prototype.pre = function pre(name, fn, async) {
+Hooks.prototype.pre = function pre(name, fn, isAsync) {
   var pres = (this.pres[name] = this.pres[name] || [])
   
   // increment async callbacks count
-  if ( async === true ) {
+  if ( isAsync === true ) {
     pres.numAsync = pres.numAsync || 0
     pres.numAsync++
-    fn.async = true
+    fn.isAsync = true
   }
   
   // add the pre callback
@@ -42,14 +42,14 @@ Hooks.prototype.callPres = function callPres(name, context, args) {
       pres = this.pres[name] || [], 
       asyncPresLeft = pres.numAsync || 0
   
-  return new Promise(function(resolve, reject) {
+  return new Promise(function (resolve, reject) {
     function next() {
       var pre = pres[++i]
       
       // No available pre callbacks
       if (! pre ) return asyncPresLeft ? void 0 : resolve()
       
-      if ( pre.async === true )
+      if ( pre.isAsync === true )
         pre.apply(context, [_next, _done].concat(args))
       else
         pre.apply(context, [_next].concat(args))
@@ -83,12 +83,18 @@ Hooks.prototype.post = function post(name, fn) {
 
 /**
  * 
+ * 
+ * @return {Promise}
  */
 Hooks.prototype.callPosts = function callPosts(name, context, args) {
   var posts = this.posts[name] || []
   
-  _.each(posts, function(post) { 
-    post.apply(context, args) 
+  return new Promise(function (resolve) {
+    _.each(posts, function(post) { 
+      post.apply(context, args) 
+    })
+    
+    resolve()
   })
 }
 

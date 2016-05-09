@@ -124,14 +124,14 @@ Model.use = function use(plugin) {
 /**
  * 
  */
-Model.pre = function pre(name, fn, async) {
+Model.pre = function pre(name, fn, isAsync) {
   if ( name === 'init' ) {
     // creating hooks for `init` method prevent handling errors,
     // because it is invoked automaticaly by the constructor
     throw "`init` method cannot accept pre callbacks"
   }
   
-  this.hooks.create(name).pre(name, fn, async)
+  this.hooks.create(name).pre(name, fn, isAsync)
   return this
 }
 
