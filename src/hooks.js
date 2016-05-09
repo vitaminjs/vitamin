@@ -10,7 +10,7 @@ module.exports = Hooks
 function Hooks(model) {
   this.pres = {}
   this.posts = {}
-  this.proto = model.prototype || model
+  this._proto = model.prototype || model
 }
 
 /**
@@ -98,7 +98,7 @@ Hooks.prototype.callPosts = function callPosts(name, context, args) {
  * @param {String} name
  */
 Hooks.prototype.create = function create(name) {
-  var fn = this.proto[name]
+  var fn = this._proto[name]
   
   // TODO we may throw an error if the function is undefined
   if (! fn ) return this
@@ -107,13 +107,13 @@ Hooks.prototype.create = function create(name) {
   if ( fn._hooked === true ) return this
   
   function fnWrapper() {
-    var hooks = this.constructor._hooks
+    var hooks = this.constructor.hooks
     
     return _wrap(hooks, name, fn, this, _.toArray(arguments))
   }
   
   fnWrapper._hooked = true
-  this.proto[name] = fnWrapper
+  this._proto[name] = fnWrapper
   
   return this
 }
@@ -149,9 +149,8 @@ function _wrap(hooks, name, fn, context, args) {
       
       return fn.apply(context, args)
     })
-    .then(function(result) {
+    .tap(function(result) {
       hooks.callPosts(name, context, [result])
-      return result
     })
     .nodeify(callback)
 }

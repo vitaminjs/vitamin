@@ -9,6 +9,7 @@ module.exports = Data
 function Data(owner, attributes) {
   this._data = {}
   this._original = {}
+  this._schema = owner.getOption('schema')
   
   this.fill(attributes)
 }

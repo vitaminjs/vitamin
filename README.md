@@ -1,2 +1,2 @@
-# vitamin
-Active Record library for node.js applications
+# vitamin (alpha)
+Active Record library for Node.js applications

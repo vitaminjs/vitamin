@@ -17,9 +17,8 @@ function Model() { this.init.apply(this, arguments) }
  * Default options
  * 
  * @static
- * @private
  */
-Model._options = {
+Model.options = {
   
   // primary key name
   'pk': "id",
@@ -44,7 +43,7 @@ Model._options = {
  * @static
  * @private
  */
-Model._hooks = new Hooks(Model)
+Model.hooks = new Hooks(Model)
 
 /**
  * Data source driver adapter
@@ -52,7 +51,7 @@ Model._hooks = new Hooks(Model)
  * @static
  * @private
  */
-Model._driver = undefined
+Model.driver = undefined
 
 /**
  * Factory function to instantiate new models without `new` operator
@@ -87,10 +86,10 @@ Model.extend = function extend(options) {
   _.extend(Model.prototype, options.methods)
   
   // merge options
-  Model._options = mergeOptions(Super._options, options)
+  Model.options = mergeOptions(Super.options, options)
   
   // init the model hooks
-  Model._hooks = Super._hooks.clone(Model)
+  Model.hooks = Super.hooks.clone(Model)
   
   // return the final product
   return Model
@@ -132,7 +131,7 @@ Model.pre = function pre(name, fn, async) {
     throw "`init` method cannot accept pre callbacks"
   }
   
-  this._hooks.create(name).pre(name, fn, async)
+  this.hooks.create(name).pre(name, fn, async)
   return this
 }
 
@@ -140,14 +139,62 @@ Model.pre = function pre(name, fn, async) {
  * 
  */
 Model.post = function post(name, fn) {
-  this._hooks.create(name).post(name, fn)
+  this.hooks.create(name).post(name, fn)
   return this
+}
+
+/**
+ * Get all models from database
+ * 
+ * @param {Object} where
+ * @param {Function} cb
+ * 
+ * @static
+ */
+Model.all = function all(cb) {
+  return this.factory().newQuery().fetchAll(cb)
+}
+
+/**
+ * Find a model by its primary key
+ * 
+ * @param {Mixed} id
+ * @param {Function} cb
+ * 
+ * @static
+ */
+Model.find = function find(id, cb) {
+  return this.where(this.options.pk, id).fetch(cb)
+}
+
+/**
+ * 
+ * @param {String|Object} key attribute name or constraints object
+ * @param {Mixed} value attribute value
+ * 
+ * @return Query
+ */
+Model.where = function where(key, value) {
+  return this.factory().newQuery().where(key, value)
+}
+
+/**
+ * Create and save a new model
+ * 
+ * @param {Object} data object
+ * @param {Function} callback
+ * 
+ * @static
+ */
+Model.create = function create(data, cb) {
+  return this.factory(data).save(cb)
 }
 
 /**
  * 
  */
 Object.defineProperty(Model.prototype, 'data', {
+  enumerable: true,
   get: function getData() {
     return this._data
   }
@@ -169,7 +216,7 @@ Model.prototype.init = function init(attributes) {
  * @param {Mixed} defaults optional
  */
 Model.prototype.getOption = function getOption(name, defaults) {
-  return _.result(this.constructor._options, name, defaults)
+  return _.result(this.constructor.options, name, defaults)
 }
 
 /**
@@ -257,53 +304,6 @@ Model.prototype.serialize = function serialize() {
 }
 
 /**
- * Get all models from database
- * 
- * @param {Object} where
- * @param {Function} cb
- * 
- * @static
- */
-Model.all = function all(cb) {
-  return this.factory().newQuery().fetchAll(cb)
-}
-
-/**
- * Find a model by its primary key
- * 
- * @param {Mixed} id
- * @param {Function} cb
- * 
- * @static
- */
-Model.find = function find(id, cb) {
-  return this.where(this._options.pk, id).fetch(cb)
-}
-
-/**
- * 
- * @param {String|Object} key attribute name or constraints object
- * @param {Mixed} value attribute value
- * 
- * @return Query
- */
-Model.where = function where(key, value) {
-  return this.factory().newQuery().where(key, value)
-}
-
-/**
- * Create and save a new model
- * 
- * @param {Object} data object
- * @param {Function} callback
- * 
- * @static
- */
-Model.create = function create(data, cb) {
-  return this.factory(data).save(cb)
-}
-
-/**
  * Fetch fresh data from database
  * 
  * @param {Function} callback
@@ -352,7 +352,7 @@ Model.prototype.update = function update(cb) {
  * @return Query builder object
  */
 Model.prototype.newQuery = function newQuery() {
-  return new Query(this, this.constructor._driver)
+  return new Query(this, this.constructor.driver)
 }
 
 /**
