@@ -38,13 +38,13 @@ Hooks.prototype.pre = function pre(name, fn, isAsync) {
  * @return {Promise}
  */
 Hooks.prototype.callPres = function callPres(name, context, args) {
-  var i = -1,
+  var current = 0,
       pres = this.pres[name] || [], 
       asyncPresLeft = pres.numAsync || 0
   
   return new Promise(function (resolve, reject) {
     function next() {
-      var pre = pres[++i]
+      var pre = pres[current++]
       
       // No available pre callbacks
       if (! pre ) return asyncPresLeft ? void 0 : resolve()
@@ -55,14 +55,14 @@ Hooks.prototype.callPres = function callPres(name, context, args) {
         pre.apply(context, [_next].concat(args))
     }
     
-    function _next(err) {
-      if ( err ) reject(err)
+    function _next(error) {
+      if ( error ) reject(error)
       else next()
     }
     
-    function _done(err) {
-      if ( err ) return reject(err)
-      if ( --asyncPresLeft === 0 ) resolve()
+    function _done(error) {
+      if ( error ) reject(error)
+      else if ( --asyncPresLeft === 0 ) resolve()
     }
     
     next()
@@ -90,10 +90,14 @@ Hooks.prototype.callPosts = function callPosts(name, context, args) {
   var posts = this.posts[name] || []
   
   return new Promise(function (resolve) {
+    // iterate over post callbacks
     _.each(posts, function(post) { 
       post.apply(context, args) 
     })
     
+    // instead of returning a resolved promise here,
+    // we resolve this one to make easy stopping posts,
+    // by simply throwing errors
     resolve()
   })
 }
@@ -156,7 +160,7 @@ function _wrap(hooks, name, fn, context, args) {
       return fn.apply(context, args)
     })
     .tap(function(result) {
-      hooks.callPosts(name, context, [result])
+      return hooks.callPosts(name, context, [result])
     })
     .nodeify(callback)
 }

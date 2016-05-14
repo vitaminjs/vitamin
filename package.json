@@ -22,7 +22,9 @@
     "url": "https://github.com/vitaminjs/vitamin.git"
   },
   "keywords": [
-    "model"
+    "model",
+    "active-record",
+    "vitamin"
   ],
   "author": "absolux",
   "license": "MIT",
