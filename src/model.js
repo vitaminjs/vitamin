@@ -11,7 +11,7 @@ module.exports = Model
  * 
  * @constructor
  */
-function Model() { this.init.apply(this, arguments) }
+function Model() { this._init.apply(this, arguments) }
 
 /**
  * Default options
@@ -23,14 +23,14 @@ Model.options = {
   // primary key name
   'pk': "id",
   
-  // model schema definition
-  'schema': {},
-  
   // instance methods
   'methods': {},
   
   // static methods
   'statics': {},
+  
+  // model attributes definition
+  'attributes': {},
   
   // table or collection name
   'source': undefined,
@@ -41,7 +41,6 @@ Model.options = {
  * Model hooks
  * 
  * @static
- * @private
  */
 Model.hooks = new Hooks(Model)
 
@@ -49,7 +48,6 @@ Model.hooks = new Hooks(Model)
  * Data source driver adapter
  * 
  * @static
- * @private
  */
 Model.driver = undefined
 
@@ -91,6 +89,9 @@ Model.extend = function extend(options) {
   // init the model hooks
   Model.hooks = Super.hooks.clone(Model)
   
+  // define proxies for model attributes
+  setProxies(Model.prototype, options.attributes)
+  
   // return the final product
   return Model
 }
@@ -125,12 +126,6 @@ Model.use = function use(plugin) {
  * 
  */
 Model.pre = function pre(name, fn, isAsync) {
-  if ( name === 'init' ) {
-    // creating hooks for `init` method prevent handling errors,
-    // because it is invoked automaticaly by the constructor
-    throw "`init` method cannot accept pre callbacks"
-  }
-  
   this.hooks.create(name).pre(name, fn, isAsync)
   return this
 }
@@ -188,25 +183,6 @@ Model.where = function where(key, value) {
  */
 Model.create = function create(data, cb) {
   return this.factory(data).save(cb)
-}
-
-/**
- * 
- */
-Object.defineProperty(Model.prototype, 'data', {
-  enumerable: true,
-  get: function getData() {
-    return this._data
-  }
-})
-
-/**
- * Called by the constructor when creating a new instance
- * 
- * @param {Object} attributes
- */
-Model.prototype.init = function init(attributes) {
-  this._initData(attributes)
 }
 
 /**
@@ -356,12 +332,24 @@ Model.prototype.newQuery = function newQuery() {
 }
 
 /**
+ * Called by the constructor when creating a new instance
+ * 
+ * @param {Object} attributes
+ */
+Model.prototype._init = function _init(attributes) {
+  this._initData(attributes)
+}
+
+/**
  * Setup model's data
  * 
  * @private
  */
 Model.prototype._initData = function _initData(attributes) {
-  this._data = new DataClass(this, attributes || {})
+  Object.defineProperty(this, 'data', {
+    enumerable: false,
+    value: new DataClass(this, attributes || {})
+  })
 }
 
 // HELPERS --------------------------------------------------------------------
@@ -390,8 +378,8 @@ function mergeOptions(parent, child) {
  */
 function mergeField(key, newVal, oldVal) {
   switch (key) {
-    case 'schema':
-      return mergeSchema(newVal, oldVal)
+    case 'attributes':
+      return mergeAttributes(newVal, oldVal)
       
     case 'methods':
     case 'statics':
@@ -405,15 +393,35 @@ function mergeField(key, newVal, oldVal) {
 /**
  * 
  */
-function mergeSchema(newVal, oldVal) {
-  var schema = _.extend({}, oldVal)
+function mergeAttributes(newVal, oldVal) {
+  var attrs = _.extend({}, oldVal)
   
-  _.each(newVal, function(options, field) {
-    // normalize schema object format
+  _.each(newVal, function(options, name) {
+    // normalize object format
     if ( _.isFunction(options) ) {
-      schema[field] = { 'type': options }
+      attrs[name] = { 'type': options }
     }
   })
   
-  return schema
+  return attrs
+}
+
+/**
+ * 
+ */
+function setProxies(proto, attrs) {
+  _.each(attrs, function(config, name) {
+    
+    Object.defineProperty(proto, name, {
+      enumerable: true,
+      configurable: true,
+      get: config.get || function getter() {
+        return this.get(name)
+      },
+      set: config.set || function setter(value) {
+        this.set(name, value)
+      }
+    })
+    
+  })
 }
