@@ -12,7 +12,7 @@ describe("Hooks Unit Tests", function() {
     var hooks
     
     beforeEach(function() {
-      hooks = new Hooks({})
+      hooks = new Hooks()
     })
     
     it("runs without any hooks specified", function(done) {
@@ -188,7 +188,7 @@ describe("Hooks Unit Tests", function() {
     var hooks
     
     beforeEach(function() {
-      hooks = new Hooks({})
+      hooks = new Hooks()
     })
     
     it("runs without any hooks specified", function() {
@@ -237,7 +237,7 @@ describe("Hooks Unit Tests", function() {
   describe("clone hooks", function() {
     
     it("clones correctly its callbacks", function() {
-      var h1 = new Hooks({})
+      var h1 = new Hooks()
       
       h1.pres['test'] = ['baz', 'foo']
       h1.posts['test'] = ['bar']

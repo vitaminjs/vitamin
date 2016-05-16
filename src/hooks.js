@@ -7,10 +7,9 @@ module.exports = Hooks
 /**
  * 
  */
-function Hooks(model) {
+function Hooks() {
   this.pres = {}
   this.posts = {}
-  this._proto = model.prototype || model
 }
 
 /**
@@ -103,36 +102,10 @@ Hooks.prototype.callPosts = function callPosts(name, context, args) {
 }
 
 /**
- * Create a new hook for the target function
- * 
- * @param {String} name
- */
-Hooks.prototype.create = function create(name) {
-  var fn = this._proto[name]
-  
-  // TODO we may throw an error if the function is undefined
-  if (! fn ) return this
-  
-  // prevent rehook the same method
-  if ( fn._hooked === true ) return this
-  
-  function fnWrapper() {
-    var hooks = this.constructor.hooks
-    
-    return _wrap(hooks, name, fn, this, _.toArray(arguments))
-  }
-  
-  fnWrapper._hooked = true
-  this._proto[name] = fnWrapper
-  
-  return this
-}
-
-/**
  * 
  */
 Hooks.prototype.clone = function clone(model) {
-  var key, o = new Hooks(model)
+  var key, o = new Hooks()
   
   for ( key in this.pres ) {
     o.pres[key] = this.pres[key].slice()
@@ -143,24 +116,4 @@ Hooks.prototype.clone = function clone(model) {
   }
   
   return o
-}
-
-/**
- * 
- */
-function _wrap(hooks, name, fn, context, args) {
-  var useCallback = _.isFunction(_.last(args)),
-      callback = useCallback ? args.pop() : null
-    
-  return hooks
-    .callPres(name, context, args)
-    .then(function () {
-      if ( useCallback ) fn = Promise.promisify(fn)
-      
-      return fn.apply(context, args)
-    })
-    .tap(function(result) {
-      return hooks.callPosts(name, context, [result])
-    })
-    .nodeify(callback)
 }
