@@ -219,6 +219,15 @@ Model.prototype.has = function has(attr) {
 }
 
 /**
+ * Return the original value of one or all the dirty attributes
+ * 
+ * @return {øbject|any}
+ */
+Model.prototype.getOriginal = function getOriginal(attr) {
+  return attr ? this.$original[attr] : this.$original
+}
+
+/**
  * Return a hash of dirty fields
  * 
  * @return {Object}
