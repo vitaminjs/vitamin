@@ -1,6 +1,7 @@
 
 var _ = require('underscore'),
-    Hooks = require('./hooks')
+    Hooks = require('./hooks'),
+    Events = require('./events')
 
 module.exports = Model
 
@@ -20,6 +21,11 @@ Model.prototype.$driver = undefined
  * Model hooks manager
  */
 Model.prototype.$hooks = new Hooks()
+
+/**
+ * Model events dispatcher
+ */
+Model.prototype.$events = new Events()
 
 /**
  * Set up correctly the prototype chain for subclasses
@@ -45,6 +51,9 @@ Model.extend = function extend(props, statics) {
   
   // init model hooks
   Model.prototype.$hooks = Super.prototype.$hooks.clone()
+  
+  // init model events
+  Model.prototype.$eevents = Super.prototype.$events.clone()
   
   return Model
 }
@@ -87,12 +96,13 @@ Model.use = function use(plugin) {
 Model.factory = function factory(attrs) { return new this(attrs) }
 
 /**
- * Create and add a pre callback
+ * Add a pre callback
  * 
  * @param {String} name
  * @param {Function} fn
  * @param {Boolean} _async
  * @return {Model}
+ * @static
  */
 Model.pre = function pre(name, fn, _async) {
   this.prototype.$hooks.pre(name, fn, _async)
@@ -100,15 +110,56 @@ Model.pre = function pre(name, fn, _async) {
 }
 
 /**
- * Create and add a post callback
+ * Add a post callback
  * 
  * @param {String} name
  * @param {Function} fn
  * @return {Model}
+ * @static
  */
 Model.post = function post(name, fn) {
   this.prototype.$hooks.post(name, fn)
   return this
+}
+
+/**
+ * Add a listener for a shared model event
+ * 
+ * @param {String} event
+ * @param {Function} fn
+ * @return {Model}
+ * @static
+ */
+Model.on = function on(event, fn) {
+  this.prototype.$events.on(event, fn)
+  return this
+}
+
+/**
+ * Unset an event listener
+ * use cases:
+ *    Model.off('eventname', listenerFn)
+ *    Model.off('eventname')
+ *    Model.off()
+ * 
+ * @param {String} event
+ * @param {Function} fn
+ * @return {Model}
+ * @static
+ */
+Model.off = function off(event, fn) {
+  this.prototype.$events.off(event, fn)
+  return this
+}
+
+/**
+ * Trigger a model event
+ * 
+ * @param {String} event
+ * @return {Promise}
+ */
+Model.prototype.trigger = function trigger(event) {
+  return this.$events.emit.apply(this.$events, arguments)
 }
 
 /**
@@ -129,7 +180,7 @@ Model.prototype.fill = function fill(attrs) {
  * Set the model data without any checking
  * 
  * @param {Object} data
- * @param {Boolean} sync
+ * @param {Boolean} sync (optional)
  * @return {Model} instance
  */
 Model.prototype.setData = function setData(data, sync) {
@@ -215,13 +266,13 @@ Model.prototype.getSourceName = function getSourceName() {
  * @return {Boolean}
  */
 Model.prototype.has = function has(attr) {
-  return !_.isUndefined(this.get(attr))
+  return !!this.get(attr)
 }
 
 /**
  * Return the original value of one or all the dirty attributes
  * 
- * @return {øbject|any}
+ * @return {any}
  */
 Model.prototype.getOriginal = function getOriginal(attr) {
   return attr ? this.$original[attr] : this.$original
