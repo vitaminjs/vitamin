@@ -46,12 +46,10 @@ Events.prototype.off = function off(event, fn) {
   else {
     // search and unset the callback
     _.any(this.listeners[event], function(cb, i, list) {
-      if ( cb === fn ) {
-        list.splice(i, 1)
-        return true
-      } 
+      if ( cb !== fn ) return false
       
-      return false
+      list.splice(i, 1)
+      return true
     })
   }
   
@@ -96,7 +94,7 @@ Events.prototype.clone = function clone() {
 Events.prototype.getListeners = function getListeners(event) {
   var list = []
   
-  if ( this.parent ) list = parent.getListeners(event)
+  if ( this.parent ) list = this.parent.getListeners(event)
   
   return list.concat(this.listeners[event] || [])
 }

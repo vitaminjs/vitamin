@@ -1,6 +1,5 @@
 
 var _ = require('underscore'),
-    Hooks = require('./hooks'),
     Events = require('./events')
 
 module.exports = Model
@@ -16,11 +15,6 @@ function Model() { this._init.apply(this, arguments) }
  * Data source driver
  */
 Model.prototype.$driver = undefined
-
-/**
- * Model hooks manager
- */
-Model.prototype.$hooks = new Hooks()
 
 /**
  * Model events dispatcher
@@ -48,9 +42,6 @@ Model.extend = function extend(props, statics) {
   // add static and instance properties
   _.extend(Model, Super, statics)
   _.extend(Model.prototype, props)
-  
-  // init model hooks
-  Model.prototype.$hooks = Super.prototype.$hooks.clone()
   
   // init model events
   Model.prototype.$eevents = Super.prototype.$events.clone()
@@ -96,34 +87,7 @@ Model.use = function use(plugin) {
 Model.factory = function factory(attrs) { return new this(attrs) }
 
 /**
- * Add a pre callback
- * 
- * @param {String} name
- * @param {Function} fn
- * @param {Boolean} _async
- * @return {Model}
- * @static
- */
-Model.pre = function pre(name, fn, _async) {
-  this.prototype.$hooks.pre(name, fn, _async)
-  return this
-}
-
-/**
- * Add a post callback
- * 
- * @param {String} name
- * @param {Function} fn
- * @return {Model}
- * @static
- */
-Model.post = function post(name, fn) {
-  this.prototype.$hooks.post(name, fn)
-  return this
-}
-
-/**
- * Add a listener for a shared model event
+ * Add a listener for a model event
  * 
  * @param {String} event
  * @param {Function} fn
