@@ -8,37 +8,21 @@ module.exports = Query
  * Vitamin query builder constructor
  * 
  * @param {Object} model
- * @param {Object} driver
  */
-function Query(model, driver) {
+function Query(model) {
   this._select = []
   this._where  = []
   this._order  = []
   this._skip   = undefined
   this._limit  = undefined
+  this._from   = model.getSourceName()
   
-  this._from   = model.getOption('source')
-  this._model  = model
-  this._driver = driver
+  // make `model` and `driver` properties private
+  Object.defineProperties(this, {
+    'model': { value: model },
+    'driver': { value: model.getDriver() }
+  })
 }
-
-/**
- * 
- */
-Object.defineProperty(Query.prototype, 'driver', {
-  get: function getDriver() {
-    return this._driver
-  }
-})
-
-/**
- * 
- */
-Object.defineProperty(Query.prototype, 'model', {
-  get: function getModel() {
-    return this._model
-  }
-})
 
 /**
  * 
@@ -123,7 +107,7 @@ Query.prototype.fetch = function fetch(cb) {
   var pending = this.driver.fetch(this.limit(1).assemble())
   
   function _mapOne(data) {
-    return _.isEmpty(data) ? Promise.reject(null) : this.model.set(data)
+    return _.isEmpty(data) ? Promise.reject(null) : this.model.fill(data)
   }
   
   return Promise.bind(this).resolve(pending).then(_mapOne).nodeify(cb)
@@ -147,34 +131,22 @@ Query.prototype.fetchAll = function fetchAll(cb) {
 /**
  * 
  */
-Query.prototype.insert = function insert(cb) {
-  var data = this.model.serialize(),
-      pending = this.driver.insert(this.assemble(), data)
-  
-  function _handle(id) {
-    return this.model.setId(id[0])
-  }
-  
-  return Promise.bind(this).resolve(pending).then(_handle).nodeify(cb)
+Query.prototype.insert = function insert(data) {
+  return this.driver.insert(data, this.assemble())
 }
 
 /**
  * 
  */
-Query.prototype.update = function update(cb) {
-  var data = this.model.serialize(),
-      pending = this.driver.update(this.assemble(), data)
-  
-  return Promise.resolve(pending).return(this.model).nodeify(cb)
+Query.prototype.update = function update(data) {
+  return this.driver.update(data, this.assemble())
 }
 
 /**
  * 
  */
 Query.prototype.destroy = function destroy(cb) {
-  var pending = this.driver.remove(this.assemble())
-  
-  return Promise.resolve(pending).return(this.model).nodeify(cb)
+  return this.driver.destroy(this.assemble())
 }
 
 /**
@@ -187,8 +159,9 @@ Query.prototype.assemble = function assemble() {
       props = ['select', 'from', 'where', 'order', 'skip', 'limit']
   
   _.each(props, function _assemblePieces(name) {
-    if (! _.isEmpty(this['_' + name]) ) 
-      q[name] = _.clone(this['_' + name])
+    var prop = this['_' + name]
+    
+    if (! _.isEmpty(prop) ) q[name] = _.clone(prop)
   }, this)
   
   return q

@@ -1,6 +1,19 @@
 
-var _ = require('underscore'),
-    Events = require('./events')
+var
+  _ = require('underscore'),
+  Events = require('./events'),
+  Promise = require('bluebird'),
+  QueryBuilder = require('./query')
+
+const
+  EVENT_CREATING = "creating",
+  EVENT_UPDATING = "updating",
+  EVENT_DELETING = "deleting",
+  EVENT_CREATED = "created",
+  EVENT_UPDATED = "updated",
+  EVENT_DELETED = "deleted",
+  EVENT_SAVING = "saving",
+  EVENT_SAVED = "saved"
 
 module.exports = Model
 
@@ -12,9 +25,9 @@ module.exports = Model
 function Model() { this._init.apply(this, arguments) }
 
 /**
- * Data source driver
+ * Indicates if the IDs are auto-incrementing
  */
-Model.prototype.$driver = undefined
+Model.prototype.$incrementing = true
 
 /**
  * Model events dispatcher
@@ -44,7 +57,7 @@ Model.extend = function extend(props, statics) {
   _.extend(Model.prototype, props)
   
   // init model events
-  Model.prototype.$eevents = Super.prototype.$events.clone()
+  Model.prototype.$events = Super.prototype.$events.clone()
   
   return Model
 }
@@ -114,6 +127,15 @@ Model.on = function on(event, fn) {
 Model.off = function off(event, fn) {
   this.prototype.$events.off(event, fn)
   return this
+}
+
+/**
+ * Save a new model in the database
+ * 
+ * @param
+ */
+Model.create = function create(data, cb) {
+  return this.factory(data).save(cb)
 }
 
 /**
@@ -266,11 +288,163 @@ Model.prototype.isDirty = function isDirty(attr) {
 }
 
 /**
+ * Returns true if the model doesn't have an identifier
+ * 
+ * @return {Boolean}
+ */
+Model.prototype.isNew = function isNew() {
+  return !this.has(this.getKeyName())
+}
+
+/**
  * @return {Object}
  */
 Model.prototype.toJSON = function toJSON() {
   // TODO omit hidden fields
   return _.clone(this.$data)
+}
+
+/**
+ * Get the model query builder
+ * 
+ * @return {Object}
+ */
+Model.prototype.newQuery = function newQuery() {
+  return new QueryBuilder(this)
+}
+
+/**
+ * Get the data source driver
+ * 
+ * @return {Object} 
+ */
+Model.prototype.getDriver = function getDriver() {
+  return undefined
+}
+
+/**
+ * Update the model in the database
+ * 
+ * @param {Object} attrs
+ * @param {Function} cb optional callback
+ * @return {Promise}
+ */
+Model.prototype.update = function update(attrs, cb) {
+  return this.fill(attrs).save(cb)
+}
+
+/**
+ * Save the model to the database
+ * 
+ * @param {Function} cb optional callback
+ * @return {Promise}
+ */
+Model.prototype.save = function save(cb) {
+  return Promise
+    .bind(this)
+    .resolve(this)
+    .tap(function () {
+      return this.trigger(EVENT_SAVING, this)
+    })
+    .tap(this.isNew() ? this._create : this._update)
+    .tap(function () {
+      this._syncOriginal()
+      
+      return this.trigger(EVENT_SAVED, this)
+    })
+    .nodeify(cb)
+}
+
+/**
+ * Delete the model from the database
+ * 
+ * @param {Function} cb optional callback
+ * @return {Promise}
+ */
+Model.prototype.destroy = function destroy(cb) {
+  if ( this.isNew() ) return Promise.reject(null).nodeify(cb)
+  
+  return Promise
+    .bind(this)
+    .resolve(this)
+    .tap(function () {
+      return this.trigger(EVENT_DELETING, this)
+    })
+    .tap(this._destroy)
+    .tap(function () {
+      this._syncOriginal()
+      
+      return this.trigger(EVENT_DELETED, this)
+    })
+    .nodeify(cb)
+}
+
+/**
+ * Perform a model insert operation
+ * 
+ * @return {Promise}
+ */
+Model.prototype._create = function _create() {
+  return Promise
+    .bind(this)
+    .resolve(this)
+    .tap(function () {
+      return this.trigger(EVENT_CREATING, this)
+    })
+    .tap(function () {
+      var data = _.clone(this.$data),
+          promise = this.newQuery().insert(data)
+      
+      // If the model has an incrementing key,
+      // we set the new inserted id for this model
+      if ( this.$incementing ) {
+        promise.then(function (ids) {
+          this.setId(ids[0])
+        }.bind(this))
+      }
+      
+      return promise
+    })
+    .tap(function () {
+      this._syncOriginal()
+      
+      return this.trigger(EVENT_CREATED, this)
+    })
+}
+
+/**
+ * Perform a model update operation
+ */
+Model.prototype._update = function _update() {
+  return Promise
+    .bind(this)
+    .resolve(this)
+    .tap(function () {
+      return this.trigger(EVENT_UPDATING, this)
+    })
+    .tap(function () {
+      var data = _.clone(this.$data),
+          pk = this.getKeyName(), 
+          id = this.getId()
+      
+      return this.newQuery().where(pk, id).update(data)
+    })
+    .tap(function () {
+      this._syncOriginal()
+      
+      return this.trigger(EVENT_UPDATED, this)
+    })
+}
+
+/**
+ * Perform the actual delete query
+ * 
+ * @return {Promise}
+ */
+Model.prototype._destroy = function _destroy() {
+  var pk = this.getKeyName(), id = this.getId()
+  
+  return this.newQuery().where(pk, id).destroy()
 }
 
 /**
@@ -289,6 +463,8 @@ Model.prototype._init = function _init(attrs) {
 
 /**
  * Sync the original attributes with the current
+ * 
+ * @private
  */
 Model.prototype._syncOriginal = function _syncOriginal() {
   this.$original = _.clone(this.$data)
