@@ -7,32 +7,29 @@ module.exports = Query
 /**
  * Vitamin query builder constructor
  * 
- * @param {Object} model
+ * @param {Object} driver
  */
-function Query(model) {
+function Query(driver) {
   this._select = []
   this._where  = []
   this._order  = []
   this._skip   = undefined
   this._limit  = undefined
-  this._from   = model.getSourceName()
+  this._from   = undefined
   
-  // make `model` and `driver` properties private
-  Object.defineProperties(this, {
-    'model': { value: model },
-    'driver': { value: model.getDriver() }
-  })
+  // make `driver` property private
+  Object.defineProperty(this, 'driver', { value: driver })
 }
 
 /**
+ * Add a basic where clause to the query
+ * use cases:
+ *   where('name', "John")
+ *   where({ name: "Rita", age: 18 })
+ *   where('status', { $ne: "draft" })
+ *   where('price', { $gt: 100, $lte: 200 })
  * 
- * 
- * where('name', "John")
- * where({ name: "Rita", age: 18 })
- * where('status', { $ne: "draft" })
- * where('price', { $gt: 100, $lte: 200 })
- * 
- * 
+ * @return {Query} instance
  */
 Query.prototype.where = function where(key, val) {
   if ( key ) {
@@ -48,16 +45,19 @@ Query.prototype.where = function where(key, val) {
 }
 
 /**
+ * Add an "or where" clause to the query
  * 
- * 
- * @param {Object} args
+ * @param {Array} clauses
+ * @return {Query} instance
  */
-Query.prototype.orWhere = function orWhere() {
+Query.prototype.orWhere = function orWhere(clauses) {
   return this.where({ $or: _.toArray(arguments) })
 }
 
 /**
+ * Set the source name which the query is targeting
  * 
+ * @return {Query} instance
  */
 Query.prototype.from = function from(from) {
   this._from = from
@@ -65,7 +65,9 @@ Query.prototype.from = function from(from) {
 }
 
 /**
+ * Set the fields to be selected
  * 
+ * @return {Query} instance
  */
 Query.prototype.select = function select() {
   var args = _.toArray(arguments)
@@ -75,7 +77,9 @@ Query.prototype.select = function select() {
 }
 
 /**
+ * Alias to set the "limit" value of the query
  * 
+ * @return {Query} instance
  */
 Query.prototype.take = function take(n) {
   this._limit = Number(n)
@@ -83,7 +87,9 @@ Query.prototype.take = function take(n) {
 }
 
 /**
+ * Alias to set the "offset" value of the query
  * 
+ * @return {Query} instance
  */
 Query.prototype.skip = function skip(n) {
   this._skip = Number(n)
@@ -91,7 +97,9 @@ Query.prototype.skip = function skip(n) {
 }
 
 /**
+ * Add an "order by" clauses to the query
  * 
+ * @return {Query} instance
  */
 Query.prototype.order = function order() {
   var args = _.toArray(arguments)
@@ -102,34 +110,26 @@ Query.prototype.order = function order() {
 
 /**
  * 
+ * 
+ * @return {Promise}
  */
 Query.prototype.fetch = function fetch(cb) {
-  var pending = this.driver.fetch(this.limit(1).assemble())
-  
-  function _mapOne(data) {
-    return _.isEmpty(data) ? Promise.reject(null) : this.model.fill(data)
-  }
-  
-  return Promise.bind(this).resolve(pending).then(_mapOne).nodeify(cb)
+  return this.driver.fetch(this.assemble())
 }
 
 /**
  * 
+ * 
+ * @return {Promise}
  */
 Query.prototype.fetchAll = function fetchAll(cb) {
-  var pending = this.driver.fetchAll(this.assemble())
-  
-  function _mapAll(list) {
-    var Model = this.model.constructor
-    
-    return _.map(list, Model.factory.bind(Model))
-  }
-  
-  return Promise.bind(this).resolve(pending).then(_mapAll).nodeify(cb)
+  return this.driver.fetchAll(this.assemble())
 }
 
 /**
  * 
+ * 
+ * @return {Promise}
  */
 Query.prototype.insert = function insert(data) {
   return this.driver.insert(data, this.assemble())
@@ -137,6 +137,8 @@ Query.prototype.insert = function insert(data) {
 
 /**
  * 
+ * 
+ * @return {Promise}
  */
 Query.prototype.update = function update(data) {
   return this.driver.update(data, this.assemble())
@@ -144,13 +146,15 @@ Query.prototype.update = function update(data) {
 
 /**
  * 
+ * 
+ * @return {Promise}
  */
 Query.prototype.destroy = function destroy(cb) {
   return this.driver.destroy(this.assemble())
 }
 
 /**
- * 
+ * Get the object representation of the query.
  * 
  * @return {Object}
  */

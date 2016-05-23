@@ -115,9 +115,9 @@ Model.on = function on(event, fn) {
 /**
  * Unset an event listener
  * use cases:
- *    Model.off('eventname', listenerFn)
- *    Model.off('eventname')
- *    Model.off()
+ *   Model.off()
+ *   Model.off('event')
+ *   Model.off('event', listener)
  * 
  * @param {String} event
  * @param {Function} fn
@@ -132,10 +132,64 @@ Model.off = function off(event, fn) {
 /**
  * Save a new model in the database
  * 
- * @param
+ * @param {Object} data
+ * @param {Function} cb optional callback
+ * @return {Promise}
+ * @static
  */
 Model.create = function create(data, cb) {
   return this.factory(data).save(cb)
+}
+
+/**
+ * Get all models from the database
+ * 
+ * @param {Function} cb optional callback
+ * @return {Promise}
+ * @static
+ */
+Model.all = function all(cb) {
+  return Promise
+    .bind(this, this.factory().newQuery().fetchAll())
+    .then(function (resp) {
+      var Model = this.constructor
+      
+      return _.map(resp, Model.factory.bind(Model))
+    })
+    .nodeify(cb)
+}
+
+/**
+ * Find a model by its primary key
+ * 
+ * @param {any} id
+ * @param {Function} cb optional callback
+ * @return {Promise}
+ * @static
+ */
+Model.find = function find(id, cb) {
+  var pk = this.prototype.getKeyName()
+  
+  return Promise
+    .bind(this, this.where(pk, id).fetch())
+    .then(function (resp) {
+      if ( _.isEmpty(resp) ) return Promise.reject(null)
+      
+      return this.factory().setData(resp, true)
+    })
+    .nodeify(cb)
+}
+
+/**
+ * 
+ * 
+ * @param {String|Object} key attribute name or constraints object
+ * @param {any} value attribute value
+ * @return {Object} query instance
+ * @static
+ */
+Model.where = function where(key, value) {
+  return this.factory().newQuery().where(key, value)
 }
 
 /**
@@ -310,7 +364,9 @@ Model.prototype.toJSON = function toJSON() {
  * @return {Object}
  */
 Model.prototype.newQuery = function newQuery() {
-  return new QueryBuilder(this)
+  var query = new QueryBuilder(this.getDriver())
+  
+  return query.from(this.getSourceName())
 }
 
 /**
@@ -320,6 +376,24 @@ Model.prototype.newQuery = function newQuery() {
  */
 Model.prototype.getDriver = function getDriver() {
   return undefined
+}
+
+/**
+ * Fetch fresh data from database
+ * 
+ * @param {Function} callback
+ */
+Model.prototype.fetch = function fetch(cb) {
+  var pk = this.getKeyName(), id = this.getId()
+  
+  return Promise
+    .bind(this, this.newQuery().where(pk, id).fetch())
+    .then(function (data) {
+      if ( _.isEmpty(data) ) return Promise.reject(null)
+      
+      return this.setData(data, true)
+    })
+    .nodeify(cb)
 }
 
 /**
@@ -342,7 +416,6 @@ Model.prototype.update = function update(attrs, cb) {
 Model.prototype.save = function save(cb) {
   return Promise
     .bind(this)
-    .resolve(this)
     .tap(function () {
       return this.trigger(EVENT_SAVING, this)
     })
@@ -352,6 +425,7 @@ Model.prototype.save = function save(cb) {
       
       return this.trigger(EVENT_SAVED, this)
     })
+    .return(this)
     .nodeify(cb)
 }
 
@@ -366,7 +440,6 @@ Model.prototype.destroy = function destroy(cb) {
   
   return Promise
     .bind(this)
-    .resolve(this)
     .tap(function () {
       return this.trigger(EVENT_DELETING, this)
     })
@@ -376,6 +449,7 @@ Model.prototype.destroy = function destroy(cb) {
       
       return this.trigger(EVENT_DELETED, this)
     })
+    .return(this)
     .nodeify(cb)
 }
 
@@ -387,7 +461,6 @@ Model.prototype.destroy = function destroy(cb) {
 Model.prototype._create = function _create() {
   return Promise
     .bind(this)
-    .resolve(this)
     .tap(function () {
       return this.trigger(EVENT_CREATING, this)
     })
@@ -397,7 +470,7 @@ Model.prototype._create = function _create() {
       
       // If the model has an incrementing key,
       // we set the new inserted id for this model
-      if ( this.$incementing ) {
+      if ( this.$incrementing ) {
         promise.then(function (ids) {
           this.setId(ids[0])
         }.bind(this))
@@ -414,11 +487,12 @@ Model.prototype._create = function _create() {
 
 /**
  * Perform a model update operation
+ * 
+ * @return {Promise}
  */
 Model.prototype._update = function _update() {
   return Promise
     .bind(this)
-    .resolve(this)
     .tap(function () {
       return this.trigger(EVENT_UPDATING, this)
     })
