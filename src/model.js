@@ -168,10 +168,13 @@ Model.all = function all(cb) {
  * @static
  */
 Model.find = function find(id, cb) {
-  var pk = this.prototype.getKeyName()
-  
   return Promise
-    .bind(this, this.where(pk, id).fetch())
+    .bind(this)
+    .then(function () {
+      var pk = this.prototype.getKeyName()
+      
+      return this.where(pk, id).fetch()
+    })
     .then(function (resp) {
       if ( _.isEmpty(resp) ) return Promise.reject(null)
       
@@ -230,6 +233,15 @@ Model.prototype.setData = function setData(data, sync) {
   if ( sync === true ) this._syncOriginal()
   
   return this
+}
+
+/**
+ * Get the model raw data
+ * 
+ * @return {Object} data
+ */
+Model.prototype.getData = function getData() {
+  return _.clone(this.$data)
 }
 
 /**
@@ -384,10 +396,13 @@ Model.prototype.getDriver = function getDriver() {
  * @param {Function} callback
  */
 Model.prototype.fetch = function fetch(cb) {
-  var pk = this.getKeyName(), id = this.getId()
-  
   return Promise
-    .bind(this, this.newQuery().where(pk, id).fetch())
+    .bind(this)
+    .then(function () {
+      var pk = this.getKeyName(), id = this.getId()
+      
+      return this.newQuery().where(pk, id).fetch()
+    })
     .then(function (data) {
       if ( _.isEmpty(data) ) return Promise.reject(null)
       
@@ -416,11 +431,11 @@ Model.prototype.update = function update(attrs, cb) {
 Model.prototype.save = function save(cb) {
   return Promise
     .bind(this)
-    .tap(function () {
+    .then(function () {
       return this.trigger(EVENT_SAVING, this)
     })
-    .tap(this.isNew() ? this._create : this._update)
-    .tap(function () {
+    .then(this.isNew() ? this._create : this._update)
+    .then(function () {
       this._syncOriginal()
       
       return this.trigger(EVENT_SAVED, this)
@@ -440,11 +455,11 @@ Model.prototype.destroy = function destroy(cb) {
   
   return Promise
     .bind(this)
-    .tap(function () {
+    .then(function () {
       return this.trigger(EVENT_DELETING, this)
     })
-    .tap(this._destroy)
-    .tap(function () {
+    .then(this._destroy)
+    .then(function () {
       this._syncOriginal()
       
       return this.trigger(EVENT_DELETED, this)
@@ -461,12 +476,11 @@ Model.prototype.destroy = function destroy(cb) {
 Model.prototype._create = function _create() {
   return Promise
     .bind(this)
-    .tap(function () {
+    .then(function () {
       return this.trigger(EVENT_CREATING, this)
     })
-    .tap(function () {
-      var data = _.clone(this.$data),
-          promise = this.newQuery().insert(data)
+    .then(function () {
+      var promise = this.newQuery().insert(this.getData())
       
       // If the model has an incrementing key,
       // we set the new inserted id for this model
@@ -478,7 +492,7 @@ Model.prototype._create = function _create() {
       
       return promise
     })
-    .tap(function () {
+    .then(function () {
       this._syncOriginal()
       
       return this.trigger(EVENT_CREATED, this)
@@ -491,19 +505,21 @@ Model.prototype._create = function _create() {
  * @return {Promise}
  */
 Model.prototype._update = function _update() {
+  if (! this.isDirty() ) return Promise.resolve()
+  
   return Promise
     .bind(this)
-    .tap(function () {
+    .then(function () {
       return this.trigger(EVENT_UPDATING, this)
     })
-    .tap(function () {
-      var data = _.clone(this.$data),
+    .then(function () {
+      var data = this.getDirty(),
           pk = this.getKeyName(), 
           id = this.getId()
       
       return this.newQuery().where(pk, id).update(data)
     })
-    .tap(function () {
+    .then(function () {
       this._syncOriginal()
       
       return this.trigger(EVENT_UPDATED, this)
