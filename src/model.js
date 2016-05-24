@@ -3,7 +3,8 @@ var
   _ = require('underscore'),
   Events = require('./events'),
   Promise = require('bluebird'),
-  QueryBuilder = require('./query')
+  QueryBuilder = require('./query'),
+  ModelNotFound = require('./errors').ModelNotFoundError
 
 const
   EVENT_CREATING = "creating",
@@ -176,7 +177,7 @@ Model.find = function find(id, cb) {
       return this.where(pk, id).fetch()
     })
     .then(function (resp) {
-      if ( _.isEmpty(resp) ) return Promise.reject(null)
+      if ( _.isEmpty(resp) ) return Promise.reject(new ModelNotFound)
       
       return this.factory().setData(resp, true)
     })
@@ -404,7 +405,7 @@ Model.prototype.fetch = function fetch(cb) {
       return this.newQuery().where(pk, id).fetch()
     })
     .then(function (data) {
-      if ( _.isEmpty(data) ) return Promise.reject(null)
+      if ( _.isEmpty(data) ) return Promise.reject(new ModelNotFound)
       
       return this.setData(data, true)
     })

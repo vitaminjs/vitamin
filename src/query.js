@@ -8,6 +8,7 @@ module.exports = Query
  * Vitamin query builder constructor
  * 
  * @param {Object} driver
+ * @constructor
  */
 function Query(driver) {
   this._select = []
@@ -46,6 +47,7 @@ Query.prototype.where = function where(key, val) {
 
 /**
  * Add an "or where" clause to the query
+ * Example: orWhere({name: "foo"}, {name: "bar"})
  * 
  * @param {Array} clauses
  * @return {Query} instance
@@ -109,7 +111,7 @@ Query.prototype.order = function order() {
 }
 
 /**
- * 
+ * Fetch one record from the database
  * 
  * @return {Promise}
  */
@@ -118,7 +120,7 @@ Query.prototype.fetch = function fetch(cb) {
 }
 
 /**
- * 
+ * Fetch all records from th database
  * 
  * @return {Promise}
  */
@@ -127,7 +129,7 @@ Query.prototype.fetchAll = function fetchAll(cb) {
 }
 
 /**
- * 
+ * Insert a new record into the database
  * 
  * @return {Promise}
  */
@@ -136,7 +138,7 @@ Query.prototype.insert = function insert(data) {
 }
 
 /**
- * 
+ * Update a record in the database
  * 
  * @return {Promise}
  */
@@ -145,7 +147,7 @@ Query.prototype.update = function update(data) {
 }
 
 /**
- * 
+ * Delete a record from the database
  * 
  * @return {Promise}
  */
