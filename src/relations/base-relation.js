@@ -49,3 +49,16 @@ BaseRelation.prototype.load = function load(cb) {
 BaseRelation.prototype.applyConstraints = function applyConstraints(models) {
   throw new Error("`Relation.applyConstraints()` should be overridden")
 }
+
+/**
+ * Get the primary keys of a ll the given models
+ * 
+ * @param {Array} models
+ * @param {String} key primary key name
+ * @return {Array} ids
+ */
+BaseRelation.prototype.getKeys = function getKeys(models, key) {
+  return _.chain(models).map(function (model) {
+    return key ? model.get(key) : model.getId()
+  }).uniq().value()
+}
