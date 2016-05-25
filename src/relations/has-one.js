@@ -1,5 +1,5 @@
 
-var Relation = require('./base-relation')
+var Relation = require('./base')
 
 module.exports = Relation.extend({
   
@@ -14,20 +14,8 @@ module.exports = Relation.extend({
    */
   constructor: function HasOne(parent, query, fk, pk) {
     Relation.apply(this, [parent, query])
-    
     this.foreignKey = fk
     this.localKey = pk
-  },
-  
-  /**
-   * Load the related model from the database
-   * 
-   * @param {Function} cb (optional)
-   * @return {Promise}
-   */
-  load: function load(cb) {
-    this.applyConstraints([this.parent])
-    return this.query.fetch(cb)
   },
   
   /**
@@ -37,6 +25,16 @@ module.exports = Relation.extend({
    */
   applyConstraints: function applyConstraints(models) {
     this.query.where(this.foreignKey, this.getKeys(models, this.localKey))
+  },
+  
+  /**
+   * Load the related model from the database
+   * 
+   * @param {Function} cb (optional)
+   * @return {Promise}
+   */
+  _load: function _load(cb) {
+    return this.query.fetch(cb)
   }
   
 })

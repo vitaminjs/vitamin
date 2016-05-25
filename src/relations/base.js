@@ -1,12 +1,14 @@
 
 var _ = require('underscore')
 
-module.exports = BaseRelation
+module.exports = Relation
 
 /**
+ * @param {Model} parent
+ * @param {Query} query 
  * @constructor
  */
-function BaseRelation(parent, query) {
+function Relation(parent, query) {
   this.parent = parent
   this.query = query
 }
@@ -18,7 +20,7 @@ function BaseRelation(parent, query) {
  * @return {Function}
  * @static
  */
-BaseRelation.extend = function extend(props) {
+Relation.extend = function extend(props) {
   var Super = this
   
   // constructor
@@ -37,8 +39,9 @@ BaseRelation.extend = function extend(props) {
  * @param {Function} cb optional callback
  * @return {Promise}
  */
-BaseRelation.prototype.load = function load(cb) {
-  throw new Error("`Relation.load()` should be overridden")
+Relation.prototype.load = function load(cb) {
+  this.applyConstraints([this.parent])
+  return this._load(cb)
 }
 
 /**
@@ -46,19 +49,30 @@ BaseRelation.prototype.load = function load(cb) {
  * 
  * @param {Array} models
  */
-BaseRelation.prototype.applyConstraints = function applyConstraints(models) {
+Relation.prototype.applyConstraints = function applyConstraints(models) {
   throw new Error("`Relation.applyConstraints()` should be overridden")
 }
 
 /**
- * Get the primary keys of a ll the given models
+ * Get the primary keys of all the given models
  * 
  * @param {Array} models
  * @param {String} key primary key name
  * @return {Array} ids
  */
-BaseRelation.prototype.getKeys = function getKeys(models, key) {
+Relation.prototype.getKeys = function getKeys(models, key) {
   return _.chain(models).map(function (model) {
     return key ? model.get(key) : model.getId()
   }).uniq().value()
+}
+
+/**
+ * Load the data from the database
+ * 
+ * @param {Function} cb (optional)
+ * @return {Promise}
+ * @private
+ */
+Relation.prototype._load = function _load(cb) {
+  throw new Error("`Relation._load()` should be overridden")
 }
