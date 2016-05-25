@@ -3,8 +3,7 @@ var
   _ = require('underscore'),
   Events = require('./events'),
   Promise = require('bluebird'),
-  QueryBuilder = require('./query'),
-  ModelNotFound = require('./errors').ModelNotFoundError
+  QueryBuilder = require('./query')
 
 const
   EVENT_CREATING = "creating",
