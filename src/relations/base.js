@@ -61,9 +61,11 @@ Relation.prototype.applyConstraints = function applyConstraints(models) {
  * @return {Array} ids
  */
 Relation.prototype.getKeys = function getKeys(models, key) {
-  return _.chain(models).map(function (model) {
+  var ids = _.chain(models).map(function (model) {
     return key ? model.get(key) : model.getId()
   }).uniq().value()
+  
+  return ids.length === 1 ? ids[0] : ids
 }
 
 /**
