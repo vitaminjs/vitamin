@@ -26,32 +26,21 @@ function Query(driver) {
  * Add a basic where clause to the query
  * use cases:
  *   where('name', "John")
- *   where('status', "$ne", "draft")
  *   where({ name: "Rita", age: 18 })
+ *   where('status', { $ne: "draft" })
  *   where('price', { $gt: 100, $lte: 200 })
  * 
- * @param {String|Object} key
- * @param {String} op
- * @param {any} value
  * @return {Query} instance
  */
-Query.prototype.where = function where(key, op, val) {
-  var cond = {}
-  
-  switch (arguments.length) {
-    case 2:
-      val = op
-      op = "$eq"
+Query.prototype.where = function where(key, val) {
+  if ( key ) {
+    var cond = {}
     
-    case 3:
-      cond = _object(key, _object(op, val))
+    if ( _.isObject(key) ) cond = key
+    else cond[key] = val
     
-    case 1:
-      // TODO check for closures and query instances
-      cond = key
+    this._where.push(cond)
   }
-  
-  if (! _.isEmpty(cond) ) this._where.push(cond)
   
   return this
 }
@@ -183,19 +172,3 @@ Query.prototype.assemble = function assemble() {
   
   return q
 }
-
-/**
- * Helper to create an plain object with one `key` and `value`
- * 
- * @param {String} key
- * @param {any} val
- * @return {Obejct}
- */
-function _object(key, val) {
-  if ( _.isObject(val) ) return val
-  
-  var o = {}
-  o[key] = val
-  return o
-}
-
