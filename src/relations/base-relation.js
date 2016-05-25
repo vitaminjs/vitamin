@@ -4,9 +4,44 @@ var _ = require('underscore')
 module.exports = BaseRelation
 
 /**
- *
+ * @constructor
  */
-function BaseRelation(query) {
+function BaseRelation(parent, query) {
+  this.parent = parent
   this.query = query
 }
 
+/**
+ * Create and return a child relation
+ * 
+ * @return {Function}
+ */
+BaseRelation.extend = function extend(props) {
+  var Super = this
+  
+  // constructor
+  function Ctor(parent, query) { Super.apply(this, arguments) }
+  
+  // inheritance
+  Ctor.prototype = Object.create(Super.prototype)
+  _.assign(Ctor.prototype, { constructor: Ctor }, props)
+  
+  return Ctor
+}
+
+/**
+ * Get the results of the relationship
+ * 
+ * @param {Function} cb optional callback
+ * @return {Promise}
+ */
+BaseRelation.prototype.load = function load(cb) {
+  throw new Error("`Relation.load()` should be overridden")
+}
+
+/**
+ * 
+ */
+BaseRelation.prototype.applyConstraints = function applyConstraints(models) {
+  throw new Error("`Relation.applyConstraints()` should be overridden")
+}
