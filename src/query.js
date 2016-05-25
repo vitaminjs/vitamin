@@ -1,6 +1,7 @@
 
-var Promise = require('bluebird')
-var _ = require('underscore')
+var _ = require('underscore'),
+    Promise = require('bluebird'),
+    ModelNotFound = require('./errors').ModelNotFoundError
 
 module.exports = Query
 
@@ -124,19 +125,41 @@ Query.prototype.order = function order() {
 /**
  * Fetch one record from the database
  * 
+ * @param {Function} cb optional callback
  * @return {Promise}
  */
 Query.prototype.fetch = function fetch(cb) {
-  return this.driver.fetch(this.assemble())
+  return Promise
+    .bind(this)
+    .then(function () {
+      return this.driver.fetch(this.assemble())
+    })
+    .then(function (resp) {
+      if ( _.isEmpty(resp) ) 
+        return Promise.reject(new ModelNotFound)
+      
+      return this.model.setData(resp, true)
+    })
+    .nodeify(cb)
 }
 
 /**
- * Fetch all records from th database
+ * Fetch many records from th database
  * 
  * @return {Promise}
  */
 Query.prototype.fetchAll = function fetchAll(cb) {
-  return this.driver.fetchAll(this.assemble())
+  return Promise
+    .bind(this)
+    .then(function () {
+      return this.driver.fetchAll(this.assemble())
+    })
+    .then(function (resp) {
+      var Model = this.model.constructor
+      
+      return _.map(resp, Model.factory.bind(Model))
+    })
+    .nodeify(cb)
 }
 
 /**
