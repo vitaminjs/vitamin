@@ -151,11 +151,9 @@ Model.create = function create(data, cb) {
  */
 Model.all = function all(cb) {
   return Promise
-    .bind(this, this.factory().newQuery().fetchAll())
+    .bind(this)
     .then(function (resp) {
-      var Model = this.constructor
-      
-      return _.map(resp, Model.factory.bind(Model))
+      return this.factory().newQuery().fetchAll()
     })
     .nodeify(cb)
 }
@@ -175,11 +173,6 @@ Model.find = function find(id, cb) {
       var pk = this.prototype.getKeyName()
       
       return this.where(pk, id).fetch()
-    })
-    .then(function (resp) {
-      if ( _.isEmpty(resp) ) return Promise.reject(new ModelNotFound)
-      
-      return this.factory().setData(resp, true)
     })
     .nodeify(cb)
 }
@@ -394,7 +387,7 @@ Model.prototype.getDriver = function getDriver() {
 /**
  * Fetch fresh data from database
  * 
- * @param {Function} callback
+ * @param {Function} cb optional callback
  */
 Model.prototype.fetch = function fetch(cb) {
   return Promise
@@ -403,11 +396,6 @@ Model.prototype.fetch = function fetch(cb) {
       var pk = this.getKeyName(), id = this.getId()
       
       return this.newQuery().where(pk, id).fetch()
-    })
-    .then(function (data) {
-      if ( _.isEmpty(data) ) return Promise.reject(new ModelNotFound)
-      
-      return this.setData(data, true)
     })
     .nodeify(cb)
 }
