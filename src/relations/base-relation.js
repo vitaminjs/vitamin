@@ -14,7 +14,9 @@ function BaseRelation(parent, query) {
 /**
  * Create and return a child relation
  * 
+ * @param {Object} props
  * @return {Function}
+ * @static
  */
 BaseRelation.extend = function extend(props) {
   var Super = this
@@ -40,7 +42,9 @@ BaseRelation.prototype.load = function load(cb) {
 }
 
 /**
+ * Apply constraints on the relation query
  * 
+ * @param {Array} models
  */
 BaseRelation.prototype.applyConstraints = function applyConstraints(models) {
   throw new Error("`Relation.applyConstraints()` should be overridden")
