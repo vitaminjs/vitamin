@@ -42,7 +42,7 @@ Query.prototype.where = function where(key, op, val) {
   switch (arguments.length) {
     case 2:
       val = op
-      op = "$eq"
+      op = _.isArray(val) ? "$in" : "$eq"
     
     case 3:
       cond = _object(key, _object(op, val))
