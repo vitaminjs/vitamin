@@ -38,6 +38,18 @@ module.exports = Relation.extend({
       .newInstance(attrs)
       .set(this.foreignKey, this.parent.get(this.localKey))
       .save(cb)
+  },
+  
+  /**
+   * Attach a model instance to the parent model
+   * 
+   * @param {Model} model
+   * @param {Function} cb (optional)
+   * @return a promise
+   */
+  save: function save(model, cb) {
+    model.set(this.foreignKey, this.parent.get(this.localKey))
+    return model.save(cb)
   }
   
 })
