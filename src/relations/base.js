@@ -4,13 +4,14 @@ var _ = require('underscore')
 module.exports = Relation
 
 /**
- * @param {Model} parent
- * @param {Query} query 
+ * @param {Model} parent relationship owner
+ * @param {Model} related
  * @constructor
  */
-function Relation(parent, query) {
+function Relation(parent, related) {
   this.parent = parent
-  this.query = query
+  this.related = related
+  this.query = related.newQuery()
 }
 
 /**
