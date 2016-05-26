@@ -38,7 +38,7 @@ Relation.extend = function extend(props) {
  * Get the results of the relationship
  * 
  * @param {Function} cb optional callback
- * @return {Promise}
+ * @return a promise
  */
 Relation.prototype.load = function load(cb) {
   this.applyConstraints([this.parent])
@@ -73,7 +73,7 @@ Relation.prototype.getKeys = function getKeys(models, key) {
  * Load the data from the database
  * 
  * @param {Function} cb (optional)
- * @return {Promise}
+ * @return a promise
  * @private
  */
 Relation.prototype._load = function _load(cb) {

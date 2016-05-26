@@ -12,7 +12,7 @@ module.exports = Relation.extend({
    * @param {String} pk other key
    * @constructor
    */
-  constructor: function HasOne(parent, query, fk, pk) {
+  constructor: function BelongsTo(parent, query, fk, pk) {
     Relation.apply(this, [parent, query])
     this.foreignKey = fk
     this.otherKey = pk
@@ -31,7 +31,8 @@ module.exports = Relation.extend({
    * Load the related model from the database
    * 
    * @param {Function} cb (optional)
-   * @return {Promise}
+   * @return a promise
+   * @private
    */
   _load: function _load(cb) {
     return this.query.fetch(cb)

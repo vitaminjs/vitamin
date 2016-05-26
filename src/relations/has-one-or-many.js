@@ -4,14 +4,16 @@ var Relation = require('./base')
 module.exports = Relation.extend({
   
   /**
+   * HasOneOrMany relation constructor
+   * 
    * @param {Model} parent
    * @param {Model} related
    * @param {String} fk
    * @param {String} pk
    * @constructor
    */
-  constructor: function(parent, related, fk, pk) {
-    Relation.apply(this, [parent, related]
+  constructor: function HasOneOrMany(parent, related, fk, pk) {
+    Relation.apply(this, [parent, related])
     this.foreignKey = fk
     this.localKey = pk
   },

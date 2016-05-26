@@ -8,6 +8,7 @@ module.exports = Relation.extend({
    * 
    * @param {Function} cb (optional)
    * @return a promise
+   * @private
    */
   _load: function _load(cb) {
     return this.query.fetchAll(cb)
