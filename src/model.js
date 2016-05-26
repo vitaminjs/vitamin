@@ -375,6 +375,16 @@ Model.prototype.newQuery = function newQuery() {
 }
 
 /**
+ * Create a new instance of the current model
+ * 
+ * @param {Object} attrs (optional)
+ * @return a model instance
+ */
+Model.prototype.newInstance = function newInstance(attrs) {
+  return this.constructor.factory(attrs)
+}
+
+/**
  * Get the data source driver
  * 
  * @return {Object} 
