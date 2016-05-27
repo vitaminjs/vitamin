@@ -46,6 +46,20 @@ Relation.prototype.load = function load(cb) {
 }
 
 /**
+ * populate the results of the relationship
+ * 
+ * @param {Array<Model>} models
+ * @param {String} name
+ * @return Promise instance
+ */
+Relation.prototype.eagerLoad = function(models, name) {
+  this.applyConstraints(models)
+  return this._load().then(function (results) {
+    this._populate(results, models, name)
+  })
+}
+
+/**
  * Apply constraints on the relation query
  * 
  * @param {Array} models
@@ -78,4 +92,16 @@ Relation.prototype.getKeys = function getKeys(models, key) {
  */
 Relation.prototype._load = function _load(cb) {
   throw new Error("`Relation._load()` should be overridden")
+}
+
+/**
+ * Populate the parent models with the eagerly loaded results
+ * 
+ * @param {Array<Model>} results
+ * @param {Array<Model>} models
+ * @param {String} name
+ * @private
+ */
+Relation.prototype._populate = function _populate(results, models, name) {
+  throw new Error("`Relation._populate()` should be overridden")
 }
