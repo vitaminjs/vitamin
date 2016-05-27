@@ -189,6 +189,17 @@ Model.where = function where(key, value) {
 }
 
 /**
+ * Load all the given relationships
+ * 
+ * @param {Array} rels
+ * @param {Function} cb (optional)
+ * @return Promise instance
+ */
+Model.prototype.load = function load(rels, cb) {
+  return this.newQuery().with(rels).loadRelated([this]).nodeify(cb)
+}
+
+/**
  * Trigger a model event
  * 
  * @param {String} event
