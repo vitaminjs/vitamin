@@ -180,6 +180,9 @@ Query.prototype.fetch = function fetch(cb) {
       
       return this.model.setData(resp, true)
     })
+    .tap(function (model) {
+        return this.loadRelated([model])
+    })
     .nodeify(cb)
 }
 
@@ -199,6 +202,7 @@ Query.prototype.fetchAll = function fetchAll(cb) {
       
       return _.map(resp, Model.factory.bind(Model))
     })
+    .tap(this.loadRelated)
     .nodeify(cb)
 }
 
