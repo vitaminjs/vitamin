@@ -384,7 +384,7 @@ Model.prototype.toJSON = function toJSON() {
 Model.prototype.newQuery = function newQuery() {
   var query = new QueryBuilder(this.getDriver())
   
-  return query.from(this.getSourceName())
+  return query.setModel(this).from(this.getSourceName())
 }
 
 /**
