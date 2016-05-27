@@ -6,7 +6,7 @@ var _ = require('underscore'),
 module.exports = Query
 
 /**
- * Vitamin query builder constructor
+ * Query Builder constructor
  * 
  * @param {Object} driver
  * @constructor
@@ -15,12 +15,52 @@ function Query(driver) {
   this._select = []
   this._where  = []
   this._order  = []
+  this._rels   = []
   this._skip   = undefined
   this._limit  = undefined
   this._from   = undefined
   
   // make `driver` property private
   Object.defineProperty(this, 'driver', { value: driver })
+}
+
+/**
+ * Set the relationships that should be eager loaded
+ * 
+ * @param {Array|String} related
+ * @return Query instance
+ */
+Query.prototype.with = function with(related) {
+  this._rels = _.isArray(rels) ? rels : _.toArray(arguments)
+  return this
+}
+
+/**
+ * Load the relationships for the models
+ * 
+ * @param {Array<Model>} models
+ * @return Promise instance
+ */
+Query.prototype.loadRelated = function loadRelated(models) {
+  return Promise
+    .bind(this)
+    .map(this._rels, function iterateRelations(name) {
+      var relation = this._getRelation(name)
+      
+      // a proposal for Relation.eagerLoad()
+      return relation.eagerLoad(models, name)
+    })
+}
+
+/**
+ * Set the model being queried
+ * 
+ * @param {Model} model
+ * @return Query instance
+ */
+Query.prototype.setModel = function setModel(model) {
+  this.model = model
+  return this
 }
 
 /**
@@ -205,6 +245,21 @@ Query.prototype.assemble = function assemble() {
   }, this)
   
   return q
+}
+
+/**
+ * Get the relation instance for the given relation name
+ * 
+ * @param {String} name
+ * @return Relation instance
+ * @private
+ */
+Query.prototype._getRelation = function _getRelation(name) {
+  var relation = this.model[name]
+  
+  if (! relation ) throw new Error("Undefined '" + name + "' relationship")
+  
+  return relation.apply(this.model)
 }
 
 /**
