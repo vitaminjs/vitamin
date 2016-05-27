@@ -189,6 +189,19 @@ Model.where = function where(key, value) {
 }
 
 /**
+ * Begin querying a model wtih eager loading
+ * 
+ * @param {String|Array} related
+ * @return Query instance
+ * @static
+ */
+Model.with = function with(related) {
+  related = _.isArray(related) ? related : _.toArray(arguments)
+  
+  return this.factory().newQuery().with(related)
+}
+
+/**
  * Load all the given relationships
  * 
  * @param {Array} rels
@@ -276,6 +289,19 @@ Model.prototype.set = function set(attr, newVal) {
 Model.prototype.get = function get(attr, defaultValue) {
   // TODO use attribute getter if available
   return this.$data[attr] || defaultValue
+}
+
+/**
+ * Get or set the relationship value
+ * 
+ * @param {String} name
+ * @param {Model|Array} value
+ * @return any
+ */
+Model.prototype.related = function related(name, value) {
+  if ( value ) this.$rels[name] = value
+  
+  return this.$rels[name]
 }
 
 /**
@@ -607,6 +633,7 @@ Model.prototype._destroy = function _destroy() {
  * @private
  */
 Model.prototype._init = function _init(attrs) {
+  this.$rels = {}
   this.$data = {}
   this.$original = {}
   
