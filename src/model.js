@@ -195,7 +195,7 @@ Model.where = function where(key, value) {
  * @return Query instance
  * @static
  */
-Model.with = function with(related) {
+Model.with = function _with(related) {
   related = _.isArray(related) ? related : _.toArray(arguments)
   
   return this.factory().newQuery().with(related)

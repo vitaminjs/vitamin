@@ -20,7 +20,7 @@ function Query(driver) {
   this._limit  = undefined
   this._from   = undefined
   
-  // make `driver` property private
+  // make `driver` a read-only property
   Object.defineProperty(this, 'driver', { value: driver })
 }
 
@@ -30,8 +30,8 @@ function Query(driver) {
  * @param {Array|String} related
  * @return Query instance
  */
-Query.prototype.with = function with(related) {
-  this._rels = _.isArray(rels) ? rels : _.toArray(arguments)
+Query.prototype.with = function _with(related) {
+  this._rels = _.isArray(related) ? related : _.toArray(arguments)
   return this
 }
 
@@ -48,7 +48,7 @@ Query.prototype.loadRelated = function loadRelated(models) {
       var relation = this._getRelation(name)
       
       // a proposal for Relation.eagerLoad()
-      return relation.eagerLoad(models, name)
+      return relation.eagerLoad(name, models)
     })
 }
 
@@ -229,7 +229,7 @@ Query.prototype.update = function update(data) {
  * 
  * @return {Promise}
  */
-Query.prototype.destroy = function destroy(cb) {
+Query.prototype.destroy = function destroy() {
   return this.driver.destroy(this.assemble())
 }
 

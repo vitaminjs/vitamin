@@ -22,12 +22,11 @@ module.exports = Relation.extend({
   /**
    * Load the related models from the database
    * 
-   * @param {Function} cb (optional)
-   * @return a promise
+   * @return Promise instance
    * @private
    */
-  _load: function _load(cb) {
-    return this.query.fetchAll(cb)
+  _load: function _load() {
+    return this.query.fetchAll()
   }
   
 })

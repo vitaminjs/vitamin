@@ -20,26 +20,6 @@ module.exports = Relation.extend({
   },
   
   /**
-   * Apply relation query constraints
-   * 
-   * @param {Array} models
-   */
-  applyConstraints: function applyConstraints(models) {
-    this.query.where(this.otherKey, this.getKeys(models, this.foreignKey))
-  },
-  
-  /**
-   * Load the related model from the database
-   * 
-   * @param {Function} cb (optional)
-   * @return a promise
-   * @private
-   */
-  _load: function _load(cb) {
-    return this.query.fetch(cb)
-  },
-  
-  /**
    * Associate the model instance to the current model
    * 
    * @param {Model|any} model
@@ -58,7 +38,27 @@ module.exports = Relation.extend({
    * @return Model instance
    */
   dissociate: function dissociate() {
-    return this.set(this.foreignKey, null)
+    return this.parent.set(this.foreignKey, null)
+  },
+  
+  /**
+   * Apply relation query constraints
+   * 
+   * @param {Array} models
+   * @private
+   */
+  _applyConstraints: function _applyConstraints(models) {
+    this.query.where(this.otherKey, this._getKeys(models, this.foreignKey))
+  },
+  
+  /**
+   * Load the related model from the database
+   * 
+   * @return Promise instance
+   * @private
+   */
+  _load: function _load() {
+    return this.query.fetch()
   }
   
 })

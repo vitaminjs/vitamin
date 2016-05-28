@@ -19,15 +19,6 @@ module.exports = Relation.extend({
   },
   
   /**
-   * Apply query constraints
-   * 
-   * @param {Array}
-   */
-  applyConstraints: function applyConstraints(models) {
-    this.query.where(this.foreignKey, this.getKeys(models, this.localKey))
-  },
-  
-  /**
    * Create a new instance of the related model
    * 
    * @param {Object} attrs
@@ -52,6 +43,16 @@ module.exports = Relation.extend({
   save: function save(model, cb) {
     model.set(this.foreignKey, this.parent.get(this.localKey))
     return model.save(cb)
+  },
+  
+  /**
+   * Apply query constraints
+   * 
+   * @param {Array}
+   * @private
+   */
+  _applyConstraints: function _applyConstraints(models) {
+    this.query.where(this.foreignKey, this.getKeys(models, this.localKey))
   }
   
 })
