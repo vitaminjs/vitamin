@@ -393,13 +393,13 @@ Model.prototype.isNew = function isNew() {
 }
 
 /**
- * 
+ * Returns a JSON representation of the current model
  * 
  * @return object
  */
 Model.prototype.toJSON = function toJSON() {
   // TODO omit hidden fields
-  return _.clone(this.$data)
+  return _.assign({}, this.$data, this.$rels)
 }
 
 /**

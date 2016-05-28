@@ -43,7 +43,7 @@ _.assign(Relation.prototype, {
    * @return Promise instance
    */
   load: function load(cb) {
-    this._applyConstraints([this.parent])
+    this._applyConstraints()
     return this._load().nodeify(cb)
   },
   
@@ -54,8 +54,8 @@ _.assign(Relation.prototype, {
    * @param {Array} models
    * @return Promise instance
    */
-  eagerLoad: function(name, models) {
-    this._applyConstraints(models)
+  eagerLoad: function eagerLoad(name, models) {
+    this._applyEagerConstraints(models)
     return this._load().then(this._populate.bind(this, name, models))
   },
   
@@ -68,21 +68,28 @@ _.assign(Relation.prototype, {
    * @private
    */
   _getKeys: function _getKeys(models, key) {
-    var ids = _.chain(models).map(function (model) {
+    return _.chain(models).map(function (model) {
       return key ? model.get(key) : model.getId()
     }).uniq().value()
-    
-    return ids.length === 1 ? ids[0] : ids
   },
   
   /**
    * Apply constraints on the relation query
    * 
+   * @private
+   */
+  _applyConstraints: function _applyConstraints() {
+    throw new Error("`Relation._applyConstraints()` should be overridden")
+  },
+  
+  /**
+   * Apply eager constraints on the relation query
+   * 
    * @param {Array} models
    * @private
    */
-  _applyConstraints: function _applyConstraints(models) {
-    throw new Error("`Relation._applyConstraints()` should be overridden")
+  _applyEagerConstraints: function _applyEagerConstraints(models) {
+    throw new Error("`Relation._applyEagerConstraints()` should be overridden")
   },
   
   /**

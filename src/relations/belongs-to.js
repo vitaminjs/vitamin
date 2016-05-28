@@ -1,6 +1,7 @@
 
 var Relation = require('./base'),
-    Model = require('../model')
+    Model = require('../model'),
+    _ = require('underscore')
 
 module.exports = Relation.extend({
   
@@ -42,13 +43,22 @@ module.exports = Relation.extend({
   },
   
   /**
-   * Apply relation query constraints
+   * Apply eager relation query constraints
    * 
    * @param {Array} models
    * @private
    */
-  _applyConstraints: function _applyConstraints(models) {
-    this.query.where(this.otherKey, this._getKeys(models, this.foreignKey))
+  _applyEagerConstraints: function _applyEagerConstraints(models) {
+    this.query.where(this.otherKey, "$in", this._getKeys(models, this.foreignKey))
+  },
+  
+  /**
+   * Apply relation query constraints
+   * 
+   * @private
+   */
+  _applyConstraints: function _applyConstraints() {
+    this.query.where(this.otherKey, this.parent.get(this.foreignKey))
   },
   
   /**
@@ -59,6 +69,44 @@ module.exports = Relation.extend({
    */
   _load: function _load() {
     return this.query.fetch()
+  },
+  
+  /**
+   * Populate the parent models with the eagerly loaded results
+   * 
+   * @param {String} name
+   * @param {Array} models
+   * @param {Array} results
+   * @private
+   */
+  _populate: function _populate(name, models, results) {
+    var foreign = this.foreignKey, other = this.otherKey,
+        dictionary = this._buildDictionary(results, other)
+    
+    for ( var owner in models ) {
+      var key = String(owner.get(foreign))
+      
+      owner.rel(name, dictionary[key] || null)
+    }
+  },
+  
+  /**
+   * Build model dictionary keyed by the given key
+   * 
+   * @param {Array} models
+   * @param {String} key
+   * @return object
+   * @private
+   */
+  _buildDictionary: function _buildDictionary(models, key) {
+    var dict = {}
+    
+    _.each(models, function (mdl) {
+      // transform numeric keys to string keys for good matching
+      dict[String(mdl.get(key))] = mdl
+    })
+    
+    return dict
   }
   
 })

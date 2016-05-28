@@ -46,13 +46,41 @@ module.exports = Relation.extend({
   },
   
   /**
-   * Apply query constraints
+   * Apply eager relation query constraints
    * 
    * @param {Array}
    * @private
    */
-  _applyConstraints: function _applyConstraints(models) {
-    this.query.where(this.foreignKey, this.getKeys(models, this.localKey))
+  _applyEagerConstraints: function _applyEagerConstraints(models) {
+    this.query.where(this.foreignKey, "$in", this.getKeys(models, this.localKey))
+  },
+  
+  /**
+   * Apply relation query constraints
+   * 
+   * @private
+   */
+  _applyConstraints: function _applyConstraints() {
+    this.query.where(this.foreignKey, this.parent.get(this.localKey))
+  },
+  
+  /**
+   * Populate the parent models with the eagerly loaded results
+   * 
+   * @param {String} name
+   * @param {Array} models
+   * @param {Array} results
+   * @private
+   */
+  _populate: function _populate(name, models, results) {
+    var foreign = this.foreignKey, local = this.localKey,
+        dictionary = this._buildDictionary(results, foreign)
+    
+    for ( var owner in models ) {
+      var key = String(owner.get(local))
+      
+      owner.rel(name, dictionary[key] || this._getRelatedDefaultValue())
+    }
   }
   
 })

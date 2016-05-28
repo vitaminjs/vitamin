@@ -47,7 +47,6 @@ Query.prototype.loadRelated = function loadRelated(models) {
     .map(this._rels, function iterateRelations(name) {
       var relation = this._getRelation(name)
       
-      // a proposal for Relation.eagerLoad()
       return relation.eagerLoad(name, models)
     })
 }
@@ -181,7 +180,7 @@ Query.prototype.fetch = function fetch(cb) {
       return this.model.setData(resp, true)
     })
     .tap(function (model) {
-        return this.loadRelated([model])
+      return this.loadRelated([model])
     })
     .nodeify(cb)
 }
@@ -198,9 +197,9 @@ Query.prototype.fetchAll = function fetchAll(cb) {
       return this.driver.fetchAll(this.assemble())
     })
     .then(function (resp) {
-      var Model = this.model.constructor
-      
-      return _.map(resp, Model.factory.bind(Model))
+      return _.map(resp, function (data) {
+        return this.newInstance(data)
+      }, this.model)
     })
     .tap(this.loadRelated)
     .nodeify(cb)
