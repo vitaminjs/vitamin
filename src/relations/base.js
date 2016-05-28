@@ -79,7 +79,7 @@ _.assign(Relation.prototype, {
    * @private
    */
   _applyConstraints: function _applyConstraints() {
-    throw new Error("`Relation._applyConstraints()` should be overridden")
+    this.query.where(this.otherKey, this.parent.get(this.localKey))
   },
   
   /**
@@ -89,7 +89,7 @@ _.assign(Relation.prototype, {
    * @private
    */
   _applyEagerConstraints: function _applyEagerConstraints(models) {
-    throw new Error("`Relation._applyEagerConstraints()` should be overridden")
+    this.query.where(this.otherKey, "$in", this._getKeys(models, this.localKey))
   },
   
   /**
@@ -111,7 +111,14 @@ _.assign(Relation.prototype, {
    * @private
    */
   _populate: function _populate(name, models, results) {
-    throw new Error("`Relation._populate()` should be overridden")
+    var local = this.localKey, other = this.otherKey,
+        dictionary = this._buildDictionary(results, other)
+    
+    for ( var owner in models ) {
+      var key = String(owner.get(local))
+      
+      owner.rel(name, dictionary[key] || this._getRelatedDefaultValue())
+    }
   }
   
 })

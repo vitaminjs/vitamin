@@ -535,7 +535,7 @@ Model.prototype._hasMany = function _hasMany(target, fk, pk) {
   var related = target.factory(),
       HasMany = require('./relations/has-many')
   
-  return HasMany(this, related, fk, pk || this.getKeyName())
+  return new HasMany(this, related, fk, pk || this.getKeyName())
 }
 
 /**
@@ -551,7 +551,7 @@ Model.prototype._belongsTo = function _belongsTo(target, fk, pk) {
   var related = target.factory(),
       BelongsTo = require('./relations/belongs-to')
   
-  return BelongsTo(this, related, fk, pk || related.getKeyName())
+  return new BelongsTo(this, related, fk, pk || related.getKeyName())
 }
 
 /**

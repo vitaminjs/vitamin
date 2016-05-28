@@ -9,14 +9,14 @@ module.exports = Relation.extend({
    * BelongsTo relation constructor
    * 
    * @param {Model} parent
-   * @param {Query} query
-   * @param {String} fk foreign key
-   * @param {String} pk other key
+   * @param {Model} related
+   * @param {String} fk parent model key
+   * @param {String} pk related model key
    * @constructor
    */
-  constructor: function BelongsTo(parent, query, fk, pk) {
-    Relation.apply(this, [parent, query])
-    this.foreignKey = fk
+  constructor: function BelongsTo(parent, related, fk, pk) {
+    Relation.apply(this, [parent, related])
+    this.localKey = fk
     this.otherKey = pk
   },
   
@@ -30,7 +30,7 @@ module.exports = Relation.extend({
     var isModel = model instanceof Model,
         id = isModel ? model.get(this.otherKey) : model
     
-    return this.parent.set(this.foreignKey, id)
+    return this.parent.set(this.localKey, id)
   },
   
   /**
@@ -39,26 +39,7 @@ module.exports = Relation.extend({
    * @return Model instance
    */
   dissociate: function dissociate() {
-    return this.parent.set(this.foreignKey, null)
-  },
-  
-  /**
-   * Apply eager relation query constraints
-   * 
-   * @param {Array} models
-   * @private
-   */
-  _applyEagerConstraints: function _applyEagerConstraints(models) {
-    this.query.where(this.otherKey, "$in", this._getKeys(models, this.foreignKey))
-  },
-  
-  /**
-   * Apply relation query constraints
-   * 
-   * @private
-   */
-  _applyConstraints: function _applyConstraints() {
-    this.query.where(this.otherKey, this.parent.get(this.foreignKey))
+    return this.parent.set(this.localKey, null)
   },
   
   /**
@@ -69,25 +50,6 @@ module.exports = Relation.extend({
    */
   _load: function _load() {
     return this.query.fetch()
-  },
-  
-  /**
-   * Populate the parent models with the eagerly loaded results
-   * 
-   * @param {String} name
-   * @param {Array} models
-   * @param {Array} results
-   * @private
-   */
-  _populate: function _populate(name, models, results) {
-    var foreign = this.foreignKey, other = this.otherKey,
-        dictionary = this._buildDictionary(results, other)
-    
-    for ( var owner in models ) {
-      var key = String(owner.get(foreign))
-      
-      owner.rel(name, dictionary[key] || null)
-    }
   },
   
   /**
@@ -107,6 +69,15 @@ module.exports = Relation.extend({
     })
     
     return dict
+  },
+  
+  /**
+   * Get the default value for the relationship
+   * 
+   * @return any
+   */
+  _getRelatedDefaultValue: function _getRelatedDefaultValue() {
+    return null
   }
   
 })

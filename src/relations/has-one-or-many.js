@@ -8,13 +8,13 @@ module.exports = Relation.extend({
    * 
    * @param {Model} parent
    * @param {Model} related
-   * @param {String} fk
-   * @param {String} pk
+   * @param {String} fk related model key
+   * @param {String} pk parent model key
    * @constructor
    */
   constructor: function HasOneOrMany(parent, related, fk, pk) {
     Relation.apply(this, [parent, related])
-    this.foreignKey = fk
+    this.otherKey = fk
     this.localKey = pk
   },
   
@@ -29,7 +29,7 @@ module.exports = Relation.extend({
     return this
       .related
       .newInstance(attrs)
-      .set(this.foreignKey, this.parent.get(this.localKey))
+      .set(this.otherKey, this.parent.get(this.localKey))
       .save(cb)
   },
   
@@ -41,46 +41,8 @@ module.exports = Relation.extend({
    * @return a promise
    */
   save: function save(model, cb) {
-    model.set(this.foreignKey, this.parent.get(this.localKey))
+    model.set(this.otherKey, this.parent.get(this.localKey))
     return model.save(cb)
   },
-  
-  /**
-   * Apply eager relation query constraints
-   * 
-   * @param {Array}
-   * @private
-   */
-  _applyEagerConstraints: function _applyEagerConstraints(models) {
-    this.query.where(this.foreignKey, "$in", this.getKeys(models, this.localKey))
-  },
-  
-  /**
-   * Apply relation query constraints
-   * 
-   * @private
-   */
-  _applyConstraints: function _applyConstraints() {
-    this.query.where(this.foreignKey, this.parent.get(this.localKey))
-  },
-  
-  /**
-   * Populate the parent models with the eagerly loaded results
-   * 
-   * @param {String} name
-   * @param {Array} models
-   * @param {Array} results
-   * @private
-   */
-  _populate: function _populate(name, models, results) {
-    var foreign = this.foreignKey, local = this.localKey,
-        dictionary = this._buildDictionary(results, foreign)
-    
-    for ( var owner in models ) {
-      var key = String(owner.get(local))
-      
-      owner.rel(name, dictionary[key] || this._getRelatedDefaultValue())
-    }
-  }
   
 })
