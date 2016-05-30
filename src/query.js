@@ -73,7 +73,9 @@ Query.prototype.setModel = function setModel(model) {
  * @param {String|Object} key
  * @param {String} op
  * @param {any} value
- * @return {Query} instance
+ * @return Query instance
+ * 
+ * @todo check for subqueries as closures
  */
 Query.prototype.where = function where(key, op, val) {
   var cond = {}
@@ -87,7 +89,6 @@ Query.prototype.where = function where(key, op, val) {
       cond = _object(key, _object(op, val))
     
     case 1:
-      // TODO check for closures and query instances
       cond = key
   }
   
@@ -97,11 +98,22 @@ Query.prototype.where = function where(key, op, val) {
 }
 
 /**
+ * Add a `Where in` clause to the query
+ * 
+ * @param {String} key
+ * @param {Array} val
+ * @return Query instance
+ */
+Query.prototype.whereIn = function whereIn(key, val) {
+  return this.where(key, "$in", val)
+}
+
+/**
  * Add an "or where" clause to the query
  * Example: orWhere({name: "foo"}, {name: "bar"})
  * 
  * @param {Array} clauses
- * @return {Query} instance
+ * @return Query instance
  */
 Query.prototype.orWhere = function orWhere(clauses) {
   return this.where({ $or: _.toArray(arguments) })
@@ -110,7 +122,8 @@ Query.prototype.orWhere = function orWhere(clauses) {
 /**
  * Set the source name which the query is targeting
  * 
- * @return {Query} instance
+ * @param {String} from
+ * @return Query instance
  */
 Query.prototype.from = function from(from) {
   this._from = from
@@ -120,10 +133,11 @@ Query.prototype.from = function from(from) {
 /**
  * Set the fields to be selected
  * 
- * @return {Query} instance
+ * @param {String} field
+ * @return Query instance
  */
-Query.prototype.select = function select() {
-  var args = _.toArray(arguments)
+Query.prototype.select = function select(field) {
+  var args = _.isArray(field) ? field : _.toArray(arguments)
   
   this._select = _.uniq(this._select.concat(args))
   return this
@@ -132,7 +146,8 @@ Query.prototype.select = function select() {
 /**
  * Alias to set the "limit" value of the query
  * 
- * @return {Query} instance
+ * @param {Number} n
+ * @return Query instance
  */
 Query.prototype.take = function take(n) {
   this._limit = Number(n)
@@ -142,7 +157,8 @@ Query.prototype.take = function take(n) {
 /**
  * Alias to set the "offset" value of the query
  * 
- * @return {Query} instance
+ * @param {Number} n
+ * @return Query instance
  */
 Query.prototype.skip = function skip(n) {
   this._skip = Number(n)
@@ -152,10 +168,11 @@ Query.prototype.skip = function skip(n) {
 /**
  * Add an "order by" clauses to the query
  * 
- * @return {Query} instance
+ * @param {String} field
+ * @return Query instance
  */
-Query.prototype.order = function order() {
-  var args = _.toArray(arguments)
+Query.prototype.order = function order(field) {
+  var args = _.isArray(field) ? field : _.toArray(arguments)
   
   this._order = _.uniq(this._order.concat(args))
   return this
@@ -188,6 +205,7 @@ Query.prototype.fetch = function fetch(cb) {
 /**
  * Fetch many records from th database
  * 
+ * @param {Function} cb (optional)
  * @return {Promise}
  */
 Query.prototype.fetchAll = function fetchAll(cb) {
@@ -208,6 +226,7 @@ Query.prototype.fetchAll = function fetchAll(cb) {
 /**
  * Insert a new record into the database
  * 
+ * @param {Object} data
  * @return {Promise}
  */
 Query.prototype.insert = function insert(data) {
@@ -217,6 +236,7 @@ Query.prototype.insert = function insert(data) {
 /**
  * Update a record in the database
  * 
+ * @param {Object} data
  * @return {Promise}
  */
 Query.prototype.update = function update(data) {
@@ -235,7 +255,7 @@ Query.prototype.destroy = function destroy() {
 /**
  * Get the object representation of the query.
  * 
- * @return {Object}
+ * @return object
  */
 Query.prototype.assemble = function assemble() {
   var q = {}, 
@@ -279,4 +299,3 @@ function _object(key, val) {
   o[key] = val
   return o
 }
-
