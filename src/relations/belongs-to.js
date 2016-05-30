@@ -3,7 +3,7 @@ var Relation = require('./base'),
     Model = require('../model'),
     _ = require('underscore')
 
-module.exports = Relation.extend({
+var BelongsTo = Relation.extend({
   
   /**
    * BelongsTo relation constructor
@@ -40,44 +40,11 @@ module.exports = Relation.extend({
    */
   dissociate: function dissociate() {
     return this.parent.set(this.localKey, null)
-  },
-  
-  /**
-   * Load the related model from the database
-   * 
-   * @return Promise instance
-   * @private
-   */
-  _load: function _load() {
-    return this.query.fetch()
-  },
-  
-  /**
-   * Build model dictionary keyed by the given key
-   * 
-   * @param {Array} models
-   * @param {String} key
-   * @return object
-   * @private
-   */
-  _buildDictionary: function _buildDictionary(models, key) {
-    var dict = {}
-    
-    _.each(models, function (mdl) {
-      // transform numeric keys to string keys for good matching
-      dict[String(mdl.get(key))] = mdl
-    })
-    
-    return dict
-  },
-  
-  /**
-   * Get the default value for the relationship
-   * 
-   * @return any
-   */
-  _getRelatedDefaultValue: function _getRelatedDefaultValue() {
-    return null
   }
   
 })
+
+// use mixin
+_.assign(BelongsTo.prototype, require('./mixins/one-to-one'))
+
+module.exports = BelongsTo

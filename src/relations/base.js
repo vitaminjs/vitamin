@@ -31,7 +31,7 @@ Relation.extend = function extend(props) {
   Ctor.prototype = Object.create(Super.prototype)
   _.assign(Ctor.prototype, { constructor: Ctor }, props)
   
-  return Ctor
+  return _.extend(Ctor, Super)
 }
 
 _.assign(Relation.prototype, {
@@ -90,16 +90,6 @@ _.assign(Relation.prototype, {
    */
   _applyEagerConstraints: function _applyEagerConstraints(models) {
     this.query.where(this.otherKey, "$in", this._getKeys(models, this.localKey))
-  },
-  
-  /**
-   * Load the data from the database
-   * 
-   * @return Promise instance
-   * @private
-   */
-  _load: function _load() {
-    throw new Error("`Relation._load()` should be overridden")
   },
 
   /**
