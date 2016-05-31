@@ -12,13 +12,14 @@ module.exports = Query
  * @constructor
  */
 function Query(driver) {
-  this._select = []
-  this._where  = []
-  this._order  = []
-  this._rels   = []
-  this._skip   = undefined
-  this._limit  = undefined
-  this._from   = undefined
+  this._select    = []
+  this._where     = []
+  this._order     = []
+  this._rels      = []
+  this._distinct  = false
+  this._offset    = undefined
+  this._limit     = undefined
+  this._from      = undefined
   
   // make `driver` a read-only property
   Object.defineProperty(this, 'driver', { value: driver })
@@ -63,6 +64,17 @@ Query.prototype.setModel = function setModel(model) {
 }
 
 /**
+ * Clone the current query builder
+ * 
+ * @return Query instance
+ */
+Query.prototype.clone = function clone() {
+  var query = new Query(this.driver)
+  
+  return query.from(this._from).setModel(this.model)
+}
+
+/**
  * Add a basic where clause to the query
  * use cases:
  *   where('name', "John")
@@ -74,8 +86,6 @@ Query.prototype.setModel = function setModel(model) {
  * @param {String} op
  * @param {any} value
  * @return Query instance
- * 
- * @todo check for subqueries as closures
  */
 Query.prototype.where = function where(key, op, val) {
   var cond = {}
@@ -86,6 +96,9 @@ Query.prototype.where = function where(key, op, val) {
       op = _.isArray(val) ? "$in" : "$eq"
     
     case 3:
+      // accept sub queries
+      if ( val instanceof Query ) val = val.assemble()
+      
       cond = _object(key, _object(op, val))
     
     case 1:
@@ -144,6 +157,16 @@ Query.prototype.select = function select(field) {
 }
 
 /**
+ * Force the query to fetch only distinct results
+ * 
+ * @return Query instance
+ */
+Query.prototype.distinct = function distinct() {
+  this._distinct = true
+  return this
+}
+
+/**
  * Alias to set the "limit" value of the query
  * 
  * @param {Number} n
@@ -161,7 +184,7 @@ Query.prototype.take = function take(n) {
  * @return Query instance
  */
 Query.prototype.skip = function skip(n) {
-  this._skip = Number(n)
+  this._offset = Number(n)
   return this
 }
 
@@ -259,12 +282,17 @@ Query.prototype.destroy = function destroy() {
  */
 Query.prototype.assemble = function assemble() {
   var q = {}, 
-      props = ['select', 'from', 'where', 'order', 'skip', 'limit']
+      props = ['select', 'distinct', 'from', 'where', 'order', 'offset', 'limit']
   
   _.each(props, function _assemblePieces(name) {
     var prop = this['_' + name]
     
-    if (! _.isEmpty(prop) ) q[name] = _.clone(prop)
+    // skip empty arrays
+    if ( _.isEmpty(prop) ) return
+    
+    if ( _.isArray(prop) ) prop = prop.slice()
+    
+    q[name] = prop
   }, this)
   
   return q
