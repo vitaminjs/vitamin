@@ -30,7 +30,8 @@ var BelongsToMany = Relation.extend({
     
     this.query.whereIn(other, function (query) {
       return query
-        .distinct(this.otherKey)
+        .select(this.otherKey)
+        .distinct()
         .from(this.pivot)
         .where(this.localKey, this.parent.getId())
     }.bind(this))
@@ -48,7 +49,8 @@ var BelongsToMany = Relation.extend({
     
     this.query.whereIn(other, function (query) {
       return query
-        .distinct(this.otherKey)
+        .select(this.otherKey)
+        .distinct()
         .from(this.pivot)
         .whereIn(this.localKey, this._getKeys(models, local))
     }.bind(this))
