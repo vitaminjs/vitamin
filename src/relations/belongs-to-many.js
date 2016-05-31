@@ -1,23 +1,60 @@
 
 var _ = require('underscore'),
+    Model = require('../model'),
     Relation = require('./base')
 
 var BelongsToMany = Relation.extend({
   
   /**
-   * HasAndBelongsToMany relationship constructor
+   * BelongsToMany relationship constructor
    * 
    * @param {Model} parent
    * @param {Model} related
-   * @param {String} table
    * @param {String} fk parent model key
    * @param {String} pk related model key
+   * @param {String|Model} pivot
    */
-  constructor: function HasAndBelongsToMany(parent, related, table, fk, pk) {
+  constructor: function BelongsToMany(parent, related, fk, pk, pivot) {
     Relation.apply(this, [parent, related])
-    this.pivot = table
+    this.withPivot(pivot || "pivot")
     this.localKey = fk
     this.otherKey = pk
+  },
+  
+  /**
+   * Set the pivot model for the relationship
+   * 
+   * @param {String|Model} pivot source nme or model constructor
+   * @return BelongsToMany instance
+   */
+  withPivot: function withPivot(pivot) {
+    if ( _.isString(pivot) ) {
+      pivot = Model.extend({
+        getSourceName: function () {
+          return String(pivot)
+        }
+      })
+    }
+    
+    this.pivot = new pivot
+    return this
+  },
+  
+  /**
+   * Attach a model the the parent
+   * 
+   * @param {Model|any} id
+   * @param {Function} cb
+   * @return Promise instance
+   */
+  attach: function attach(id, cb) {
+    var pivot = this.pivot.newInstance()
+    
+    // set pivot model properties 
+    pivot.set(this.localKey, this.parent.getId())
+    pivot.set(this.otherKey, ( id instanceof Model ) ? id.getId() : id)
+    
+    return pivot.save(cb)
   },
   
   /**
@@ -33,8 +70,8 @@ var BelongsToMany = Relation.extend({
       other, 
       query
         .distinct()
-        .from(this.pivot)
         .select(this.otherKey)
+        .from(this.pivot.getSourceName())
         .where(this.localKey, this.parent.getId())
     )
   },
@@ -54,8 +91,8 @@ var BelongsToMany = Relation.extend({
       other,
       query
         .distinct()
-        .from(this.pivot)
         .select(this.otherKey)
+        .from(this.pivot.getSourceName())
         .whereIn(this.localKey, this._getKeys(models, local))
     )
   }
