@@ -69,9 +69,9 @@ Query.prototype.setModel = function setModel(model) {
  * @return Query instance
  */
 Query.prototype.clone = function clone() {
-  var query = new Query(this.driver)
+  var Query = this.constructor
   
-  return query.from(this._from).setModel(this.model)
+  return (new Query(this.driver)).from(this._from)
 }
 
 /**
