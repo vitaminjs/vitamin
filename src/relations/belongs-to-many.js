@@ -26,15 +26,17 @@ var BelongsToMany = Relation.extend({
    * @private
    */
   _applyConstraints: function _applyConstraints() {
-    var other = this.related.getKeyName()
+    var query = this.query.clone(),
+        other = this.related.getKeyName()
     
-    this.query.whereIn(other, function (query) {
-      return query
-        .select(this.otherKey)
+    this.query.whereIn(
+      other, 
+      query
         .distinct()
         .from(this.pivot)
+        .select(this.otherKey)
         .where(this.localKey, this.parent.getId())
-    }.bind(this))
+    )
   },
   
   /**
@@ -44,16 +46,18 @@ var BelongsToMany = Relation.extend({
    * @private
    */
   _applyEagerConstraints: function _applyEagerConstraints(models) {
-    var local = this.parent.getKeyName(),
+    var query = this.query.clone(),
+        local = this.parent.getKeyName(),
         other = this.related.getKeyName()
     
-    this.query.whereIn(other, function (query) {
-      return query
-        .select(this.otherKey)
+    this.query.whereIn(
+      other,
+      query
         .distinct()
         .from(this.pivot)
+        .select(this.otherKey)
         .whereIn(this.localKey, this._getKeys(models, local))
-    }.bind(this))
+    )
   }
   
 })
