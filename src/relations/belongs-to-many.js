@@ -8,35 +8,40 @@ var BelongsToMany = Relation.extend({
   /**
    * BelongsToMany relationship constructor
    * 
-   * @param {Model} parent
-   * @param {Model} related
-   * @param {String} fk parent model key
-   * @param {String} pk related model key
-   * @param {String|Model} pivot
+   * @param {Model} parent model of the relationship
+   * @param {Model} related model
+   * @param {String} pivot table or collection name
+   * @param {String} rk related model key
+   * @param {String} pk parent model key
    */
-  constructor: function BelongsToMany(parent, related, fk, pk, pivot) {
+  constructor: function BelongsToMany(parent, related, pivot, rk, pk) {
     Relation.apply(this, [parent, related])
-    this.withPivot(pivot || "pivot")
-    this.localKey = fk
-    this.otherKey = pk
-  },
-  
-  /**
-   * Set the pivot model for the relationship
-   * 
-   * @param {String|Model} pivot source nme or model constructor
-   * @return BelongsToMany instance
-   */
-  withPivot: function withPivot(pivot) {
-    if ( _.isString(pivot) ) {
+    
+    // use a default pivot model
+    if ( pivot ) {
       pivot = Model.extend({
         getSourceName: function () {
           return String(pivot)
         }
       })
+      
+      this.through(pivot, rk, pk)
     }
+  },
+  
+  /**
+   * Use a custom pivot model for the relationship
+   * 
+   * @param {Model} model constructor
+   * @param {String} rk related model key
+   * @param {String} pk parent model key
+   * @return BelongsToMany instance
+   */
+  through: function through(model, rk, pk) {
+    this.pivot = model.factory()
+    this.localKey = pk
+    this.otherKey = rk
     
-    this.pivot = new pivot
     return this
   },
   
@@ -44,13 +49,14 @@ var BelongsToMany = Relation.extend({
    * Attach a model the the parent
    * 
    * @param {Model|any} id
+   * @param {Object} attrs
    * @param {Function} cb
    * @return Promise instance
    */
-  attach: function attach(id, cb) {
-    var pivot = this.pivot.newInstance()
+  attach: function attach(id, attrs, cb) {
+    var pivot = this.pivot.newInstance(attrs)
     
-    // set pivot model properties 
+    // set pivot model properties
     pivot.set(this.localKey, this.parent.getId())
     pivot.set(this.otherKey, ( id instanceof Model ) ? id.getId() : id)
     
