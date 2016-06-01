@@ -112,3 +112,15 @@ _.assign(Relation.prototype, {
   }
   
 })
+
+// create proxies to query methods
+var methods = [
+  'where', 'whereIn', 'with', 'select', 'take', 'skip', 'order'
+]
+
+_.each(methods, function (name) {
+  Query.prototype[name] = function () {
+    (this.query[name]).apply(this.query, arguments)
+    return this
+  }
+})
