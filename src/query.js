@@ -27,26 +27,41 @@ function Query(driver) {
 
 /**
  * Set the relationships that should be eager loaded
+ * Use case:
+ *   with(
+ *     'tags',
+ *     { 'comments': ['author', 'likes'] },
+ *     { 'editor': function (q) { q.select('fullname') } }
+ *   )
  * 
  * @param {Array|String} related
  * @return Query instance
  */
 Query.prototype.with = function _with(related) {
-  this._rels = _.isArray(related) ? related : _.toArray(arguments)
+  var rels = {}
+  
+  if (! _.isArray(related) ) related = _.toArray(arguments)
+  
+  _.each(related, function (value) {
+    if ( _.isString(value) ) rels[value] = function noop(q) {}
+    else _.extend(rels, value)
+  })
+  
+  this._rels = rels 
   return this
 }
 
 /**
  * Load the relationships for the models
  * 
- * @param {Array<Model>} models
+ * @param {Array} models
  * @return Promise instance
  */
 Query.prototype.loadRelated = function loadRelated(models) {
   return Promise
     .bind(this)
-    .map(this._rels, function iterateRelations(name) {
-      var relation = this._getRelation(name)
+    .map(_.keys(this._rels), function iterateRelations(name) {
+      var relation = this._getRelation(name, this._rels[name])
       
       return relation.eagerLoad(name, models)
     })
@@ -305,12 +320,30 @@ Query.prototype.assemble = function assemble() {
  * @return Relation instance
  * @private
  */
-Query.prototype._getRelation = function _getRelation(name) {
-  var relation = this.model[name]
+Query.prototype._getRelation = function _getRelation(name, custom) {
+  var relationFn = this.model[name]
   
-  if (! relation ) throw new Error("Undefined '" + name + "' relationship")
+  if (! relationFn ) throw new Error("Undefined '" + name + "' relationship")
   
-  return relation.apply(this.model)
+  return this._initRelation(relationFn.call(this.model), custom)
+}
+
+/**
+ * Customize the relationship query
+ * 
+ * @param {Relation} relation
+ * @param {Array|Function} custom
+ * @return Relation instance
+ * @private
+ */
+Query.prototype._initRelation = function _initRelation(relation, custom) {
+  // set nested models
+  if ( _.isArray(custom) ) relation.with(custom)
+  
+  // use custom constraints
+  if ( _.isFunction(custom) ) custom.call(null, relation.query)
+  
+  return relation
 }
 
 /**
