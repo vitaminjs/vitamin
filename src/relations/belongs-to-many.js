@@ -1,7 +1,8 @@
 
 var _ = require('underscore'),
     Model = require('../model'),
-    Relation = require('./base')
+    Relation = require('./base'),
+    Promise = require('bluebird')
 
 var BelongsToMany = Relation.extend({
   
@@ -48,13 +49,14 @@ var BelongsToMany = Relation.extend({
   /**
    * Attach a model the the parent
    * 
-   * @param {Model|any} id
-   * @param {Object} attrs
+   * @param {Any} id
    * @param {Function} cb
    * @return Promise instance
    */
-  attach: function attach(id, attrs, cb) {
-    var pivot = this.pivot.newInstance(attrs)
+  attach: function attach(id, cb) {
+    if ( _.isArray(id) ) return this.attachMany(id, cb)
+    
+    var pivot = this.pivot.newInstance()
     
     // set pivot model properties
     pivot.set(this.localKey, this.parent.getId())
@@ -64,22 +66,55 @@ var BelongsToMany = Relation.extend({
   },
   
   /**
+   * Attach many models to the parent
+   * 
+   * @param {Array} ids
+   * @param {Function} cb (optional)
+   * @return Promise instance
+   */
+  attachMany: function attachMany(ids, cb) {
+    return Promise
+      .bind(this)
+      .map(ids, this.attach)
+      .nodeify(cb)
+  }
+  
+  /**
+   * Detach one or many models from the parent
+   * 
+   * @param {Any} ids
+   * @param {Function} cb (optional)
+   * @return Promise instance
+   */
+  detach: function detach(ids, cb) {
+    var query = this._newPivotQuery(this.parent.getId())
+    
+    // detach all related models
+    if ( _.isFunction(ids) ) {
+      cb = ids
+      ids = []
+    }
+    
+    // in case it is a model instance
+    if ( ids instanceof Model ) ids = ids.getId()
+    
+    if (! _.isArray(ids) ) ids = [ids]
+    
+    if ( ids.length > 0 ) query.whereIn(this.otherKey, ids)
+    
+    return Promise.resolve(query.destroy()).nodeify(cb)
+  }
+  
+  /**
    * Apply constraints on the relation query
    * 
    * @private
    */
   _applyConstraints: function _applyConstraints() {
-    var query = this.query.clone(),
-        other = this.related.getKeyName()
+    var other = this.related.getKeyName(),
+        query = this._newPivotQuery(this.parent.getId())
     
-    this.query.whereIn(
-      other, 
-      query
-        .distinct()
-        .select(this.otherKey)
-        .from(this.pivot.getSourceName())
-        .where(this.localKey, this.parent.getId())
-    )
+    this.query.whereIn(other, query.select(this.otherKey).distinct())
   },
   
   /**
@@ -89,18 +124,23 @@ var BelongsToMany = Relation.extend({
    * @private
    */
   _applyEagerConstraints: function _applyEagerConstraints(models) {
-    var query = this.query.clone(),
-        local = this.parent.getKeyName(),
-        other = this.related.getKeyName()
+    var local = this.parent.getKeyName(),
+        other = this.related.getKeyName(),
+        query = this._newPivotQuery(this._getKeys(models, local))
     
-    this.query.whereIn(
-      other,
-      query
-        .distinct()
-        .select(this.otherKey)
-        .from(this.pivot.getSourceName())
-        .whereIn(this.localKey, this._getKeys(models, local))
-    )
+    this.query.whereIn(other, query.select(this.otherKey).distinct())
+  },
+  
+  /**
+   * Create a new pivot query
+   * 
+   * @param {any} ids parent keys
+   * @return Query instance
+   */
+  _newPivotQuery: function _newPivotQuery(ids) {
+    var query = this.pivot.newQuery()
+    
+    return query.where(this.localKey, ids)
   }
   
 })
