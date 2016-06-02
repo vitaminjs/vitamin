@@ -20,29 +20,31 @@
 
     <section class="main-content">
       <h3>
-<a id="defining-model-classes" class="anchor" href="#defining-model-classes" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Defining Model classes</h3>
+<a id="introduction" class="anchor" href="#introduction" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Introduction</h3>
+
+<p>Vitamin provides a simple and easy to use ActiveRecord implementation for working with your database. Each database table or view is wrapped into a "Model" class. Thus, a model instance is tied to a single row in the table. Models allow you to query for data in your tables, as well as inserting or updating records.</p>
 
 <hr>
 
 <h3>
-<a id="retrieving-single-or-multiple-models" class="anchor" href="#retrieving-single-or-multiple-models" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Retrieving single or multiple models</h3>
+<a id="defining-model-classes" class="anchor" href="#defining-model-classes" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Defining Model classes</h3>
 
-<p>We’ve crafted some handsome templates for you to use. Go ahead and click 'Continue to layouts' to browse through them. You can easily go back to edit your page before publishing. After publishing your page, you can revisit the page generator and switch to another theme. Your Page content will be preserved.</p>
+<p>To get started, let's define a basic Model using the <code>extend</code> static method, and specify the <code>primary key</code> name, and <code>data source</code> name</p>
 
-<h3>
-<a id="creating-pages-manually" class="anchor" href="#creating-pages-manually" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Creating pages manually</h3>
+<div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> Model <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>vitamin/model<span class="pl-pds">'</span></span>)
 
-<p>If you prefer to not use the automatic generator, push a branch named <code>gh-pages</code> to your repository to create a page manually. In addition to supporting regular HTML content, GitHub Pages support Jekyll, a simple, blog aware static site generator. Jekyll makes it easy to create site-wide headers and footers without having to copy them across every page. It also offers intelligent blog support and other advanced templating features.</p>
+<span class="pl-k">var</span> Post <span class="pl-k">=</span> <span class="pl-smi">Model</span>.<span class="pl-en">extend</span>({
+  <span class="pl-c">/**</span>
+<span class="pl-c">   * The table or the collection name associated with this model</span>
+<span class="pl-c">   */</span>
+  <span class="pl-en">getSourceName</span><span class="pl-k">:</span> <span class="pl-k">function</span> () { <span class="pl-k">return</span> <span class="pl-s"><span class="pl-pds">"</span>posts<span class="pl-pds">"</span></span> },
 
-<h3>
-<a id="authors-and-contributors" class="anchor" href="#authors-and-contributors" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Authors and Contributors</h3>
+  <span class="pl-c">/**</span>
+<span class="pl-c">   * The primary key name, by default 'id' is used</span>
+<span class="pl-c">   */</span>
+  <span class="pl-en">getKeyName</span><span class="pl-k">:</span> <span class="pl-k">function</span> () { <span class="pl-k">return</span> <span class="pl-s"><span class="pl-pds">"</span>id<span class="pl-pds">"</span></span> },
 
-<p>You can <a href="https://help.github.com/articles/basic-writing-and-formatting-syntax/#mentioning-users-and-teams" class="user-mention">@mention</a> a GitHub username to generate a link to their profile. The resulting <code>&lt;a&gt;</code> element will link to the contributor’s GitHub Profile. For example: In 2007, Chris Wanstrath (<a href="https://github.com/defunkt" class="user-mention">@defunkt</a>), PJ Hyett (<a href="https://github.com/pjhyett" class="user-mention">@pjhyett</a>), and Tom Preston-Werner (<a href="https://github.com/mojombo" class="user-mention">@mojombo</a>) founded GitHub.</p>
-
-<h3>
-<a id="support-or-contact" class="anchor" href="#support-or-contact" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Support or Contact</h3>
-
-<p>Having trouble with Pages? Check out our <a href="https://help.github.com/pages">documentation</a> or <a href="https://github.com/contact">contact support</a> and we’ll help you sort it out.</p>
+})</pre></div>
 
       <footer class="site-footer">
         <span class="site-footer-owner"><a href="https://github.com/vitaminjs/vitamin">Vitamin</a> is maintained by <a href="https://github.com/vitaminjs">vitaminjs</a>.</span>
