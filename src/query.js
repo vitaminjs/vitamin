@@ -12,10 +12,10 @@ module.exports = Query
  * @constructor
  */
 function Query(driver) {
+  this._where     = {}
+  this._rels      = {}
   this._select    = []
-  this._where     = []
   this._order     = []
-  this._rels      = []
   this._distinct  = false
   this._offset    = undefined
   this._limit     = undefined
@@ -79,17 +79,6 @@ Query.prototype.setModel = function setModel(model) {
 }
 
 /**
- * Clone the current query builder
- * 
- * @return Query instance
- */
-Query.prototype.clone = function clone() {
-  var Query = this.constructor
-  
-  return (new Query(this.driver)).from(this._from)
-}
-
-/**
  * Add a basic where clause to the query
  * use cases:
  *   where('name', "John")
@@ -117,11 +106,10 @@ Query.prototype.where = function where(key, op, val) {
       cond = _object(key, _object(op, val))
     
     case 1:
-      cond = key
+      cond = _.isObject(key) ? key : {}
   }
   
-  if (! _.isEmpty(cond) ) this._where.push(cond)
-  
+  _.extend(this._where, cond)
   return this
 }
 
@@ -302,10 +290,12 @@ Query.prototype.assemble = function assemble() {
   _.each(props, function _assemblePieces(name) {
     var prop = this['_' + name]
     
-    // skip empty arrays
+    // skip empty arrays and objects
     if ( _.isEmpty(prop) ) return
     
     if ( _.isArray(prop) ) prop = prop.slice()
+    
+    if ( _.isObject(prop) ) prop = _.clone(prop)
     
     q[name] = prop
   }, this)
