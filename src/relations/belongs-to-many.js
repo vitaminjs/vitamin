@@ -87,7 +87,7 @@ var BelongsToMany = Relation.extend({
    * @return Promise instance
    */
   detach: function detach(ids, cb) {
-    var query = this._newPivotQuery(this.parent.getId())
+    var query = this._newPivotQuery()
     
     // detach all related models
     if ( _.isFunction(ids) ) {
@@ -112,9 +112,9 @@ var BelongsToMany = Relation.extend({
    */
   _applyConstraints: function _applyConstraints() {
     var other = this.related.getKeyName(),
-        query = this._newPivotQuery(this.parent.getId())
+        subQuery = this._newPivotQuery()
     
-    this.query.whereIn(other, query.select(this.otherKey).distinct())
+    this.query.whereIn(other, subQuery.select(this.otherKey).distinct())
   },
   
   /**
@@ -124,23 +124,24 @@ var BelongsToMany = Relation.extend({
    * @private
    */
   _applyEagerConstraints: function _applyEagerConstraints(models) {
-    var local = this.parent.getKeyName(),
-        other = this.related.getKeyName(),
-        query = this._newPivotQuery(this._getKeys(models, local))
+    var subQuery = this._newPivotQuery(),
+        local = this.parent.getKeyName(),
+        other = this.related.getKeyName()
     
-    this.query.whereIn(other, query.select(this.otherKey).distinct())
+    subQuery.whereIn(this.localKey, this._getKeys(models, local))
+    
+    this.query.whereIn(other, subQuery.select(this.otherKey).distinct())
   },
   
   /**
    * Create a new pivot query
    * 
-   * @param {any} ids parent keys
    * @return Query instance
    */
-  _newPivotQuery: function _newPivotQuery(ids) {
+  _newPivotQuery: function _newPivotQuery() {
     var query = this.pivot.newQuery()
     
-    return query.where(this.localKey, ids)
+    return query.where(this.localKey, this.parent.getId())
   }
   
 })
