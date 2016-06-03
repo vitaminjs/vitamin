@@ -8,21 +8,12 @@ module.exports = Query
 /**
  * Query Builder constructor
  * 
- * @param {Object} driver
+ * @param {Object} builder
  * @constructor
  */
-function Query(driver) {
-  this._where     = {}
-  this._rels      = {}
-  this._select    = []
-  this._order     = []
-  this._distinct  = false
-  this._offset    = undefined
-  this._limit     = undefined
-  this._from      = undefined
-  
-  // make `driver` a read-only property
-  Object.defineProperty(this, 'driver', { value: driver })
+function Query(builder) {
+  // make the builder a read-only property
+  Object.defineProperty(this, 'query', { value: builder })
 }
 
 /**
@@ -74,133 +65,8 @@ Query.prototype.loadRelated = function loadRelated(models) {
  * @return Query instance
  */
 Query.prototype.setModel = function setModel(model) {
+  this.query.from(model.getTableName())
   this.model = model
-  return this
-}
-
-/**
- * Add a basic where clause to the query
- * use cases:
- *   where('name', "John")
- *   where('status', "$ne", "draft")
- *   where({ name: "Rita", age: 18 })
- *   where('price', { $gt: 100, $lte: 200 })
- * 
- * @param {String|Object} key
- * @param {String} op
- * @param {any} value
- * @return Query instance
- */
-Query.prototype.where = function where(key, op, val) {
-  var cond = {}
-  
-  switch (arguments.length) {
-    case 2:
-      val = op
-      op = _.isArray(val) ? "$in" : "$eq"
-    
-    case 3:
-      // accept sub queries
-      if ( val instanceof Query ) val = val.assemble()
-      
-      cond = _object(key, _object(op, val))
-    
-    case 1:
-      cond = _.isObject(key) ? key : {}
-  }
-  
-  _.extend(this._where, cond)
-  return this
-}
-
-/**
- * Add a `Where in` clause to the query
- * 
- * @param {String} key
- * @param {Array} val
- * @return Query instance
- */
-Query.prototype.whereIn = function whereIn(key, val) {
-  return this.where(key, "$in", val)
-}
-
-/**
- * Add an "or where" clause to the query
- * Example: orWhere({name: "foo"}, {name: "bar"})
- * 
- * @param {Array} clauses
- * @return Query instance
- */
-Query.prototype.orWhere = function orWhere(clauses) {
-  return this.where({ $or: _.toArray(arguments) })
-}
-
-/**
- * Set the source name which the query is targeting
- * 
- * @param {String} from
- * @return Query instance
- */
-Query.prototype.from = function from(from) {
-  this._from = from
-  return this
-}
-
-/**
- * Set the fields to be selected
- * 
- * @param {String} field
- * @return Query instance
- */
-Query.prototype.select = function select(field) {
-  var args = _.isArray(field) ? field : _.toArray(arguments)
-  
-  this._select = _.uniq(this._select.concat(args))
-  return this
-}
-
-/**
- * Force the query to fetch only distinct results
- * 
- * @return Query instance
- */
-Query.prototype.distinct = function distinct() {
-  this._distinct = true
-  return this
-}
-
-/**
- * Alias to set the "limit" value of the query
- * 
- * @param {Number} n
- * @return Query instance
- */
-Query.prototype.take = function take(n) {
-  this._limit = Number(n)
-  return this
-}
-
-/**
- * Alias to set the "offset" value of the query
- * 
- * @param {Number} n
- * @return Query instance
- */
-Query.prototype.skip = function skip(n) {
-  this._offset = Number(n)
-  return this
-}
-
-/**
- * Add an "order by" clauses to the query
- * 
- * @param {String} field
- * @return Query instance
- */
-Query.prototype.order = function order(field) {
-  var args = _.isArray(field) ? field : _.toArray(arguments)
-  
-  this._order = _.uniq(this._order.concat(args))
   return this
 }
 
@@ -279,31 +145,6 @@ Query.prototype.destroy = function destroy() {
 }
 
 /**
- * Get the object representation of the query.
- * 
- * @return object
- */
-Query.prototype.assemble = function assemble() {
-  var q = {}, 
-      props = ['select', 'distinct', 'from', 'where', 'order', 'offset', 'limit']
-  
-  _.each(props, function _assemblePieces(name) {
-    var prop = this['_' + name]
-    
-    // skip empty arrays and objects
-    if ( _.isEmpty(prop) ) return
-    
-    if ( _.isArray(prop) ) prop = prop.slice()
-    
-    if ( _.isObject(prop) ) prop = _.clone(prop)
-    
-    q[name] = prop
-  }, this)
-  
-  return q
-}
-
-/**
  * Get the relation instance for the given relation name
  * 
  * @param {String} name
@@ -336,17 +177,18 @@ Query.prototype._initRelation = function _initRelation(relation, custom) {
   return relation
 }
 
-/**
- * Helper to create an plain object with one `key` and `value`
- * 
- * @param {String} key
- * @param {any} val
- * @return {Obejct}
- */
-function _object(key, val) {
-  if ( _.isObject(val) ) return val
+// create proxies to the builder methods
+var methods = [
+  'select', 'distinct',   
+  'where', 'orWhere', 'whereIn', 'orWhereIn',
+  'orderBy', 'offset', 'limit'
+]
+
+_.each(methods, function (name) {
   
-  var o = {}
-  o[key] = val
-  return o
-}
+  Query.prototype[name] = function () {
+    this.query[name].apply(this.query, arguments)
+    return this
+  }
+  
+})

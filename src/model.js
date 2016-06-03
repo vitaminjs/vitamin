@@ -1,19 +1,19 @@
 
-var
-  _ = require('underscore'),
-  Events = require('./events'),
-  Promise = require('bluebird'),
-  QueryBuilder = require('./query')
+var knex = require('knex'),
+    _ = require('underscore'),
+    Events = require('./events'),
+    Promise = require('bluebird'),
+    ModelQuery = require('./query')
 
-const
-  EVENT_CREATING = "creating",
-  EVENT_UPDATING = "updating",
-  EVENT_DELETING = "deleting",
-  EVENT_CREATED = "created",
-  EVENT_UPDATED = "updated",
-  EVENT_DELETED = "deleted",
-  EVENT_SAVING = "saving",
-  EVENT_SAVED = "saved"
+
+const EVENT_CREATING = "creating",
+      EVENT_UPDATING = "updating",
+      EVENT_DELETING = "deleting",
+      EVENT_CREATED = "created",
+      EVENT_UPDATED = "updated",
+      EVENT_DELETED = "deleted",
+      EVENT_SAVING = "saving",
+      EVENT_SAVED = "saved"
 
 module.exports = Model
 
@@ -23,6 +23,11 @@ module.exports = Model
  * @constructor
  */
 function Model() { this._init.apply(this, arguments) }
+
+/**
+ * Define the primary key name
+ */
+Model.prototype.$pk = 'id'
 
 /**
  * Indicates if the IDs are auto-incrementing
@@ -88,6 +93,16 @@ Model.use = function use(plugin) {
   plugin.installed = true
   
   return this
+}
+
+/**
+ * Initialise the database connection
+ * 
+ * @param {Object} config
+ * @static
+ */
+Model.connection = function connection(config) {
+  this.prototype.$connection = knex(config)
 }
 
 /**
@@ -329,7 +344,7 @@ Model.prototype.getId = function getId() {
  * @return string
  */
 Model.prototype.getKeyName = function getKeyName() {
-  return "id"
+  return this.$pk
 }
 
 /**
@@ -337,8 +352,8 @@ Model.prototype.getKeyName = function getKeyName() {
  * 
  * @return string
  */
-Model.prototype.getSourceName = function getSourceName() {
-  return undefined
+Model.prototype.getTableName = function getTableName() {
+  return this.$table
 }
 
 /**
@@ -408,9 +423,9 @@ Model.prototype.toJSON = function toJSON() {
  * @return Query instance
  */
 Model.prototype.newQuery = function newQuery() {
-  var query = new QueryBuilder(this.getDriver())
+  var builder = this.$connection.queryBuilder()
   
-  return query.setModel(this).from(this.getSourceName())
+  return (new ModelQuery(builder)).setModel(this)
 }
 
 /**
@@ -421,15 +436,6 @@ Model.prototype.newQuery = function newQuery() {
  */
 Model.prototype.newInstance = function newInstance(attrs) {
   return this.constructor.factory(attrs)
-}
-
-/**
- * Get the data source driver
- * 
- * @return Driver instance 
- */
-Model.prototype.getDriver = function getDriver() {
-  return undefined
 }
 
 /**

@@ -1,5 +1,6 @@
 
-var _ = require('underscore')
+var _ = require('underscore'),
+    Query = require('../query')
 
 module.exports = Relation
 
@@ -115,7 +116,7 @@ _.assign(Relation.prototype, {
 
 // create proxies to query methods
 var methods = [
-  'where', 'whereIn', 'with', 'select', 'take', 'skip', 'order'
+  'where', 'whereIn', 'with', 'select', 'limit', 'offset', 'orderBy'
 ]
 
 _.each(methods, function (name) {

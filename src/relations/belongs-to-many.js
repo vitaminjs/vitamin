@@ -21,9 +21,7 @@ var BelongsToMany = Relation.extend({
     // use a default pivot model
     if ( pivot ) {
       pivot = Model.extend({
-        getSourceName: function () {
-          return String(pivot)
-        }
+        $table: String(pivot)
       })
       
       this.through(pivot, rk, pk)
@@ -77,7 +75,7 @@ var BelongsToMany = Relation.extend({
       .bind(this)
       .map(ids, this.attach)
       .nodeify(cb)
-  }
+  },
   
   /**
    * Detach one or many models from the parent
@@ -103,7 +101,7 @@ var BelongsToMany = Relation.extend({
     if ( ids.length > 0 ) query.whereIn(this.otherKey, ids)
     
     return Promise.resolve(query.destroy()).nodeify(cb)
-  }
+  },
   
   /**
    * Apply constraints on the relation query
