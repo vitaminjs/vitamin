@@ -89,7 +89,7 @@ _.assign(Relation.prototype, {
    * @private
    */
   _applyEagerConstraints: function _applyEagerConstraints(models) {
-    this.query.where(this.otherKey, "$in", this._getKeys(models, this.localKey))
+    this.query.whereIn(this.otherKey, this._getKeys(models, this.localKey))
   },
 
   /**
@@ -107,7 +107,7 @@ _.assign(Relation.prototype, {
     for ( var owner in models ) {
       var key = String(owner.get(local))
       
-      owner.rel(name, dictionary[key] || this._getRelatedDefaultValue())
+      owner.related(name, dictionary[key] || this._getRelatedDefaultValue())
     }
   }
   
