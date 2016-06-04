@@ -103,6 +103,7 @@ Model.use = function use(plugin) {
  */
 Model.connection = function connection(config) {
   this.prototype.$connection = knex(config)
+  return this
 }
 
 /**
@@ -192,15 +193,16 @@ Model.find = function find(id, cb) {
 }
 
 /**
+ * Start the query by a `where` constraints
  * 
- * 
- * @param {String|Object} key attribute name or constraints object
- * @param {any} value attribute value
+ * @param {String|Object} key
+ * @param {string} operator
+ * @param {any} value
  * @return Query instance
  * @static
  */
-Model.where = function where(key, value) {
-  return this.factory().newQuery().where(key, value)
+Model.where = function where(key, operator, value) {
+  return this.factory().newQuery().where(key, operator, value)
 }
 
 /**
@@ -210,10 +212,10 @@ Model.where = function where(key, value) {
  * @return Query instance
  * @static
  */
-Model.with = function _with(related) {
-  related = _.isArray(related) ? related : _.toArray(arguments)
+Model.populate = function populate(related) {
+  if (! _.isArray(related) ) related = _.toArray(arguments)
   
-  return this.factory().newQuery().with(related)
+  return this.factory().newQuery().populate(related)
 }
 
 /**
@@ -234,7 +236,9 @@ Model.prototype.load = function load(rels, cb) {
  * @return Promise instance
  */
 Model.prototype.trigger = function trigger(event) {
-  return this.$events.emit.apply(this.$events, arguments)
+  var events = this.$events
+  
+  return events.emit.apply(events, arguments)
 }
 
 /**

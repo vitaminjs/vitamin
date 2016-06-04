@@ -28,7 +28,7 @@ function Query(builder) {
  * @param {Array|String} related
  * @return Query instance
  */
-Query.prototype.with = function _with(related) {
+Query.prototype.populate = function populate(related) {
   var rels = {}
   
   if (! _.isArray(related) ) related = _.toArray(arguments)
@@ -80,7 +80,7 @@ Query.prototype.fetch = function fetch(cb) {
   return Promise
     .bind(this)
     .then(function () {
-      return this.driver.fetch(this.assemble())
+      return this.query.first()
     })
     .then(function (resp) {
       if ( _.isEmpty(resp) ) 
@@ -104,9 +104,10 @@ Query.prototype.fetchAll = function fetchAll(cb) {
   return Promise
     .bind(this)
     .then(function () {
-      return this.driver.fetchAll(this.assemble())
+      return this.query.select()
     })
     .then(function (resp) {
+      // map results to model objects
       return _.map(resp, function (data) {
         return this.newInstance(data)
       }, this.model)
@@ -122,7 +123,7 @@ Query.prototype.fetchAll = function fetchAll(cb) {
  * @return {Promise}
  */
 Query.prototype.insert = function insert(data) {
-  return this.driver.insert(data, this.assemble())
+  return this.query.insert(data).returning(this.model.getKeyName())
 }
 
 /**
@@ -132,7 +133,7 @@ Query.prototype.insert = function insert(data) {
  * @return {Promise}
  */
 Query.prototype.update = function update(data) {
-  return this.driver.update(data, this.assemble())
+  return this.query.update(data)
 }
 
 /**
@@ -141,7 +142,7 @@ Query.prototype.update = function update(data) {
  * @return {Promise}
  */
 Query.prototype.destroy = function destroy() {
-  return this.driver.destroy(this.assemble())
+  return this.query.del()
 }
 
 /**
