@@ -22,27 +22,66 @@
       <h3>
 <a id="introduction" class="anchor" href="#introduction" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Introduction</h3>
 
-<p>Vitamin provides a simple and easy to use ActiveRecord implementation for working with your database. Each database table or view is wrapped into a "Model" class. Thus, a model instance is tied to a single row in the table. Models allow you to query for data in your tables, as well as inserting or updating records.</p>
+<p>Vitamin provides a simple and easy to use ActiveRecord implementation for working with your database. It supports <strong>Postgres</strong>, <strong>MySQL</strong>, <strong>MariaDB</strong>, <strong>SQLite3</strong>, and <strong>Oracle</strong>.</p>
+
+<p>Each database table or view is wrapped into a "Model" class. Thus, a model instance is tied to a single row in the table. Models allow you to query for data in your tables, as well as inserting or updating records.</p>
+
+<hr>
+
+<h3>
+<a id="installation" class="anchor" href="#installation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Installation</h3>
+
+<div class="highlight highlight-source-shell"><pre>$ npm install --save vitamin
+
+<span class="pl-c"># Then add one of the following (adding a --save) flag:</span>
+$ npm install pg
+$ npm install sqlite3
+$ npm install mysql
+$ npm install mysql2
+$ npm install mariasql
+$ npm install strong-oracle
+$ npm install oracle</pre></div>
+
+<p>Database connection is initialized by passing a config object to <code>connection</code> static method.</p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> Model <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>vitamin/model<span class="pl-pds">'</span></span>)
+
+<span class="pl-c">// example of config </span>
+<span class="pl-smi">Model</span>.<span class="pl-en">connection</span>({
+  client<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>mysql<span class="pl-pds">'</span></span>,
+  connection<span class="pl-k">:</span> {
+    host     <span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>127.0.0.1<span class="pl-pds">'</span></span>,
+    user     <span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>your_database_user<span class="pl-pds">'</span></span>,
+    password <span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>your_database_password<span class="pl-pds">'</span></span>,
+    database <span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>myapp_test<span class="pl-pds">'</span></span>,
+    charset  <span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>utf8<span class="pl-pds">'</span></span>
+  }
+})</pre></div>
+
+<blockquote>
+<p>The <a href="//knexjs.org/#Installation">knex documentation</a> provides a number of examples for different databases.</p>
+</blockquote>
 
 <hr>
 
 <h3>
 <a id="defining-model-classes" class="anchor" href="#defining-model-classes" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Defining Model classes</h3>
 
-<p>To get started, let's define a basic Model using the <code>extend</code> static method, and specify the <code>primary key</code> name, and <code>data source</code> name</p>
+<p>To get started, let's define a basic Model using the <code>extend</code> static method, by specifying the <code>primary key</code> name and the <code>table</code> name</p>
 
 <div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> Model <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>vitamin/model<span class="pl-pds">'</span></span>)
 
 <span class="pl-k">var</span> Post <span class="pl-k">=</span> <span class="pl-smi">Model</span>.<span class="pl-en">extend</span>({
+
   <span class="pl-c">/**</span>
-<span class="pl-c">   * The table or the collection name associated with this model</span>
+<span class="pl-c">   * The table name associated with this model</span>
 <span class="pl-c">   */</span>
-  <span class="pl-en">getSourceName</span><span class="pl-k">:</span> <span class="pl-k">function</span> () { <span class="pl-k">return</span> <span class="pl-s"><span class="pl-pds">"</span>posts<span class="pl-pds">"</span></span> },
+  $table<span class="pl-k">:</span>  <span class="pl-s"><span class="pl-pds">"</span>posts<span class="pl-pds">"</span></span>,
 
   <span class="pl-c">/**</span>
 <span class="pl-c">   * The primary key name, by default 'id' is used</span>
 <span class="pl-c">   */</span>
-  <span class="pl-en">getKeyName</span><span class="pl-k">:</span> <span class="pl-k">function</span> () { <span class="pl-k">return</span> <span class="pl-s"><span class="pl-pds">"</span>id<span class="pl-pds">"</span></span> },
+  $pk<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>id<span class="pl-pds">"</span></span>,
 
 })</pre></div>
 
