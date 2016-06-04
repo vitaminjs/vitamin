@@ -42,11 +42,11 @@ $ npm install mariasql
 $ npm install strong-oracle
 $ npm install oracle</pre></div>
 
-<p>Database connection is initialized by passing a config object to <code>connection</code> static method.</p>
+<p>Database connection is initialized by passing a config object to <code>connection</code> static method. The <a href="//knexjs.org/#Installation">knex documentation</a> provides a number of examples for different databases.</p>
 
 <div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> Model <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>vitamin/model<span class="pl-pds">'</span></span>)
 
-<span class="pl-c">// example of config </span>
+<span class="pl-c">// provide a config object for MySQL which will be used by knex</span>
 <span class="pl-smi">Model</span>.<span class="pl-en">connection</span>({
   client<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>mysql<span class="pl-pds">'</span></span>,
   connection<span class="pl-k">:</span> {
@@ -58,16 +58,12 @@ $ npm install oracle</pre></div>
   }
 })</pre></div>
 
-<blockquote>
-<p>The <a href="//knexjs.org/#Installation">knex documentation</a> provides a number of examples for different databases.</p>
-</blockquote>
-
 <hr>
 
 <h3>
-<a id="defining-model-classes" class="anchor" href="#defining-model-classes" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Defining Model classes</h3>
+<a id="defining-models" class="anchor" href="#defining-models" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Defining Models</h3>
 
-<p>To get started, let's define a basic Model using the <code>extend</code> static method, by specifying the <code>primary key</code> name and the <code>table</code> name</p>
+<p>To get started, let's define a basic Model using the <code>extend</code> static method, and specify both, the <code>primary key</code> name, and the <code>table</code> name</p>
 
 <div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> Model <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>vitamin/model<span class="pl-pds">'</span></span>)
 
@@ -84,6 +80,97 @@ $ npm install oracle</pre></div>
   $pk<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>id<span class="pl-pds">"</span></span>,
 
 })</pre></div>
+
+<blockquote>
+<p>Vitamin assumes that the primary key is an auto-increment key, if you wish to use a non-numeric key, you must set to <code>false</code> the flag property <code>$incrementing</code> when you define the model.</p>
+</blockquote>
+
+<hr>
+
+<h3>
+<a id="retrieving-models" class="anchor" href="#retrieving-models" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Retrieving models</h3>
+
+<p>Vitamin uses the standard Node.js style callbacks and promises when dealing with queries</p>
+
+<h4>
+<a id="-retrieving-multiple-models" class="anchor" href="#-retrieving-multiple-models" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>· Retrieving multiple models</h4>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-c">// Using callbacks</span>
+<span class="pl-smi">Post</span>.<span class="pl-c1">all</span>(<span class="pl-k">function</span> (<span class="pl-smi">result</span>, <span class="pl-smi">error</span>) {
+  <span class="pl-k">...</span>
+})
+
+<span class="pl-c">// Using promises</span>
+<span class="pl-smi">Post</span>.<span class="pl-c1">all</span>()
+  .<span class="pl-en">then</span>(<span class="pl-k">function</span> (<span class="pl-smi">results</span>) {
+    <span class="pl-k">...</span>
+  })
+  .<span class="pl-en">catch</span>(<span class="pl-k">function</span> (<span class="pl-smi">error</span>) {
+    <span class="pl-k">...</span>
+  })</pre></div>
+
+<p>The <code>all</code> static method will return all of the results of the model. But, if you may also add constraints to queries, you can use the <code>where</code> method, which returns a <code>query builder</code> instance</p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-c">// Using callabcks</span>
+Post
+  .<span class="pl-en">where</span>(<span class="pl-s"><span class="pl-pds">'</span>active<span class="pl-pds">'</span></span>, <span class="pl-c1">true</span>)
+  .<span class="pl-en">limit</span>(<span class="pl-c1">10</span>)
+  .<span class="pl-en">fetchAll</span>(<span class="pl-k">function</span> (<span class="pl-smi">res</span>, <span class="pl-smi">err</span>) {
+  <span class="pl-k">...</span>
+})
+
+<span class="pl-c">// Using promises</span>
+Post
+  .<span class="pl-en">where</span>(<span class="pl-s"><span class="pl-pds">'</span>active<span class="pl-pds">'</span></span>, <span class="pl-c1">true</span>)
+  .<span class="pl-en">limit</span>(<span class="pl-c1">10</span>)
+  .<span class="pl-en">fetchAll</span>()
+  .<span class="pl-en">then</span>(<span class="pl-k">function</span> (<span class="pl-smi">results</span>) {
+    <span class="pl-k">...</span>
+  })
+  .<span class="pl-en">catch</span>(<span class="pl-k">function</span> (<span class="pl-smi">error</span>) {
+    <span class="pl-k">...</span>
+  })</pre></div>
+
+<h4>
+<a id="-retrieving-single-model" class="anchor" href="#-retrieving-single-model" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>· Retrieving single model</h4>
+
+<p>Of course, in addition to retrieving all of the records for a given table, you may also retrieve single records using <code>find</code> and <code>fetch</code>. Instead of returning an array of models, these methods return only a single model instance</p>
+
+<p>To retrieve a model by its primary key, use <code>find</code></p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-c">// Using callbacks</span>
+<span class="pl-smi">Post</span>.<span class="pl-c1">find</span>(<span class="pl-c1">1</span>, <span class="pl-k">function</span> (<span class="pl-smi">res</span>, <span class="pl-smi">err</span>) {
+  <span class="pl-k">...</span>
+})
+
+<span class="pl-c">// Using promises</span>
+<span class="pl-smi">Post</span>.<span class="pl-c1">find</span>(<span class="pl-c1">1</span>)
+  .<span class="pl-en">then</span>(<span class="pl-k">function</span> (<span class="pl-smi">results</span>) {
+    <span class="pl-k">...</span>
+  })
+  .<span class="pl-en">catch</span>(<span class="pl-k">function</span> (<span class="pl-smi">error</span>) {
+    <span class="pl-k">...</span>
+  })</pre></div>
+
+<p>To retrieve the first model matching the query constraints, use <code>fetch</code></p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-c">// Using callbacks</span>
+Post
+  .<span class="pl-en">where</span>(<span class="pl-s"><span class="pl-pds">'</span>published<span class="pl-pds">'</span></span>, <span class="pl-c1">1</span>)
+  .<span class="pl-en">fetch</span>(<span class="pl-k">function</span> (<span class="pl-smi">res</span>, <span class="pl-smi">err</span>) {
+  <span class="pl-k">...</span>
+})
+
+<span class="pl-c">// Using promises</span>
+Post
+  .<span class="pl-en">where</span>(<span class="pl-s"><span class="pl-pds">'</span>published<span class="pl-pds">'</span></span>, <span class="pl-c1">1</span>)
+  .<span class="pl-en">fetch</span>()
+  .<span class="pl-en">then</span>(<span class="pl-k">function</span> (<span class="pl-smi">results</span>) {
+    <span class="pl-k">...</span>
+  })
+  .<span class="pl-en">catch</span>(<span class="pl-k">function</span> (<span class="pl-smi">error</span>) {
+    <span class="pl-k">...</span>
+  })</pre></div>
 
       <footer class="site-footer">
         <span class="site-footer-owner"><a href="https://github.com/vitaminjs/vitamin">Vitamin</a> is maintained by <a href="https://github.com/vitaminjs">vitaminjs</a>.</span>
