@@ -1,7 +1,7 @@
 {
   "name": "vitamin",
   "version": "0.4.0",
-  "description": "Active Record library for node.js applications",
+  "description": "ActiveRecord library for node.js applications",
   "main": "src/model.js",
   "directories": {
     "test": "test"
@@ -23,6 +23,15 @@
     "url": "https://github.com/vitaminjs/vitamin.git"
   },
   "keywords": [
+    "sql",
+    "mysql",
+    "mssql",
+    "mariadb",
+    "sqlite3",
+    "oracle",
+    "pg",
+    "postgresql",
+    "orm",
     "model",
     "active-record",
     "vitamin"
@@ -32,5 +41,5 @@
   "bugs": {
     "url": "https://github.com/vitaminjs/vitamin/issues"
   },
-  "homepage": "https://github.com/vitaminjs/vitamin"
+  "homepage": "http://vitaminjs.github.io/vitamin/"
 }
