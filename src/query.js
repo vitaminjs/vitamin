@@ -12,6 +12,8 @@ module.exports = Query
  * @constructor
  */
 function Query(builder) {
+  this._rels = {}
+  
   // make the builder a read-only property
   Object.defineProperty(this, 'query', { value: builder })
 }
@@ -50,8 +52,8 @@ Query.prototype.populate = function populate(related) {
  */
 Query.prototype.loadRelated = function loadRelated(models) {
   return Promise
-    .bind(this)
-    .map(_.keys(this._rels), function iterateRelations(name) {
+    .bind(this, _.keys(this._rels))
+    .map(function iterateRelations(name) {
       var relation = this._getRelation(name, this._rels[name])
       
       return relation.eagerLoad(name, models)
@@ -120,29 +122,47 @@ Query.prototype.fetchAll = function fetchAll(cb) {
  * Insert a new record into the database
  * 
  * @param {Object} data
+ * @param {Function} cb (optional)
  * @return {Promise}
  */
-Query.prototype.insert = function insert(data) {
-  return this.query.insert(data).returning(this.model.getKeyName())
+Query.prototype.insert = function insert(data, cb) {
+  return Promise
+    .bind(this)
+    .then(function () {
+      return this.query.insert(data).returning(this.model.getKeyName())
+    })
+    .nodeify(cb)
 }
 
 /**
  * Update a record in the database
  * 
  * @param {Object} data
+ * @param {Function} cb (optional)
  * @return {Promise}
  */
-Query.prototype.update = function update(data) {
-  return this.query.update(data)
+Query.prototype.update = function update(data, cb) {
+  return Promise
+    .bind(this)
+    .then(function () {
+      return this.query.update(data)
+    })
+    .nodeify(cb)
 }
 
 /**
  * Delete a record from the database
  * 
+ * @param {Function} cb (optional)
  * @return {Promise}
  */
-Query.prototype.destroy = function destroy() {
-  return this.query.del()
+Query.prototype.destroy = function destroy(cb) {
+  return Promise
+    .bind(this)
+    .then(function () {
+      return this.query.del()
+    })
+    .nodeify(cb)
 }
 
 /**

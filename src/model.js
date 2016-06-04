@@ -202,7 +202,9 @@ Model.find = function find(id, cb) {
  * @static
  */
 Model.where = function where(key, operator, value) {
-  return this.factory().newQuery().where(key, operator, value)
+  var query = this.factory().newQuery()
+  
+  return query.where.apply(query, arguments)
 }
 
 /**
@@ -226,7 +228,7 @@ Model.populate = function populate(related) {
  * @return Promise instance
  */
 Model.prototype.load = function load(rels, cb) {
-  return this.newQuery().with(rels).loadRelated([this]).nodeify(cb)
+  return this.newQuery().populate(rels).loadRelated([this]).nodeify(cb)
 }
 
 /**

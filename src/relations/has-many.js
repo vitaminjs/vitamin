@@ -14,8 +14,8 @@ var HasMany = Relation.extend({
    */
   saveMany: function saveMany(models, cb) {
     return Promise
-      .bind(this)
-      .map(models, this.save)
+      .bind(this, models)
+      .map(this.save)
       .nodeify(cb)
   }
   

@@ -72,8 +72,8 @@ var BelongsToMany = Relation.extend({
    */
   attachMany: function attachMany(ids, cb) {
     return Promise
-      .bind(this)
-      .map(ids, this.attach)
+      .bind(this, ids)
+      .map(this.attach)
       .nodeify(cb)
   },
   
