@@ -54,7 +54,7 @@ Model.extend = function extend(props, statics) {
   function Model() { Super.apply(this, arguments) }
   
   // set the prototype chain to inherit from `parent`
-  Model.prototype = Object.create(Super.prototype, { 
+  Model.prototype = Object.create(Super.prototype, {
     constructor: { value: Model } 
   })
   
@@ -421,7 +421,18 @@ Model.prototype.isNew = function isNew() {
  */
 Model.prototype.toJSON = function toJSON() {
   // TODO omit hidden fields
-  return _.assign({}, this.$data, this.$rels)
+  var json = _.clone(this.$data)
+  
+  _.each(this.$rels, function (related, name) {
+    if ( _.isArray(related) ) {
+      json[name] = _.map(related, function (rel) {
+        return rel.toJSON()
+      })
+    }
+    else json[name] = related.toJSON()
+  })
+  
+  return json
 }
 
 /**
@@ -523,12 +534,12 @@ Model.prototype.destroy = function destroy(cb) {
  * Define a HasOne relationship
  * 
  * @param {Model} target
- * @param {String} fk
- * @param {String} pk
+ * @param {String} fk related model foreign key name
+ * @param {String} pk parent model primary key name
  * @return Relation instance
  * @private
  */
-Model.prototype._hasOne = function _hasOne(target, fk, pk) {
+Model.prototype.hasOne = function _hasOne(target, fk, pk) {
   var related = target.factory(),
       HasOne = require('./relations/has-one')
   
@@ -539,12 +550,12 @@ Model.prototype._hasOne = function _hasOne(target, fk, pk) {
  * Define a HasMany relationship
  * 
  * @param {Model} target
- * @param {String} fk
- * @param {String} pk
+ * @param {String} fk related model foreign key name
+ * @param {String} pk parent model primary key name
  * @return Relation instance
  * @private
  */
-Model.prototype._hasMany = function _hasMany(target, fk, pk) {
+Model.prototype.hasMany = function _hasMany(target, fk, pk) {
   var related = target.factory(),
       HasMany = require('./relations/has-many')
   
@@ -555,16 +566,32 @@ Model.prototype._hasMany = function _hasMany(target, fk, pk) {
  * Define a BelongsTo relationship
  * 
  * @param {Model} target
- * @param {String} fk
- * @param {String} pk
+ * @param {String} fk parent model foreign key name
+ * @param {String} pk related model primary key name
  * @return Relation instance
  * @private
  */
-Model.prototype._belongsTo = function _belongsTo(target, fk, pk) {
+Model.prototype.belongsTo = function _belongsTo(target, fk, pk) {
   var related = target.factory(),
       BelongsTo = require('./relations/belongs-to')
   
   return new BelongsTo(this, related, fk, pk || related.getKeyName())
+}
+
+/**
+ * Define a BelongsToMany relationship
+ * 
+ * @param {Model} target
+ * @param {String} pivot table name
+ * @param {String} fk related model foreign key name
+ * @param {String} pk parent model foreign key name
+ * @private
+ */
+Model.prototype.belongsToMany = function _belongsToMany(target, pivot, fk, pk) {
+  var related = target.factory(),
+      BelongsToMany = require('./relations/belongs-to-many')
+  
+  return new BelongsToMany(this, related, pivot, fk, pk)
 }
 
 /**

@@ -58,7 +58,10 @@ _.assign(Relation.prototype, {
    */
   eagerLoad: function eagerLoad(name, models) {
     this._applyEagerConstraints(models)
-    return this._load().then(this._populate.bind(this, name, models))
+    
+    return this.query
+      .fetchAll()
+      .then(this._populate.bind(this, name, models))
   },
   
   /**
@@ -106,11 +109,11 @@ _.assign(Relation.prototype, {
     var local = this.localKey, other = this.otherKey,
         dictionary = this._buildDictionary(results, other)
     
-    for ( var owner in models ) {
+    _.each(models, function (owner) {
       var key = String(owner.get(local))
       
       owner.related(name, dictionary[key] || this._getRelatedDefaultValue())
-    }
+    }, this)
   }
   
 })

@@ -37,7 +37,7 @@ Query.prototype.populate = function populate(related) {
   
   _.each(related, function (value) {
     if ( _.isString(value) ) rels[value] = function noop(q) {}
-    else _.extend(rels, value)
+    else if ( _.isObject(value) ) _.extend(rels, value)
   })
   
   this._rels = rels 
@@ -111,7 +111,7 @@ Query.prototype.fetchAll = function fetchAll(cb) {
     .then(function (resp) {
       // map results to model objects
       return _.map(resp, function (data) {
-        return this.newInstance(data)
+        return this.newInstance().setData(data, true)
       }, this.model)
     })
     .tap(this.loadRelated)
@@ -126,12 +126,10 @@ Query.prototype.fetchAll = function fetchAll(cb) {
  * @return {Promise}
  */
 Query.prototype.insert = function insert(data, cb) {
-  return Promise
-    .bind(this)
-    .then(function () {
-      return this.query.insert(data).returning(this.model.getKeyName())
-    })
-    .nodeify(cb)
+  var pk = this.model.getKeyName(), 
+      query = this.query.insert(data).returning(pk)
+  
+  return Promise.resolve(query).nodeify(cb)
 }
 
 /**
@@ -142,12 +140,7 @@ Query.prototype.insert = function insert(data, cb) {
  * @return {Promise}
  */
 Query.prototype.update = function update(data, cb) {
-  return Promise
-    .bind(this)
-    .then(function () {
-      return this.query.update(data)
-    })
-    .nodeify(cb)
+  return Promise.resolve(this.query.update(data)).nodeify(cb)
 }
 
 /**
@@ -157,12 +150,7 @@ Query.prototype.update = function update(data, cb) {
  * @return {Promise}
  */
 Query.prototype.destroy = function destroy(cb) {
-  return Promise
-    .bind(this)
-    .then(function () {
-      return this.query.del()
-    })
-    .nodeify(cb)
+  return Promise.resolve(this.query.del()).nodeify(cb)
 }
 
 /**
