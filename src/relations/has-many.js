@@ -1,7 +1,7 @@
 
 var _ = require('underscore'),
     Promise = require('bluebird'),
-    Relation = require('has-one-or-many')
+    Relation = require('./has-one-or-many')
 
 var HasMany = Relation.extend({
   

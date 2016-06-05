@@ -26,7 +26,8 @@ Relation.extend = function extend(props) {
   var Super = this
   
   // constructor
-  function Ctor(parent, query) { Super.apply(this, arguments) }
+  var Ctor = _.has(props, 'constructor') ? props.constructor :
+  function Ctor() { Super.apply(this, arguments) }
   
   // inheritance
   Ctor.prototype = Object.create(Super.prototype)

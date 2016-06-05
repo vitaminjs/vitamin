@@ -50,6 +50,7 @@ Model.extend = function extend(props, statics) {
   var Super = this
   
   // default constructor simply calls the parent one
+  var Model = _.has(props, 'constructor') ? props.constructor :
   function Model() { Super.apply(this, arguments) }
   
   // set the prototype chain to inherit from `parent`

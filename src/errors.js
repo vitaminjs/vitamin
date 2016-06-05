@@ -10,7 +10,9 @@ var _ = require('underscore')
  */
 function createError(name, props) {
   // constructor
-  function Ctor(message) {
+  var Ctor = _.has(props, 'constructor') 
+    ? props.constructor 
+    : function Ctor(message) {
     this.name = name
     this.message = message
     
