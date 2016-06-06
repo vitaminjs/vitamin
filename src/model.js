@@ -166,12 +166,9 @@ Model.create = function create(data, cb) {
  * @static
  */
 Model.all = function all(cb) {
-  return Promise
-    .bind(this)
-    .then(function (resp) {
-      return this.factory().newQuery().fetchAll()
-    })
-    .nodeify(cb)
+  var pending = this.factory().newQuery().fetchAll()
+  
+  return Promise.resolve(pending).nodeify(cb)
 }
 
 /**
@@ -183,29 +180,9 @@ Model.all = function all(cb) {
  * @static
  */
 Model.find = function find(id, cb) {
-  return Promise
-    .bind(this)
-    .then(function () {
-      var pk = this.prototype.getKeyName()
-      
-      return this.where(pk, id).fetch()
-    })
-    .nodeify(cb)
-}
-
-/**
- * Start the query by a `where` constraints
- * 
- * @param {String|Object} key
- * @param {string} operator
- * @param {any} value
- * @return Query instance
- * @static
- */
-Model.where = function where(key, operator, value) {
-  var query = this.factory().newQuery()
+  var pending = this.where(this.prototype.$pk, id).fetch()
   
-  return query.where.apply(query, arguments)
+  return Promise.resolve(pending).nodeify(cb)
 }
 
 /**
@@ -463,14 +440,10 @@ Model.prototype.newInstance = function newInstance(attrs) {
  * @return Promise instance
  */
 Model.prototype.fetch = function fetch(cb) {
-  return Promise
-    .bind(this)
-    .then(function () {
-      var pk = this.getKeyName(), id = this.getId()
-      
-      return this.newQuery().where(pk, id).fetch()
-    })
-    .nodeify(cb)
+  var pk = this.getKeyName(), id = this.getId(),
+      pending = this.newQuery().where(pk, id).fetch()
+  
+  return Promise.resolve(pending).nodeify(cb)
 }
 
 /**
@@ -689,3 +662,28 @@ Model.prototype._init = function _init(attrs) {
 Model.prototype._syncOriginal = function _syncOriginal() {
   this.$original = _.clone(this.$data)
 }
+
+// add proxies to the query builder
+var methods = [
+  'select', 'distinct',   
+  'where', 'orWhere', 'whereRaw',
+  'whereIn', 'orWhereIn',
+  'whereNotIn', 'orWhereNotIn',
+  'whereNull', 'orWhereNull', 
+  'whereNotNull', 'orWhereNotNull',
+  'whereExists', 'orWhereExists',
+  'whereNotExists', 'orWhereNotExists',
+  'whereBetween', 'orWhereBetween',
+  'whereNotBetween', 'orWhereNotBetween',
+  'orderBy', 'offset', 'limit'
+]
+
+methods.forEach(function (name) {
+  
+  Model[name] = function () {
+    var query = this.factory().newQuery()
+    
+    return query[name].apply(query, arguments)
+  }
+  
+})
