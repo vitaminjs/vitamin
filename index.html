@@ -182,7 +182,7 @@ $ npm install oracle</pre></div>
 
 <span class="pl-c">// set attributes </span>
 <span class="pl-smi">post</span>.<span class="pl-en">set</span>(<span class="pl-s"><span class="pl-pds">'</span>title<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">"</span>Sample title<span class="pl-pds">"</span></span>)
-<span class="pl-smi">post</span>.<span class="pl-en">set</span>(<span class="pl-s"><span class="pl-pds">'</span>content<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">"</span>Sample content for the post<span class="pl-pds">"</span></span>)
+<span class="pl-smi">post</span>.<span class="pl-en">set</span>(<span class="pl-s"><span class="pl-pds">'</span>content<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">"</span>Sample content for the article<span class="pl-pds">"</span></span>)
 
 <span class="pl-c">// Using callbacks</span>
 <span class="pl-smi">post</span>.<span class="pl-en">save</span>(<span class="pl-k">function</span> (<span class="pl-smi">error</span>, <span class="pl-smi">result</span>) {
@@ -190,7 +190,111 @@ $ npm install oracle</pre></div>
 })
 
 <span class="pl-c">// Using promises</span>
-<span class="pl-smi">post</span>.<span class="pl-en">save</span>()().<span class="pl-en">then</span>(
+<span class="pl-smi">post</span>.<span class="pl-en">save</span>().<span class="pl-en">then</span>(
+  <span class="pl-k">function</span> (<span class="pl-smi">result</span>) {
+    <span class="pl-k">...</span>
+  },
+  <span class="pl-k">function</span> (<span class="pl-smi">error</span>) {
+    <span class="pl-k">...</span>
+  }
+)</pre></div>
+
+<p>Or, simply by using the static method <code>create</code></p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> data <span class="pl-k">=</span> {
+  title<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>Sample title<span class="pl-pds">"</span></span>,
+  content<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>Sample content for the article<span class="pl-pds">"</span></span>
+}
+
+<span class="pl-c">// Using callbacks</span>
+<span class="pl-smi">Post</span>.<span class="pl-en">create</span>(data, <span class="pl-k">function</span> (<span class="pl-smi">error</span>, <span class="pl-smi">result</span>) {
+  <span class="pl-k">...</span>
+})
+
+<span class="pl-c">// Using promises</span>
+<span class="pl-smi">Post</span>.<span class="pl-en">create</span>(data).<span class="pl-en">then</span>(
+  <span class="pl-k">function</span> (<span class="pl-smi">result</span>) {
+    <span class="pl-k">...</span>
+  },
+  <span class="pl-k">function</span> (<span class="pl-smi">error</span>) {
+    <span class="pl-k">...</span>
+  }
+)</pre></div>
+
+<h4>
+<a id="-basic-update" class="anchor" href="#-basic-update" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>· Basic update</h4>
+
+<p>The <code>save</code> method may also be used to update models that already exist in the database. To update a model, you should retrieve it, set any attributes you wish to update, and then call the <code>save</code> method.</p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-c">// `post` is already retrieved from the database,</span>
+<span class="pl-c">// then we modify the `status` attribute</span>
+<span class="pl-smi">post</span>.<span class="pl-en">set</span>(<span class="pl-s"><span class="pl-pds">'</span>status<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>published<span class="pl-pds">'</span></span>)
+
+<span class="pl-c">// Using callbacks</span>
+<span class="pl-smi">post</span>.<span class="pl-en">save</span>(<span class="pl-k">function</span> (<span class="pl-smi">error</span>, <span class="pl-smi">result</span>) {
+  <span class="pl-k">...</span>
+})
+
+<span class="pl-c">// Using promises</span>
+<span class="pl-smi">post</span>.<span class="pl-en">save</span>().<span class="pl-en">then</span>(
+  <span class="pl-k">function</span> (<span class="pl-smi">result</span>) {
+    <span class="pl-k">...</span>
+  },
+  <span class="pl-k">function</span> (<span class="pl-smi">error</span>) {
+    <span class="pl-k">...</span>
+  }
+)</pre></div>
+
+<p>In case you have many attributes to edit, you may use the <code>update</code> method:</p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> data <span class="pl-k">=</span> {
+  <span class="pl-s"><span class="pl-pds">'</span>status<span class="pl-pds">'</span></span><span class="pl-k">:</span> 
+}
+
+<span class="pl-c">// Using callbacks</span>
+<span class="pl-smi">post</span>.<span class="pl-en">update</span>(data, <span class="pl-k">function</span> (<span class="pl-smi">error</span>, <span class="pl-smi">result</span>) {
+  <span class="pl-k">...</span>
+})
+
+<span class="pl-c">// Using promises</span>
+<span class="pl-smi">post</span>.<span class="pl-en">update</span>(data).<span class="pl-en">then</span>(
+  <span class="pl-k">function</span> (<span class="pl-smi">result</span>) {
+    <span class="pl-k">...</span>
+  },
+  <span class="pl-k">function</span> (<span class="pl-smi">error</span>) {
+    <span class="pl-k">...</span>
+  }
+)</pre></div>
+
+<h4>
+<a id="-deleting-models" class="anchor" href="#-deleting-models" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>· Deleting models</h4>
+
+<p>To delete a model, call the <code>destroy</code> method on an existing model instance:</p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-c">// Using callbacks</span>
+<span class="pl-smi">post</span>.<span class="pl-en">destroy</span>(<span class="pl-k">function</span> (<span class="pl-smi">error</span>, <span class="pl-smi">result</span>) {
+  <span class="pl-k">...</span>
+})
+
+<span class="pl-c">// Using promises</span>
+<span class="pl-smi">post</span>.<span class="pl-en">destroy</span>().<span class="pl-en">then</span>(
+  <span class="pl-k">function</span> (<span class="pl-smi">result</span>) {
+    <span class="pl-k">...</span>
+  },
+  <span class="pl-k">function</span> (<span class="pl-smi">error</span>) {
+    <span class="pl-k">...</span>
+  }
+)</pre></div>
+
+<p>Of course, you may also run a delete query on a set of models. In this example, we will delete all posts that are marked as draft:</p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-c">// Using callbacks</span>
+<span class="pl-smi">Post</span>.<span class="pl-en">where</span>(<span class="pl-s"><span class="pl-pds">'</span>status<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>draft<span class="pl-pds">'</span></span>).<span class="pl-en">destroy</span>(<span class="pl-k">function</span> (<span class="pl-smi">error</span>, <span class="pl-smi">result</span>) {
+  <span class="pl-k">...</span>
+})
+
+<span class="pl-c">// Using promises</span>
+<span class="pl-smi">Post</span>.<span class="pl-en">where</span>(<span class="pl-s"><span class="pl-pds">'</span>status<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>draft<span class="pl-pds">'</span></span>).<span class="pl-en">destroy</span>().<span class="pl-en">then</span>(
   <span class="pl-k">function</span> (<span class="pl-smi">result</span>) {
     <span class="pl-k">...</span>
   },
