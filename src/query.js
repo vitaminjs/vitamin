@@ -201,7 +201,15 @@ Query.prototype._initRelation = function _initRelation(relation, custom) {
 // create proxies to the builder methods
 var methods = [
   'select', 'distinct',   
-  'where', 'orWhere', 'whereIn', 'orWhereIn',
+  'where', 'orWhere', 'whereRaw',
+  'whereIn', 'orWhereIn',
+  'whereNotIn', 'orWhereNotIn',
+  'whereNull', 'orWhereNull', 
+  'whereNotNull', 'orWhereNotNull',
+  'whereExists', 'orWhereExists',
+  'whereNotExists', 'orWhereNotExists',
+  'whereBetween', 'orWhereBetween',
+  'whereNotBetween', 'orWhereNotBetween',
   'orderBy', 'offset', 'limit'
 ]
 
