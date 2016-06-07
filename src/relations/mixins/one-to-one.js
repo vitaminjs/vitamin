@@ -22,14 +22,9 @@ module.exports = {
    * @private
    */
   _buildDictionary: function _buildDictionary(models, key) {
-    var dict = {}
-    
-    _.each(models, function (mdl) {
-      // for good matching, transform numeric keys to string
-      dict[String(mdl.get(key))] = mdl
+    return _.indexBy(models, function (mdl) {
+      return String(mdl.get(key))
     })
-    
-    return dict
   },
   
   /**
