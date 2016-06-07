@@ -54,7 +54,7 @@ Query.prototype.loadRelated = function loadRelated(models) {
   return Promise
     .bind(this, _.keys(this._rels))
     .map(function iterateRelations(name) {
-      var relation = this._getRelation(name, this._rels[name])
+      var relation = this._getRelation(name)
       
       return relation.eagerLoad(name, models)
     })
@@ -160,12 +160,12 @@ Query.prototype.destroy = function destroy(cb) {
  * @return Relation instance
  * @private
  */
-Query.prototype._getRelation = function _getRelation(name, custom) {
+Query.prototype._getRelation = function _getRelation(name) {
   var relationFn = this.model[name]
   
   if (! relationFn ) throw new Error("Undefined '" + name + "' relationship")
   
-  return this._initRelation(relationFn.call(this.model), custom)
+  return this._initRelation(relationFn.call(this.model), this._rels[name])
 }
 
 /**
