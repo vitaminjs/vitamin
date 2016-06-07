@@ -22,18 +22,9 @@ module.exports = {
    * @private
    */
   _buildDictionary: function _buildDictionary(models, key) {
-    var dict = {}
-    
-    _.each(models, function (mdl) {
-      var _key = String(mdl.get(key))
-      
-      if (! _.has(dict, _key) ) dict[_key] = []
-      
-      // transform numeric keys to string keys for good matching
-      dict[_key].push(mdl)
+    return _.groupBy(models, function (mdl) {
+      return String(mdl.get(key))
     })
-    
-    return dict
   },
   
   /**
