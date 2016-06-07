@@ -18,6 +18,8 @@ var BelongsToMany = Relation.extend({
   constructor: function BelongsToMany(parent, related, pivot, rk, pk) {
     Relation.apply(this, [parent, related])
     
+    this.pivotColumns = []
+    
     // use a default pivot model
     if ( pivot ) {
       pivot = Model.extend({
@@ -41,6 +43,19 @@ var BelongsToMany = Relation.extend({
     this.localKey = pk
     this.otherKey = rk
     
+    return this
+  },
+  
+  /**
+   * Add the pivot table columns to fetch
+   * 
+   * @param {String|Array} field
+   * @return BelongsToMany instance
+   */
+  withPivot: function withPivot(field) {
+    if (! _.isArray(field) ) field = _.toArray(arguments)
+    
+    this.pivotColumns = this.pivotColumns(field)
     return this
   },
   
@@ -109,10 +124,8 @@ var BelongsToMany = Relation.extend({
    * @private
    */
   _applyConstraints: function _applyConstraints() {
-    var other = this.related.getKeyName(),
-        subQuery = this._newPivotQuery()
-    
-    this.query.whereIn(other, subQuery.select(this.otherKey).distinct())
+    this._setJoin()
+    this.query.where(this._getForeignKey(), this.parent.getId())
   },
   
   /**
@@ -122,29 +135,100 @@ var BelongsToMany = Relation.extend({
    * @private
    */
   _applyEagerConstraints: function _applyEagerConstraints(models) {
-    var subQuery = this._newPivotQuery(),
-        local = this.parent.getKeyName(),
-        other = this.related.getKeyName()
+    this._setJoin()
+    this.query.whereIn(this._getForeignKey(), this._getKeys(models))
+  },
+  
+  /**
+   * Set the join clause for the relation query
+   * 
+   * @private
+   */
+  _setJoin: function _setJoin() {
+    var pivotTable = this.pivot.getTableName(),
+        modelTable = this.related.getTableName(),
+        pivotColumn = pivotTable + '.' + this.otherKey,
+        modelColumn = modelTable + '.' + this.related.getKeyName(),
+        columns = [this.localKey, this.otherKey].concat(this.pivotColumns)
     
-    subQuery.whereIn(this.localKey, this._getKeys(models, local))
+    // add pivot columns
+    columns = _.map(columns, function (col) {
+      return (col + 'as pivot__' + col)
+    })
     
-    this.query.whereIn(other, subQuery.select(this.otherKey).distinct())
+    // set query clauses
+    this.query.select(modelTable + '.*', columns)
+    this.query.join(pivotTable, modelColumn, pivotColumn)
   },
   
   /**
    * Create a new pivot query
    * 
    * @return Query instance
+   * @private
    */
   _newPivotQuery: function _newPivotQuery() {
     var query = this.pivot.newQuery()
     
     return query.where(this.localKey, this.parent.getId())
+  },
+  
+  /**
+   * Get the fully qualified foreign key for the relation
+   * 
+   * @return String
+   */
+  _getForeignKey: function _getForeignKey() {
+    return this.pivot.getTableName() + '.' + this.localKey
+  },
+  
+  /**
+   * Build a model dictionary keyed by the given key
+   * 
+   * @param {Array} models
+   * @param {String} attr
+   * @private
+   */
+  _buildDictionary: function _buildDictionary(models, attr) {
+    var dict = {}
+    
+    _.each(models, function (mdl) {
+      var _key = String(mdl.get(attr))
+      
+      if (! _.has(dict, _key) ) dict[_key] = []
+      
+      // transform numeric keys to string keys for good matching
+      dict[_key].push(mdl)
+      
+      // inject the pivot model
+      mdl.related('pivot', this._newPivotFromRelated(mdl))
+    })
+    
+    return dict
+  },
+  
+  /**
+   * Get and clean pivot attributes from a model
+   * 
+   * @return Model instance
+   */
+  _newPivotFromRelated: function _newPivotFromRelated(model) {
+    var data = {}
+    
+    _.each(model.getData(), function (value, key) {
+      if ( key.indexOf('pivot__') === 0 ) {
+        data[key] = value
+        model.set(name, undefined)
+      }
+    })
+    
+    // TODO we should sync original attributes of the model
+    return this.pivot.newInstance().setData(data, true)
   }
   
 })
 
 // use mixin
-_.assign(BelongsToMany.prototype, require('./mixins/one-to-many'))
+_.defaults(BelongsToMany.prototype, require('./mixins/one-to-many'))
 
 module.exports = BelongsToMany
