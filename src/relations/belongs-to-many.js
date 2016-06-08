@@ -19,6 +19,7 @@ var BelongsToMany = Relation.extend({
     Relation.apply(this, [parent, related])
     
     this.pivotColumns = []
+    this.localKey = this.parent.getKeyName()
     
     // use a default pivot model
     if ( pivot ) {
@@ -34,14 +35,14 @@ var BelongsToMany = Relation.extend({
    * Use a custom pivot model for the relationship
    * 
    * @param {Model} model constructor
-   * @param {String} rk related model key
-   * @param {String} pk parent model key
+   * @param {String} rk related model foreign key
+   * @param {String} pk parent model foreign key
    * @return BelongsToMany instance
    */
   through: function through(model, rk, pk) {
     this.pivot = model.factory()
-    this.localKey = pk
-    this.otherKey = rk
+    this.thirdKey = rk
+    this.otherKey = pk
     
     return this
   },
@@ -120,8 +121,8 @@ var BelongsToMany = Relation.extend({
     return _.map(ids, function (id) {
       var record = _.extend({}, attrs)
       
-      record[this.localKey] = this.parent.getId()
-      record[this.otherKey] = ( id instanceof Model )  ? id.getId() : id
+      record[this.otherKey] = this.parent.getId()
+      record[this.thirdKey] = ( id instanceof Model )  ? id.getId() : id
       
       return record
     }, this)
@@ -155,9 +156,9 @@ var BelongsToMany = Relation.extend({
    */
   _setJoin: function _setJoin() {
     var pivotTable = this.pivot.getTableName(),
-        pivotColumn = pivotTable + '.' + this.otherKey,
+        pivotColumn = pivotTable + '.' + this.thirdKey,
         modelColumn = this.related.getQualifiedKeyName(),
-        columns = [this.localKey, this.otherKey].concat(this.pivotColumns)
+        columns = [this.thirdKey, this.otherKey].concat(this.pivotColumns)
     
     // add an alias to pivot columns
     columns = _.map(columns, function (col) {
@@ -178,7 +179,7 @@ var BelongsToMany = Relation.extend({
   _newPivotQuery: function _newPivotQuery() {
     var query = this.pivot.newQuery()
     
-    return query.where(this.localKey, this.parent.getId())
+    return query.where(this.otherKey, this.parent.getId())
   },
   
   /**
@@ -188,25 +189,7 @@ var BelongsToMany = Relation.extend({
    * @private
    */
   _getForeignKey: function _getForeignKey() {
-    return this.pivot.getTableName() + '.' + this.localKey
-  },
-  
-  /**
-   * Populate the parent models with the eagerly loaded results
-   * 
-   * @param {String} name
-   * @param {Array} models
-   * @param {Array} results
-   * @private
-   */
-  _populate: function _populate(name, models, results) {
-    var dictionary = this._buildDictionary(results, this.localKey)
-    
-    _.each(models, function (owner) {
-      var key = String(owner.getId())
-      
-      owner.related(name, dictionary[key] || this._getRelatedDefaultValue())
-    }, this)
+    return this.pivot.getTableName() + '.' + this.otherKey
   },
   
   /**
