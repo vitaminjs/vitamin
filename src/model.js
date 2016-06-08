@@ -332,6 +332,15 @@ Model.prototype.getKeyName = function getKeyName() {
 }
 
 /**
+ * Get the primary key name prefixed by the table name
+ * 
+ * @return String
+ */
+Model.prototype.getQualifiedKeyName = function getQualifiedKeyName() {
+  return this.$table + '.' + this.$id
+}
+
+/**
  * Get table or collection name
  * 
  * @return string
