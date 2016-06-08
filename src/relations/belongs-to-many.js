@@ -55,41 +55,30 @@ var BelongsToMany = Relation.extend({
   withPivot: function withPivot(field) {
     if (! _.isArray(field) ) field = _.toArray(arguments)
     
-    this.pivotColumns = this.pivotColumns(field)
+    this.pivotColumns = this.pivotColumns.concat(field)
     return this
   },
   
   /**
    * Attach a model the the parent
    * 
-   * @param {Any} id
-   * @param {Function} cb
-   * @return Promise instance
-   */
-  attach: function attach(id, cb) {
-    if ( _.isArray(id) ) return this.attachMany(id, cb)
-    
-    var pivot = this.pivot.newInstance()
-    
-    // set pivot model properties
-    pivot.set(this.localKey, this.parent.getId())
-    pivot.set(this.otherKey, ( id instanceof Model ) ? id.getId() : id)
-    
-    return pivot.save(cb)
-  },
-  
-  /**
-   * Attach many models to the parent
-   * 
-   * @param {Array} ids
+   * @param {Any} ids
+   * @param {Object} attrs pivot table attributes
    * @param {Function} cb (optional)
    * @return Promise instance
    */
-  attachMany: function attachMany(ids, cb) {
-    return Promise
-      .bind(this, ids)
-      .map(this.attach)
-      .nodeify(cb)
+  attach: function attach(ids, attrs, cb) {
+    if (! _.isArray(ids) ) ids = [ids]
+    
+    if ( _.isFunction(attrs) ) {
+      cb = attrs
+      attrs = {}
+    }
+    
+    var query = this.pivot.newQuery(),
+        records = this._createPivotRecords(ids, attrs)
+    
+    return Promise.resolve(query.insert(records)).nodeify(cb)
   },
   
   /**
@@ -108,14 +97,34 @@ var BelongsToMany = Relation.extend({
       ids = []
     }
     
-    // in case it is a model instance
-    if ( ids instanceof Model ) ids = ids.getId()
-    
     if (! _.isArray(ids) ) ids = [ids]
+    
+    // accept also an array of models
+    ids = _.map(ids, function (id) {
+      return ( ids instanceof Model ) ? ids.getId() : id
+    })
     
     if ( ids.length > 0 ) query.whereIn(this.otherKey, ids)
     
     return Promise.resolve(query.destroy()).nodeify(cb)
+  },
+  
+  /**
+   * Create an array of records to insert into the pivot table
+   * 
+   * @param {Array} ids
+   * @param {Object} attrs (optional)
+   * @return Array
+   */
+  _createPivotRecords: function _createPivotRecords(ids, attrs) {
+    return _.map(ids, function (id) {
+      var record = _.extend({}, attrs)
+      
+      record[this.localKey] = this.parent.getId()
+      record[this.otherKey] = ( id instanceof Model )  ? id.getId() : id
+      
+      return record
+    }, this)
   },
   
   /**
@@ -146,9 +155,8 @@ var BelongsToMany = Relation.extend({
    */
   _setJoin: function _setJoin() {
     var pivotTable = this.pivot.getTableName(),
-        modelTable = this.related.getTableName(),
         pivotColumn = pivotTable + '.' + this.otherKey,
-        modelColumn = modelTable + '.' + this.related.getKeyName(),
+        modelColumn = this.related.getQualifiedKeyName(),
         columns = [this.localKey, this.otherKey].concat(this.pivotColumns)
     
     // add an alias to pivot columns
