@@ -337,7 +337,7 @@ Model.prototype.getKeyName = function getKeyName() {
  * @return String
  */
 Model.prototype.getQualifiedKeyName = function getQualifiedKeyName() {
-  return this.$table + '.' + this.$id
+  return this.$table + '.' + this.$pk
 }
 
 /**

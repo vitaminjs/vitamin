@@ -155,6 +155,7 @@ var BelongsToMany = Relation.extend({
    */
   _setJoin: function _setJoin() {
     var pivotTable = this.pivot.getTableName(),
+        modelTable = this.related.getTableName(),
         pivotColumn = pivotTable + '.' + this.otherKey,
         modelColumn = this.related.getQualifiedKeyName(),
         columns = [this.localKey, this.otherKey].concat(this.pivotColumns)
