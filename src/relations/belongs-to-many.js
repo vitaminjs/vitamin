@@ -151,13 +151,13 @@ var BelongsToMany = Relation.extend({
         modelColumn = modelTable + '.' + this.related.getKeyName(),
         columns = [this.localKey, this.otherKey].concat(this.pivotColumns)
     
-    // add pivot columns
+    // add an alias to pivot columns
     columns = _.map(columns, function (col) {
-      return (col + 'as pivot__' + col)
+      return (col + ' as pivot_' + col)
     })
     
     // set query clauses
-    this.query.select(modelTable + '.*', columns)
+    this.query.select([modelTable + '.*'].concat(columns))
     this.query.join(pivotTable, modelColumn, pivotColumn)
   },
   
@@ -177,9 +177,28 @@ var BelongsToMany = Relation.extend({
    * Get the fully qualified foreign key for the relation
    * 
    * @return String
+   * @private
    */
   _getForeignKey: function _getForeignKey() {
     return this.pivot.getTableName() + '.' + this.localKey
+  },
+  
+  /**
+   * Populate the parent models with the eagerly loaded results
+   * 
+   * @param {String} name
+   * @param {Array} models
+   * @param {Array} results
+   * @private
+   */
+  _populate: function _populate(name, models, results) {
+    var dictionary = this._buildDictionary(results, this.localKey)
+    
+    _.each(models, function (owner) {
+      var key = String(owner.getId())
+      
+      owner.related(name, dictionary[key] || this._getRelatedDefaultValue())
+    }, this)
   },
   
   /**
@@ -193,7 +212,7 @@ var BelongsToMany = Relation.extend({
     var dict = {}
     
     _.each(models, function (mdl) {
-      var _key = String(mdl.get(attr))
+      var _key = String(mdl.get('pivot_' + attr))
       
       if (! _.has(dict, _key) ) dict[_key] = []
       
@@ -202,7 +221,7 @@ var BelongsToMany = Relation.extend({
       
       // inject the pivot model
       mdl.related('pivot', this._newPivotFromRelated(mdl))
-    })
+    }, this)
     
     return dict
   },
@@ -211,18 +230,18 @@ var BelongsToMany = Relation.extend({
    * Get and clean pivot attributes from a model
    * 
    * @return Model instance
+   * @private
    */
   _newPivotFromRelated: function _newPivotFromRelated(model) {
     var data = {}
     
     _.each(model.getData(), function (value, key) {
-      if ( key.indexOf('pivot__') === 0 ) {
-        data[key] = value
-        model.set(name, undefined)
+      if ( key.indexOf('pivot_') === 0 ) {
+        data[key.substring(6)] = value
+        delete model.$data[key]
       }
     })
     
-    // TODO we should sync original attributes of the model
     return this.pivot.newInstance().setData(data, true)
   }
   
