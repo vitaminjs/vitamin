@@ -1,10 +1,9 @@
 
-var knex = require('knex'),
-    _ = require('underscore'),
-    Events = require('./events'),
-    Promise = require('bluebird'),
-    ModelQuery = require('./query')
-
+var   knex = require('knex'),
+      _ = require('underscore'),
+      Events = require('./events'),
+      Promise = require('bluebird'),
+      ModelQuery = require('./query')
 
 const EVENT_CREATING = "creating",
       EVENT_UPDATING = "updating",
@@ -166,9 +165,7 @@ Model.create = function create(data, cb) {
  * @static
  */
 Model.all = function all(cb) {
-  var pending = this.factory().newQuery().fetchAll()
-  
-  return Promise.resolve(pending).nodeify(cb)
+  return this.factory().newQuery().fetchAll(cb)
 }
 
 /**
@@ -180,9 +177,7 @@ Model.all = function all(cb) {
  * @static
  */
 Model.find = function find(id, cb) {
-  var pending = this.where(this.prototype.$pk, id).fetch()
-  
-  return Promise.resolve(pending).nodeify(cb)
+  return this.where(this.prototype.$pk, id).fetch(cb)
 }
 
 /**
@@ -397,7 +392,7 @@ Model.prototype.isDirty = function isDirty(attr) {
  * @return boolean
  */
 Model.prototype.isNew = function isNew() {
-  return !this.has(this.getKeyName())
+  return !_.has(this.$original, this.getKeyName())
 }
 
 /**
@@ -450,9 +445,8 @@ Model.prototype.newInstance = function newInstance(attrs) {
  */
 Model.prototype.fetch = function fetch(cb) {
   var pk = this.getKeyName(), id = this.getId(),
-      pending = this.newQuery().where(pk, id).fetch()
   
-  return Promise.resolve(pending).nodeify(cb)
+  return this.newQuery().where(pk, id).fetch(cb)
 }
 
 /**
