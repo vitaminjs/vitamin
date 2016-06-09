@@ -1,6 +1,6 @@
 {
   "name": "vitamin",
-  "version": "0.7.0-alpha.1",
+  "version": "0.7.0-alpha.2",
   "description": "ActiveRecord library for node.js applications",
   "main": "src/model.js",
   "directories": {
