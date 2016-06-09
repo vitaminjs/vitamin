@@ -15,7 +15,7 @@ function Query(builder) {
   this._rels = {}
   
   // make the builder a read-only property
-  Object.defineProperty(this, 'query', { get: builder })
+  Object.defineProperty(this, 'query', { value: builder })
 }
 
 /**

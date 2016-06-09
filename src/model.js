@@ -444,7 +444,7 @@ Model.prototype.newInstance = function newInstance(attrs) {
  * @return Promise instance
  */
 Model.prototype.fetch = function fetch(cb) {
-  var pk = this.getKeyName(), id = this.getId(),
+  var pk = this.getKeyName(), id = this.getId()
   
   return this.newQuery().where(pk, id).fetch(cb)
 }
