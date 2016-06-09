@@ -157,7 +157,7 @@ var BelongsToMany = Relation.extend({
   _setJoin: function _setJoin() {
     var pivotTable = this.pivot.getTableName(),
         modelTable = this.related.getTableName(),
-        pivotColumn = pivotTable + '.' + this.otherKey,
+        pivotColumn = pivotTable + '.' + this.thirdKey,
         modelColumn = this.related.getQualifiedKeyName(),
         columns = [this.thirdKey, this.otherKey].concat(this.pivotColumns)
     
@@ -194,52 +194,30 @@ var BelongsToMany = Relation.extend({
   },
   
   /**
-   * Build a model dictionary keyed by the given key
+   * Clean pivot attributes from models
    * 
    * @param {Array} models
-   * @param {String} attr
    * @private
    */
-  _buildDictionary: function _buildDictionary(models, attr) {
-    var dict = {}
-    
-    _.each(models, function (mdl) {
-      var _key = String(mdl.get('pivot_' + attr))
+  _cleanPivotAttributes: function _cleanPivotAttributes(models) {
+    _.each(models, function (model) {
+      var data = {}
       
-      if (! _.has(dict, _key) ) dict[_key] = []
+      _.each(model.getData(), function (value, key) {
+        if ( key.indexOf('pivot_') === 0 ) {
+          data[key.substring(6)] = value
+          delete model.$data[key]
+          delete model.$original[key]
+        }
+      })
       
-      // transform numeric keys to string keys for good matching
-      dict[_key].push(mdl)
-      
-      // inject the pivot model
-      mdl.related('pivot', this._newPivotFromRelated(mdl))
+      model.related('pivot', this.pivot.newInstance().setData(data, true))
     }, this)
-    
-    return dict
-  },
-  
-  /**
-   * Get and clean pivot attributes from a model
-   * 
-   * @return Model instance
-   * @private
-   */
-  _newPivotFromRelated: function _newPivotFromRelated(model) {
-    var data = {}
-    
-    _.each(model.getData(), function (value, key) {
-      if ( key.indexOf('pivot_') === 0 ) {
-        data[key.substring(6)] = value
-        delete model.$data[key]
-      }
-    })
-    
-    return this.pivot.newInstance().setData(data, true)
   }
   
 })
 
 // use mixin
-_.defaults(BelongsToMany.prototype, require('./mixins/one-to-many'))
+_.defaults(BelongsToMany.prototype, require('./mixins/many-to-many'))
 
 module.exports = BelongsToMany
