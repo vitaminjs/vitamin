@@ -15,7 +15,7 @@ function Query(builder) {
   this._rels = {}
   
   // make the builder a read-only property
-  Object.defineProperty(this, 'query', { value: builder })
+  Object.defineProperty(this, 'query', { get: builder })
 }
 
 /**
@@ -40,7 +40,7 @@ Query.prototype.populate = function populate(related) {
     else if ( _.isObject(value) ) _.extend(rels, value)
   })
   
-  this._rels = rels 
+  _.extend(this._rels, rels)
   return this
 }
 
@@ -51,13 +51,7 @@ Query.prototype.populate = function populate(related) {
  * @return Promise instance
  */
 Query.prototype.loadRelated = function loadRelated(models) {
-  return Promise
-    .bind(this, _.keys(this._rels))
-    .map(function iterateRelations(name) {
-      var relation = this._getRelation(name)
-      
-      return relation.eagerLoad(name, models)
-    })
+  return Promise.map(_.keys(this._rels), this._eagerLoad.bind(this, models))
 }
 
 /**
@@ -166,6 +160,18 @@ Query.prototype._getRelation = function _getRelation(name) {
   if (! relationFn ) throw new Error("Undefined '" + name + "' relationship")
   
   return this._initRelation(relationFn.call(this.model), this._rels[name])
+}
+
+/**
+ * Eager load a relationship
+ * 
+ * @param {Array} models
+ * @param {String} name
+ * @return Promise instance
+ * @private
+ */
+Query.prototype._eagerLoad = function _eagerLoad(models, name) {
+  return this._getRelation(name).eagerLoad(name, models)
 }
 
 /**
