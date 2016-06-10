@@ -208,12 +208,16 @@ User.find(123).then(function (user) {
 })
 ```
 
+### Events
+Model events allow you to attach code to certain events in the lifecycle of yours models. This enables you to add behaviors to your models when those events `creating`, `created`, `saving`, `saved`, `updating`, `updated`, `deleting` or `deleted` occur.
 
+```js
+// attach a listener for `created` event
+User.on('created', function (user) {
+  assert.instanceOf(Model, user)
+})
 
-
-
-
-
-
-
-
+// Events `saving - creating - created - saved` are fired in order
+// when we create a new model
+User.create({ name: "John", occupation: "Developer" })
+```
