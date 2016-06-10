@@ -37,6 +37,7 @@ Model.connection({
   }
 })
 ```
+***
 
 ## Examples of usage
 
@@ -221,6 +222,7 @@ User.on('created', function (user) {
 // when we create a new model
 User.create({ name: "John", occupation: "Developer" })
 ```
+***
 
 ## Associations
 Vitamin makes managing and working with relationships easy, and supports several types of relations:
@@ -232,7 +234,8 @@ Vitamin makes managing and working with relationships easy, and supports several
 ### Defining relations
 
 #### One to One
-Let's define a relation one to one between `User` model and `Phone` model
+
+Let's define a relation one to one between `Person` model and `Phone` model
 ```js
 var Phone = Model.extend({
   
@@ -240,33 +243,34 @@ var Phone = Model.extend({
   
   owner: function () {
     // `user_id` is the foreign key of `users` in `phones` table
-    return this.belongsTo(User, 'user_id')
+    return this.belongsTo(Person, 'owner_id')
   }
   
 })
 
-var User = Model.extend({
+var Person = Model.extend({
   
-  $table: 'users',
+  $table: 'people',
   
   phone: function () {
     // the  first argument is the target model
     // the second is the foreign key in phones table
     // the third parameter is optional, it corresponds to the primary key of user model
-    return this.hasOne(Phone, 'user_id')
+    return this.hasOne(Phone, 'owner_id')
   }
 })
 ```
 
 #### One To Many
-An example for this type, is the relation between blog `Post` and its `Comment`
+
+An example for this type, is the relation between blog `Post` and its `Author`
 ```js
-var Comment = Model.extend({
+var Author = Model.extend({
   
-  $table: 'comments',
+  $table: 'authors',
   
-  post: function () {
-    return this.belongsTo(Post, 'post_id')
+  articles: function () {
+    return this.hasMany(Post, 'author_id')
   }
   
 })
@@ -275,14 +279,15 @@ var Post = Model.extend({
   
   $table: 'posts',
   
-  comments: function () {
-    return this.hasMany(Comment, 'post_id')
+  author: function () {
+    return this.belongsTo(Author, 'author_id')
   }
   
 })
 ```
 
 #### Many To Many
+
 this relation is more complicated than the previous. An example of that is the relation between `Product` and `Category`, when a product has many tags, and the same tage is assigned to many products. A pivot table, in this case `product_categories`, is used and contains the relative keys `product_id` and `category_id`
 ```js
 var Product = Model.extend({
@@ -309,20 +314,41 @@ var Category = Model.extend({
 ### Querying relations
 
 #### Lazy loading
-We will use the relations defined below
+
+We will use the relations defined below, to lazy load the related model
 ```js
-// load the related phone model of the user with id 123
+// load the related phone model of the person with the id 123
 // we access the relation via `phone()` which return a HasOne relation instance
-user.phone().load(function (error, phone) {
-  assert.equal(123456789, phone.get('number'))
+person.load(['phone'], function (error, model) {
+  assert.equal(person, model)
+  assert.instanceOf(Phone, model.related('phone'))
 })
 
 // the same can be done to retrieve the phone owner
-phone.owner().load().then(function (user) {
-  assert.equal(123, user.getId())
+phone.load(['owner']).then(function (model) {
+  assert.equal(phone, model)
+  assert.instanceOf(Person, model.related('owner'))
 })
 ```
 
+### Eager loading
 
+To load a model and its relationships in one call, we use the static method `populate` as below
+```js
+// fetch the first article and its author
+Post.populate('author').fetch().then(function (post) {
+  // the json object contains a key `author` with all author's attributes
+  console.log(post.toJSON())
+})
 
-
+// advanced eager load
+// load all author with their 3 first posts
+Author
+  .populate({ posts: function (query) { query.limit(3) } })
+  .fetchAll(function (error, authors) {
+    authors.forEach(function (author) {
+      assert.isArray(author.related('posts'))
+      assert.instanceOf(Post, author.related('posts')[0])
+    })
+  })
+```
