@@ -1,8 +1,12 @@
 # Vitamin
 
-Vitamin provides a simple and easy to use ActiveRecord implementation for working with your database. Each table or view is wrapped into a "Model" class. Thus, a model instance is tied to a single row in the table. Models allow you to query for data in your tables, as well as inserting or updating records.
+Vitamin provides a simple and easy to use ActiveRecord implementation for working with your database. 
+Each table or view is wrapped into a "Model" class. Thus, a model instance is tied to a single row in the table. 
+Models allow you to query for data in your tables, as well as inserting or updating records.
 
-It supports **Postgres**, **MySQL**, **MariaDB**, **SQLite3**, and **Oracle** databases, featuring both promise based and traditional callback interfaces, providing lazy and eager relationships loading, and support for one-to-one, one-to-many, and many-to-many relations.
+It supports **Postgres**, **MySQL**, **MariaDB**, **SQLite3**, and **Oracle** databases, 
+featuring both promise based and traditional callback interfaces, providing lazy and eager relationships loading, 
+and support for one-to-one, one-to-many, and many-to-many relations.
 
 ***
 
@@ -10,7 +14,7 @@ It supports **Postgres**, **MySQL**, **MariaDB**, **SQLite3**, and **Oracle** da
 ```
 $ npm install --save vitamin
 
-# Then add one of the following (adding a --save) flag:
+# Then add one of the supported database drivers
 $ npm install pg
 $ npm install sqlite3
 $ npm install mysql
@@ -333,16 +337,14 @@ phone.load(['owner']).then(function (model) {
 
 ### Eager loading
 
-To load a model and its relationships in one call, we use the static method `populate` as below
+To load a model and its relationships in one call, you can use the static method `populate`
 ```js
 // fetch the first article and its author
 Post.populate('author').fetch().then(function (post) {
-  // the json object contains a key `author` with all author's attributes
-  console.log(post.toJSON())
+  assert.instanceOf(Author, post.related('author'))
 })
 
-// advanced eager load
-// load all author with their 3 first posts
+// load all authors with their 3 first posts
 Author
   .populate({ posts: function (query) { query.limit(3) } })
   .fetchAll(function (error, authors) {
