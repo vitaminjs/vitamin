@@ -221,3 +221,108 @@ User.on('created', function (user) {
 // when we create a new model
 User.create({ name: "John", occupation: "Developer" })
 ```
+
+## Associations
+Vitamin makes managing and working with relationships easy, and supports several types of relations:
+
+* One To One
+* One To Many
+* Many To Many
+
+### Defining relations
+
+#### One to One
+Let's define a relation one to one between `User` model and `Phone` model
+```js
+var Phone = Model.extend({
+  
+  $table: 'phones',
+  
+  owner: function () {
+    // `user_id` is the foreign key of `users` in `phones` table
+    return this.belongsTo(User, 'user_id')
+  }
+  
+})
+
+var User = Model.extend({
+  
+  $table: 'users',
+  
+  phone: function () {
+    // the  first argument is the target model
+    // the second is the foreign key in phones table
+    // the third parameter is optional, it corresponds to the primary key of user model
+    return this.hasOne(Phone, 'user_id')
+  }
+})
+```
+
+#### One To Many
+An example for this type, is the relation between blog `Post` and its `Comment`
+```js
+var Comment = Model.extend({
+  
+  $table: 'comments',
+  
+  post: function () {
+    return this.belongsTo(Post, 'post_id')
+  }
+  
+})
+
+var Post = Model.extend({
+  
+  $table: 'posts',
+  
+  comments: function () {
+    return this.hasMany(Comment, 'post_id')
+  }
+  
+})
+```
+
+#### Many To Many
+this relation is more complicated than the previous. An example of that is the relation between `Product` and `Category`, when a product has many tags, and the same tage is assigned to many products. A pivot table, in this case `product_categories`, is used and contains the relative keys `product_id` and `category_id`
+```js
+var Product = Model.extend({
+  
+  $table: 'products',
+  
+  categories: function () {
+    return belongsToMany(Category, 'product_categories', 'category_id', 'product_id')
+  }
+  
+})
+
+var Category = Model.extend({
+  
+  $table: 'categories',
+  
+  products: function () {
+    return belongsToMany(Product, 'product_categories', 'product_id', 'category_id')
+  }
+  
+})
+```
+
+### Querying relations
+
+#### Lazy loading
+We will use the relations defined below
+```js
+// load the related phone model of the user with id 123
+// we access the relation via `phone()` which return a HasOne relation instance
+user.phone().load(function (error, phone) {
+  assert.equal(123456789, phone.get('number'))
+})
+
+// the same can be done to retrieve the phone owner
+phone.owner().load().then(function (user) {
+  assert.equal(123, user.getId())
+})
+```
+
+
+
+
