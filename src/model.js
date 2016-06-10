@@ -181,19 +181,6 @@ Model.find = function find(id, cb) {
 }
 
 /**
- * Begin querying a model wtih eager loading
- * 
- * @param {String|Array} related
- * @return Query instance
- * @static
- */
-Model.populate = function populate(related) {
-  if (! _.isArray(related) ) related = _.toArray(arguments)
-  
-  return this.factory().newQuery().populate(related)
-}
-
-/**
  * Load all the given relationships
  * 
  * @param {Array} rels
@@ -668,6 +655,7 @@ Model.prototype._syncOriginal = function _syncOriginal() {
 
 // add proxies to the query builder
 var methods = [
+  'populate',
   'select', 'distinct',   
   'where', 'orWhere', 'whereRaw',
   'whereIn', 'orWhereIn',
