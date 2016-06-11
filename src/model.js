@@ -347,7 +347,7 @@ Model.prototype.has = function has(attr) {
  * @return any
  */
 Model.prototype.getOriginal = function getOriginal(attr) {
-  return attr ? this.$original[attr] : this.$original
+  return attr ? this.$original[attr] : _.clone(this.$original)
 }
 
 /**
@@ -583,6 +583,9 @@ Model.prototype._create = function _create() {
       return promise
     })
     .then(function () {
+      // to mark the created model as existing, 
+      // we should sync originals all attributes,
+      // including the primary key
       this._syncOriginal()
       
       return this.trigger(EVENT_CREATED, this)
