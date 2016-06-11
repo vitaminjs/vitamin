@@ -26,11 +26,9 @@ module.exports = Relation.extend({
    * @return a promise
    */
   create: function create(attrs, cb) {
-    return this
-      .related
-      .newInstance(attrs)
-      .set(this.otherKey, this.parent.get(this.localKey))
-      .save(cb)
+    var related = this.related.newInstance(attrs)
+    
+    return this.save(related, cb)
   },
   
   /**

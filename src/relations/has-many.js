@@ -6,6 +6,17 @@ var _ = require('underscore'),
 var HasMany = Relation.extend({
   
   /**
+   * Create many instances of the related model
+   * 
+   * @param {Array} records
+   * @param {Function} cb (optional)
+   * @return Promise instance
+   */
+  createMany: function createMany(records, cb) {
+    return Promise.bind(this, records).map(this.create).nodeify(cb)
+  },
+  
+  /**
    * Attach many models to the parent model
    * 
    * @param {Array} models
@@ -13,15 +24,12 @@ var HasMany = Relation.extend({
    * @return Promise instance
    */
   saveMany: function saveMany(models, cb) {
-    return Promise
-      .bind(this, models)
-      .map(this.save)
-      .nodeify(cb)
+    return Promise.bind(this, models).map(this.save).nodeify(cb)
   }
   
 })
 
 // use mixin
-_.assign(HasMany.prototype, require('./mixins/one-to-many'))
+_.defaults(HasMany.prototype, require('./mixins/one-to-many'))
 
 module.exports = HasMany
