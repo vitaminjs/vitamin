@@ -24,7 +24,8 @@ $ npm install strong-oracle
 $ npm install oracle
 ```
 
-Database connection is initialized by passing a config object to `connection` static method. The [knex documentation](//knexjs.org/#Installation) provides a number of examples for different use cases.
+Database connection is initialized by passing a config object to `connection` static method. 
+The [knex documentation](//knexjs.org/#Installation) provides a number of examples for different use cases.
 
 ```js
 var Model = require('vitamin/model')
@@ -139,12 +140,12 @@ User.all().then(
 
 
 // using callbacks
-User.where('role', "guest").limit(15).fetchAll(function (error, result) {
+User.where('role', "guest").offset(10).limit(15).fetchAll(function (error, result) {
   ...
 })
 
 // using promises
-User.where('role', "guest").limit(15).fetchAll().then(
+User.where('role', "guest").orderBy('name').fetchAll().then(
   function (result) {
     ... 
   },
@@ -182,7 +183,7 @@ User.where('is_admin', true).fetch(function (error, result) {
 })
 
 // using promises
-User.where('is_admin', true).fetch().then(
+User.where('name', '!=', 'John').fetch().then(
   function (result) {
     ...
   },
@@ -214,7 +215,9 @@ User.find(123).then(function (user) {
 ```
 
 ### Events
-Model events allow you to attach code to certain events in the lifecycle of yours models. This enables you to add behaviors to your models when those events `creating`, `created`, `saving`, `saved`, `updating`, `updated`, `deleting` or `deleted` occur.
+Model events allow you to attach code to certain events in the lifecycle of yours models. 
+This enables you to add behaviors to your models when those events 
+`creating`, `created`, `saving`, `saved`, `updating`, `updated`, `deleting` or `deleted` occur.
 
 ```js
 // attach a listener for `created` event
@@ -259,7 +262,7 @@ var Person = Model.extend({
   phone: function () {
     // the  first argument is the target model
     // the second is the foreign key in phones table
-    // the third parameter is optional, it corresponds to the primary key of user model
+    // the third parameter is optional, it corresponds to the primary key of person model
     return this.hasOne(Phone, 'owner_id')
   }
 })
@@ -292,7 +295,9 @@ var Post = Model.extend({
 
 #### Many To Many
 
-this relation is more complicated than the previous. An example of that is the relation between `Product` and `Category`, when a product has many tags, and the same tage is assigned to many products. A pivot table, in this case `product_categories`, is used and contains the relative keys `product_id` and `category_id`
+this relation is more complicated than the previous. 
+An example of that is the relation between `Product` and `Category`, when a product has many categories, and the same category is assigned to many products. 
+A pivot table, in this case `product_categories`, is used and contains the relative keys `product_id` and `category_id`
 ```js
 var Product = Model.extend({
   
@@ -335,7 +340,7 @@ phone.load(['owner']).then(function (model) {
 })
 ```
 
-### Eager loading
+#### Eager loading
 
 To load a model and its relationships in one call, you can use the static method `populate`
 ```js
