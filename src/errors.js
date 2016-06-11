@@ -14,7 +14,7 @@ function createError(name, props) {
     ? props.constructor 
     : function Ctor(message) {
     this.name = name
-    this.message = message
+    this.message = message || this.message
     
     Error.captureStackTrace(this, Ctor)
   }

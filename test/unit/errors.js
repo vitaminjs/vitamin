@@ -18,6 +18,15 @@ describe("Custom Errors Unit Tests", function () {
       assert.propertyVal(err, 'message', "reason")
     })
     
+    it("creates a error with default message", function () {
+      var SomeError = createError("SomeError", { message: "default msg" })
+      var err1 = new SomeError()
+      var err2 = new SomeError('another msg')
+      
+      assert.equal('default msg', err1.message)
+      assert.equal('another msg', err2.message)
+    })
+    
   })
   
 })
