@@ -159,6 +159,44 @@ var BelongsToMany = Relation.extend({
   },
   
   /**
+   * Create and attach a new instance of the related model
+   * 
+   * @param {Object} attrs
+   * @param {Object} pivots (optional)
+   * @param {Function} cb (optional)
+   * @return Promise instance
+   */
+  create: function create(attrs, pivots, cb) {
+    var related = this.related.newInstance(attrs)
+    
+    return this.save(related, pivots, cb)
+  },
+  
+  /**
+   * Create an array of new instances of the related models
+   * 
+   * @param {Array} records
+   * @param {Array} pivots
+   * @param {Function} cb (optional)
+   * @return Promise instance
+   */
+  createMany: function createMany(records, pivots, cb) {
+    if ( _.isFunction(pivots) ) {
+      cb = pivots
+      pivots = []
+    }
+    
+    if (! _.isArray(pivots) ) pivots = []
+    
+    return Promise
+      .bind(this, records)
+      .map(function (attrs, index) {
+        return this.create(attrs, pivots[index])
+      })
+      .nodeify(cb)
+  },
+  
+  /**
    * Create an array of records to insert into the pivot table
    * 
    * @param {Array} ids
