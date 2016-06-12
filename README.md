@@ -333,10 +333,10 @@ person.load(['phone'], function (error, model) {
   assert.instanceOf(Phone, model.related('phone'))
 })
 
-// the same can be done to retrieve the phone owner
-phone.load(['owner']).then(function (model) {
-  assert.equal(phone, model)
-  assert.instanceOf(Person, model.related('owner'))
+// the same can be done to retrieve all the  author's posts
+author.load(['posts']).then(function (model) {
+  assert.equal(author, model)
+  assert.isArray(Post, model.related('posts'))
 })
 ```
 
