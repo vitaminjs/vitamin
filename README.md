@@ -78,13 +78,13 @@ user.set('occupation', "Developer")
 
 // using callbacks
 user.save(function (error, result) {
-  assert.instanceOf(Model, result)
+  assert.instanceOf(result, Model)
 })
 
 // or using promises
 user.save().then(
   function (result) {
-    assert.instanceOf(Model, result)
+    assert.instanceOf(result, Model)
   },
   function (error) {
     ...
@@ -97,13 +97,13 @@ var data = { name: "John", occupation: "Developer" }
 
 // using callabcks
 User.create(data, function (error, result) {
-  assert.instanceOf(Model, result)
+  assert.instanceOf(result, Model)
 })
 
 // using promises
 User.create(data).then(
   function (result) {
-    assert.instanceOf(Model, result)
+    assert.instanceOf(result, Model)
   }, 
   function (error) {
     ...
@@ -162,13 +162,13 @@ User.where('role', "guest").orderBy('name').fetchAll().then(
 
 // using callbacks
 User.find(123, function (error, result) {
-  assert.instanceOf(Model, result)
+  assert.instanceOf(result, Model)
 })
 
 // using promises
 User.find(123).then(
   function (result) {
-    assert.instanceOf(Model, result)
+    assert.instanceOf(result, Model)
   },
   function (error) {
     ...
@@ -222,7 +222,7 @@ This enables you to add behaviors to your models when those events
 ```js
 // attach a listener for `created` event
 User.on('created', function (user) {
-  assert.instanceOf(Model, user)
+  assert.instanceOf(user, Model)
 })
 
 // Events `saving - creating - created - saved` are fired in order
@@ -346,7 +346,7 @@ To load a model and its relationships in one call, you can use the static method
 ```js
 // fetch the first article and its author
 Post.populate('author').fetch().then(function (post) {
-  assert.instanceOf(Author, post.related('author'))
+  assert.instanceOf(post.related('author'), Author)
 })
 
 // load all authors with their 3 first posts
@@ -355,7 +355,125 @@ Author
   .fetchAll(function (error, authors) {
     authors.forEach(function (author) {
       assert.isArray(author.related('posts'))
-      assert.instanceOf(Post, author.related('posts')[0])
+      assert.instanceOf(author.related('posts')[0], Post)
     })
   })
+```
+
+### Saving related models
+
+Instead of manually setting the foreign keys, Vitamin provides many methods to save the related models.
+
+#### `save()` and `saveMany()`
+
+```js
+var comment = Comment.factory({ body: "Hello World !!" })
+
+// using callbacks
+post.comments().save(comment, function (error, model) {
+  assert.equal(model, comment)
+})
+
+// using promises
+post.comments().save(comment).then(
+  function (model) {
+    assert.equal(model, comment)
+  },
+  function (error) {
+    ...
+  }
+)
+```
+
+```js
+// save many using callbacks
+post.comments().saveMany([
+  Comment.factory({ body: "first comment" }),
+  Comment.factory({ body: "second comment" })
+], function (error, result) {
+  assert.isArray(result)
+  assert.instanceOf(result[0], Comment)
+})
+
+// using promises
+post.comments().saveMany([
+  Comment.factory({ body: "first comment" }),
+  Comment.factory({ body: "second comment" })
+]).then(function (result) {
+  assert.isArray(result)
+  assert.instanceOf(result[0], Comment)
+})
+```
+
+#### `create()` and `createMany()`
+
+In addition to the `save` and `saveMany` methods, you may also use the `create` method, 
+which accepts an array of attributes, creates a model, and inserts it into the database.
+
+```js
+post.comments().create(, function (error, model) {
+  assert.instanceOf(model, Comment)
+})
+
+post.comments().createMany([
+  { body: "first comment" }, { body: "second comment" }
+]).then(function (result) {
+  assert.isArray(result)
+  assert.instanceOf(result[0], Comment)
+})
+```
+
+##### `associate()` and `dissociate`
+
+When updating a `belongsTo` relationship, you may use the `associate` method.
+
+```js
+var john = Person.factory({ id: 123 })
+
+// set the foreign key `owner_id` and save the phone model
+phone.owner().associate(john).save()
+
+// unset the foreign key, then save
+phone.owner().dissociate().save()
+```
+
+#### `attach`, `detach` and `updatePivot`
+
+When working with many-to-many relationships, Vitamin provides a few additional helper methods to make working with related models more convenient.
+
+```js
+// to attach a role to a user by inserting a record in the joining table
+// using callbacks
+user.roles().attach(roleId, function (error, result) {
+  ...
+})
+
+// or using promises
+user.roles().attach(roleId).then(
+  function (result) {
+    ...
+  },
+  function (error) {
+    ...
+  }
+)
+```
+
+To remove a many-to-many relationship record, use the detach method.
+
+```js
+// detach all roles of the loaded user
+user.roles().detach()
+
+// detach only the role with the given id
+user.roles().detach(roleId)
+
+// detach all roles with the given ids
+user.roles().detach([1, 2, 3])
+```
+
+If you need to update an existing row in your pivot table, you may use `updatePivot` method
+
+```js
+user.roles().updatePivot(roleId, pivotAttributes).then(...)
 ```
