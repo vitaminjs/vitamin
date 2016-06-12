@@ -188,7 +188,12 @@ Model.find = function find(id, cb) {
  * @return Promise instance
  */
 Model.prototype.load = function load(rels, cb) {
-  return this.newQuery().populate(rels).loadRelated([this]).nodeify(cb)
+  return this
+    .newQuery()
+    .populate(rels)
+    .loadRelated([this])
+    .return(this)
+    .nodeify(cb)
 }
 
 /**
