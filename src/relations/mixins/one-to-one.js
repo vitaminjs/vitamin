@@ -28,13 +28,14 @@ module.exports = {
   },
   
   /**
-   * Get the default value for the relationship
+   * Get the value for the relationship
    * 
+   * @param {Model} value
    * @return null
    * @private
    */
-  _getRelatedDefaultValue: function _getRelatedDefaultValue() {
-    return null
+  _getRelationshipValue: function _getRelationshipValue(value) {
+    return value || null
   }
   
 }

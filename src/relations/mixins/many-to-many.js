@@ -30,13 +30,14 @@ module.exports = {
   },
   
   /**
-   * Get the default value for the relationship
+   * Get the value for the relationship
    * 
+   * @param {Array} value
    * @return Array
    * @private
    */
-  _getRelatedDefaultValue: function _getRelatedDefaultValue() {
-    return []
+  _getRelationshipValue: function _getRelationshipValue(value) {
+    return value || []
   },
   
   /**

@@ -112,7 +112,7 @@ _.assign(Relation.prototype, {
     _.each(models, function (owner) {
       var key = String(owner.get(local))
       
-      owner.related(name, dictionary[key] || this._getRelatedDefaultValue())
+      owner.related(name, this._getRelationshipValue(dictionary[key]))
     }, this)
   }
   
