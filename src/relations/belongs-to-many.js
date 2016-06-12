@@ -197,6 +197,20 @@ var BelongsToMany = Relation.extend({
   },
   
   /**
+   * Update an existing record on the pivot table
+   * 
+   * @param {Any} id
+   * @param {Object} attrs
+   * @param {Function} cb (optional)
+   * @return Promise instance
+   */
+  updatePivot: function updatePivot(id, attrs, cb) {
+    var query = this._newPivotQuery().where(this.thirdKey, id)
+    
+    return Promise.resolve(query.update(attrs)).nodeify(cb)
+  },
+  
+  /**
    * Create an array of records to insert into the pivot table
    * 
    * @param {Array} ids
