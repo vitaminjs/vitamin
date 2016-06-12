@@ -275,19 +275,19 @@ var BelongsToMany = Relation.extend({
    */
   _setJoin: function _setJoin() {
     var pivotTable = this.pivot.getTableName(),
+        pivotColumn = 'pivot.' + this.thirdKey,
         modelTable = this.related.getTableName(),
-        pivotColumn = pivotTable + '.' + this.thirdKey,
         modelColumn = this.related.getQualifiedKeyName(),
         columns = [this.thirdKey, this.otherKey].concat(this.pivotColumns)
     
     // add an alias to pivot columns
     columns = _.map(columns, function (col) {
-      return pivotTable + '.' + (col + ' as pivot_' + col)
+      return 'pivot.' + (col + ' as pivot_' + col)
     })
     
     // set query clauses
     this.query.select([modelTable + '.*'].concat(columns))
-    this.query.join(pivotTable, modelColumn, pivotColumn)
+    this.query.join(pivotTable + ' as pivot', modelColumn, pivotColumn)
   },
   
   /**
@@ -309,7 +309,7 @@ var BelongsToMany = Relation.extend({
    * @private
    */
   _getForeignKey: function _getForeignKey() {
-    return this.pivot.getTableName() + '.' + this.otherKey
+    return 'pivot.' + this.otherKey
   },
   
   /**
