@@ -1,5 +1,3 @@
-# Vitamin
-
 Vitamin provides a simple and easy to use ActiveRecord implementation for working with your database. 
 Each table or view is wrapped into a "Model" class. Thus, a model instance is tied to a single row in the table. 
 Models allow you to query for data in your tables, as well as inserting or updating records.
@@ -47,6 +45,8 @@ Model.connection({
 ## Examples of usage
 
 ### Defining models
+To get started, let's define a basic Model using the `extend` static method, 
+and specify both, the `primary key` name, and the `table` name
 
 ```js
 var Model = require('vitamin/model')
@@ -61,10 +61,13 @@ var User = new Model.extend({
   
 })
 ```
+> Vitamin assumes that the primary key is an auto-increment key, if you wish to use a non-numeric key, 
+you must set to `false` the flag property `$incrementing` when you define the model.
 
 ### CRUD : Reading and writing data
 
 #### 1 - Create
+To create a new record in the database, simply create a new model instance, set its attributes, then call the `save` method
 ```js
 // we create a new instance of User model with `factory` method
 var user = User.factory({ name: "John", occupation: "Developer" })
@@ -78,32 +81,32 @@ user.set('occupation', "Developer")
 
 // using callbacks
 user.save(function (error, result) {
-  assert.instanceOf(result, Model)
+  assert.instanceOf(result, User)
 })
 
 // or using promises
 user.save().then(
   function (result) {
-    assert.instanceOf(result, Model)
+    assert.instanceOf(result, User)
   },
   function (error) {
     ...
   }
 )
 ```
-Another shorthand to create and save a new user is the `create` method
+Another shorthand to create and save a new user is the `create` static method
 ```js
 var data = { name: "John", occupation: "Developer" }
 
 // using callabcks
 User.create(data, function (error, result) {
-  assert.instanceOf(result, Model)
+  assert.instanceOf(result, User)
 })
 
 // using promises
 User.create(data).then(
   function (result) {
-    assert.instanceOf(result, Model)
+    assert.instanceOf(result, User)
   }, 
   function (error) {
     ...
@@ -113,7 +116,8 @@ User.create(data).then(
 
 #### 2 - Read
 
-Below a few examples of different data access methods provided by Vitamin
+Vitamin uses the standard Node.js style callbacks and promises when dealing with queries.
+Below a few examples of different data access methods provided by Vitamin.
 
 * Retrieving multiple models
 
@@ -135,10 +139,10 @@ User.all().then(
   }
 )
 ```
+The `all` static method will return all of the results of the model. 
+But, if you may also add constraints to queries, you can use the `where` method, which returns a `query builder` instance
 
 ```js
-
-
 // using callbacks
 User.where('role', "guest").offset(10).limit(15).fetchAll(function (error, result) {
   ...
@@ -156,6 +160,8 @@ User.where('role', "guest").orderBy('name').fetchAll().then(
 ```
 
 * Retrieving single model
+Of course, in addition to retrieving all of the records for a given table, you may also retrieve single records using `find` and `fetch`.
+Instead of returning an array of models, these methods return only a single model instance
 
 ```js
 // find a user by its primary key
@@ -175,17 +181,18 @@ User.find(123).then(
   }
 )
 ```
+To retrieve the first model matching the query constraints, use `fetch`
 
 ```js
 // using callbacks
 User.where('is_admin', true).fetch(function (error, result) {
-  ...
+  assert.instanceOf(result, User)
 })
 
 // using promises
 User.where('name', '!=', 'John').fetch().then(
   function (result) {
-    ...
+    assert.instanceOf(result, User)
   },
   function (error) {
     ...
@@ -195,6 +202,7 @@ User.where('name', '!=', 'John').fetch().then(
 
 #### 3 - Update
 The `save` method may also be used to update a single model that already exists in the database.
+To update a model, you should retrieve it, set any attributes you wish to update, and then call the `save` method.  
 ```js
 // post model is retrieved from `posts` table
 // then we modify the status attribute and save it
@@ -204,14 +212,64 @@ Post
     return post.set('status', "draft").save()
   })
 ```
+In case you have many attributes to edit, you may use the `update` method:
+```js
+var data = {
+  'status': "published",
+  'published_at': new Date
+}
+
+// Using callbacks
+post.update(data, function (error, result) {
+  ...
+})
+
+// Using promises
+post.update(data).then(
+  function (result) {
+    ...
+  },
+  function (error) {
+    ...
+  }
+)
+```
 
 #### 4 - Delete
-Likewise, once retrieved, a model can be destroyed which removes it from the database
-
+Likewise, once retrieved, a model can be destroyed which removes it from the database.
+To delete a model, call the `destroy` method on an existing model instance:
 ```js
-User.find(123).then(function (user) {
-  return user.destroy()
+// Using callbacks
+post.destroy(function (error, result) {
+  assert.equal(result, post)
 })
+
+// Using promises
+post.destroy().then(
+  function (result) {
+    assert.equal(result, post)
+  },
+  function (error) {
+    ...
+  }
+)
+```
+Of course, you may also run a delete query on a set of models. In this example, we will delete all posts that are marked as draft:
+```js
+// Using callbacks
+Post.where('status', 'draft').destroy(function (error, result) {
+  ...
+})
+
+// Using promises
+Post.where('status', 'draft').destroy().then(
+  function (result) {
+    ...
+  },
+  function (error) {
+    ...
+  }
+)
 ```
 
 ### Events
@@ -330,13 +388,13 @@ We will use the relations defined below, to lazy load the related model
 // we access the relation via `phone()` which return a HasOne relation instance
 person.load(['phone'], function (error, model) {
   assert.equal(person, model)
-  assert.instanceOf(Phone, model.related('phone'))
+  assert.instanceOf(model.related('phone'), Phone)
 })
 
 // the same can be done to retrieve all the  author's posts
 author.load(['posts']).then(function (model) {
   assert.equal(author, model)
-  assert.isArray(Post, model.related('posts'))
+  assert.isArray(model.related('posts'))
 })
 ```
 
