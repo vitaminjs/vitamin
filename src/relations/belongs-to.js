@@ -45,6 +45,6 @@ var BelongsTo = Relation.extend({
 })
 
 // use mixin
-_.assign(BelongsTo.prototype, require('./mixins/one-to-one'))
+_.defaults(BelongsTo.prototype, require('./mixins/one-to-one'))
 
 module.exports = BelongsTo

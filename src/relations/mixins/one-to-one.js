@@ -6,11 +6,12 @@ module.exports = {
   /**
    * Load the related model from the database
    * 
+   * @param {Boolean} eager
    * @return Promise instance
    * @private
    */
-  _load: function _load() {
-    return this.query.fetch()
+  get: function _get(eager) {
+    return eager ? this.query.fetchAll() : this.query.fetch()
   },
   
   /**
@@ -21,9 +22,9 @@ module.exports = {
    * @return object
    * @private
    */
-  _buildDictionary: function _buildDictionary(models, key) {
-    return _.indexBy(models, function (mdl) {
-      return String(mdl.get(key))
+  buildDictionary: function _buildDictionary(models, key) {
+    return _.indexBy(models, function (model) {
+      return String(model.get(key))
     })
   },
   
@@ -34,7 +35,7 @@ module.exports = {
    * @return null
    * @private
    */
-  _getRelationshipValue: function _getRelationshipValue(value) {
+  getRelationshipValue: function _getRelationshipValue(value) {
     return value || null
   }
   

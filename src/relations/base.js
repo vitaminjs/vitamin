@@ -36,8 +36,8 @@ _.assign(Relation.prototype, {
    * @return Promise instance
    */
   load: function load(cb) {
-    this._applyConstraints()
-    return this._load().nodeify(cb)
+    this.applyConstraints()
+    return this.get().nodeify(cb)
   },
   
   /**
@@ -48,11 +48,8 @@ _.assign(Relation.prototype, {
    * @return Promise instance
    */
   eagerLoad: function eagerLoad(name, models) {
-    this._applyEagerConstraints(models)
-    
-    return this.query
-      .fetchAll()
-      .then(this._populate.bind(this, name, models))
+    this.applyEagerConstraints(models)
+    return this.get(true).then(this.hydrate.bind(this, name, models))
   },
   
   /**
@@ -63,7 +60,7 @@ _.assign(Relation.prototype, {
    * @return {Array} ids
    * @private
    */
-  _getKeys: function _getKeys(models, key) {
+  getKeys: function _getKeys(models, key) {
     return _.chain(models).map(function (model) {
       return key ? model.get(key) : model.getId()
     }).uniq().value()
@@ -74,7 +71,7 @@ _.assign(Relation.prototype, {
    * 
    * @private
    */
-  _applyConstraints: function _applyConstraints() {
+  applyConstraints: function _applyConstraints() {
     this.query.where(this.otherKey, this.parent.get(this.localKey))
   },
   
@@ -84,26 +81,26 @@ _.assign(Relation.prototype, {
    * @param {Array} models
    * @private
    */
-  _applyEagerConstraints: function _applyEagerConstraints(models) {
-    this.query.whereIn(this.otherKey, this._getKeys(models, this.localKey))
+  applyEagerConstraints: function _applyEagerConstraints(models) {
+    this.query.whereIn(this.otherKey, this.getKeys(models, this.localKey))
   },
 
   /**
-   * Populate the parent models with the eagerly loaded results
+   * Hydrate the parent models with the eagerly loaded results
    * 
    * @param {String} name
    * @param {Array} models
    * @param {Array} results
    * @private
    */
-  _populate: function _populate(name, models, results) {
+  hydrate: function _hydrate(name, models, results) {
     var local = this.localKey, other = this.otherKey,
-        dictionary = this._buildDictionary(results, other)
+        dictionary = this.buildDictionary(results, other)
     
     _.each(models, function (owner) {
       var key = String(owner.get(local))
       
-      owner.related(name, this._getRelationshipValue(dictionary[key]))
+      owner.related(name, this.getRelationshipValue(dictionary[key]))
     }, this)
   }
   

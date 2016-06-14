@@ -6,11 +6,16 @@ module.exports = {
   /**
    * Load the related models from the database
    * 
+   * @param {Boolean} eager
    * @return Promise instance
    * @private
    */
-  _load: function _load() {
-    return this.query.fetchAll().tap(this._cleanPivotAttributes.bind(this))
+  get: function _get(eager) {
+    var results =this.query.fetchAll()
+    
+    if (! eager ) results.tap(this.cleanPivotAttributes.bind(this))
+    
+    return results
   },
   
   /**
@@ -21,8 +26,8 @@ module.exports = {
    * @return object
    * @private
    */
-  _buildDictionary: function _buildDictionary(models, key) {
-    this._cleanPivotAttributes(models)
+  buildDictionary: function _buildDictionary(models, key) {
+    this.cleanPivotAttributes(models)
     
     return _.groupBy(models, function (model) {
       return String(model.related('pivot').get(key))
@@ -36,7 +41,7 @@ module.exports = {
    * @return Array
    * @private
    */
-  _getRelationshipValue: function _getRelationshipValue(value) {
+  getRelationshipValue: function _getRelationshipValue(value) {
     return value || []
   },
   
@@ -46,8 +51,8 @@ module.exports = {
    * @param {Array} models
    * @private
    */
-  _cleanPivotAttributes: function _cleanPivotAttributes(models) {
-    throw new Error("Should be overridden")
+  cleanPivotAttributes: function _cleanPivotAttributes(models) {
+    return models
   }
   
 }

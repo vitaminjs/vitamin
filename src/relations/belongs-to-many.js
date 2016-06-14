@@ -78,7 +78,7 @@ var BelongsToMany = Relation.extend({
     }
     
     var query = this.pivot.newQuery(),
-        records = this._createPivotRecords(ids, attrs)
+        records = this.createPivotRecords(ids, attrs)
     
     return Promise.resolve(query.insert(records)).nodeify(cb)
   },
@@ -91,7 +91,7 @@ var BelongsToMany = Relation.extend({
    * @return Promise instance
    */
   detach: function detach(ids, cb) {
-    var query = this._newPivotQuery()
+    var query = this.newPivotQuery()
     
     // detach all related models
     if (! ids ) ids = []
@@ -205,7 +205,7 @@ var BelongsToMany = Relation.extend({
    * @return Promise instance
    */
   updatePivot: function updatePivot(id, attrs, cb) {
-    var query = this._newPivotQuery().where(this.thirdKey, id)
+    var query = this.newPivotQuery().where(this.thirdKey, id)
     
     return Promise.resolve(query.update(attrs)).nodeify(cb)
   },
@@ -216,8 +216,9 @@ var BelongsToMany = Relation.extend({
    * @param {Array} ids
    * @param {Object} attrs (optional)
    * @return Array
+   * @private
    */
-  _createPivotRecords: function _createPivotRecords(ids, attrs) {
+  createPivotRecords: function _createPivotRecords(ids, attrs) {
     var temp = {}, records = []
     
     // we reduce the array of ids into one object,
@@ -252,9 +253,9 @@ var BelongsToMany = Relation.extend({
    * 
    * @private
    */
-  _applyConstraints: function _applyConstraints() {
-    this._setJoin()
-    this.query.where(this._getForeignKey(), this.parent.getId())
+  applyConstraints: function _applyConstraints() {
+    this.setJoin()
+    this.query.where(this.getForeignKey(), this.parent.getId())
   },
   
   /**
@@ -263,9 +264,9 @@ var BelongsToMany = Relation.extend({
    * @param {Array} models
    * @private
    */
-  _applyEagerConstraints: function _applyEagerConstraints(models) {
-    this._setJoin()
-    this.query.whereIn(this._getForeignKey(), this._getKeys(models))
+  applyEagerConstraints: function _applyEagerConstraints(models) {
+    this.setJoin()
+    this.query.whereIn(this.getForeignKey(), this.getKeys(models))
   },
   
   /**
@@ -273,7 +274,7 @@ var BelongsToMany = Relation.extend({
    * 
    * @private
    */
-  _setJoin: function _setJoin() {
+  setJoin: function _setJoin() {
     var pivotTable = this.pivot.getTableName(),
         pivotColumn = 'pivot.' + this.thirdKey,
         modelTable = this.related.getTableName(),
@@ -296,7 +297,7 @@ var BelongsToMany = Relation.extend({
    * @return Query instance
    * @private
    */
-  _newPivotQuery: function _newPivotQuery() {
+  newPivotQuery: function _newPivotQuery() {
     var query = this.pivot.newQuery()
     
     return query.where(this.otherKey, this.parent.getId())
@@ -308,7 +309,7 @@ var BelongsToMany = Relation.extend({
    * @return String
    * @private
    */
-  _getForeignKey: function _getForeignKey() {
+  getForeignKey: function _getForeignKey() {
     return 'pivot.' + this.otherKey
   },
   
@@ -318,7 +319,7 @@ var BelongsToMany = Relation.extend({
    * @param {Array} models
    * @private
    */
-  _cleanPivotAttributes: function _cleanPivotAttributes(models) {
+  cleanPivotAttributes: function _cleanPivotAttributes(models) {
     _.each(models, function (model) {
       var data = {}
       

@@ -22,7 +22,7 @@ module.exports = Model
  * 
  * @constructor
  */
-function Model() { this._init.apply(this, arguments) }
+function Model() { this.init.apply(this, arguments) }
 
 /**
  * Define the primary key name
@@ -221,7 +221,7 @@ Model.prototype.setData = function setData(data, sync) {
   this.$data = data || {}
   
   // sync original attributes with current state
-  if ( sync === true ) this._syncOriginal()
+  if ( sync === true ) this.syncOriginal()
   
   return this
 }
@@ -262,6 +262,7 @@ Model.prototype.set = function set(attr, newVal) {
  */
 Model.prototype.get = function get(attr, defaultValue) {
   // TODO use attribute getter if available
+  
   return this.$data[attr] || defaultValue
 }
 
@@ -349,8 +350,8 @@ Model.prototype.getOriginal = function getOriginal(attr) {
  * @return object
  */
 Model.prototype.getDirty = function getDirty() {
-  return _.pick(this.$data, function(val, attr) {
-    return !_.has(this.$original, attr) || val !== this.$original[attr]
+  return _.pick(this.getData(), function(val, attr) {
+    return !_.has(this.$original, attr) || val !== this.getOriginal(attr)
   }, this)
 }
 
@@ -382,7 +383,7 @@ Model.prototype.isNew = function isNew() {
  */
 Model.prototype.toJSON = function toJSON() {
   // TODO omit hidden fields
-  var json = _.clone(this.$data)
+  var json = this.getData()
   
   _.each(this.$rels, function (related, name) {
     if ( _.isArray(related) ) {
@@ -462,9 +463,9 @@ Model.prototype.save = function save(cb) {
     .then(function () {
       return this.trigger(EVENT_SAVING, this)
     })
-    .then(this.isNew() ? this._create : this._update)
+    .then(this.isNew() ? this.createNew : this.updateExisting)
     .then(function () {
-      this._syncOriginal()
+      this.syncOriginal()
       
       return this.trigger(EVENT_SAVED, this)
     })
@@ -486,9 +487,9 @@ Model.prototype.destroy = function destroy(cb) {
     .then(function () {
       return this.trigger(EVENT_DELETING, this)
     })
-    .then(this._destroy)
+    .then(this.destroyExisting)
     .then(function () {
-      this._syncOriginal()
+      this.syncOriginal()
       
       return this.trigger(EVENT_DELETED, this)
     })
@@ -566,7 +567,7 @@ Model.prototype.belongsToMany = function _belongsToMany(target, pivot, fk, pk) {
  * @return Promise instance
  * @private
  */
-Model.prototype._create = function _create() {
+Model.prototype.createNew = function _create() {
   return Promise
     .bind(this)
     .then(function () {
@@ -589,7 +590,7 @@ Model.prototype._create = function _create() {
       // to mark the created model as existing, 
       // we should sync originals all attributes,
       // including the primary key
-      this._syncOriginal()
+      this.syncOriginal()
       
       return this.trigger(EVENT_CREATED, this)
     })
@@ -601,7 +602,7 @@ Model.prototype._create = function _create() {
  * @return Promise instance
  * @private
  */
-Model.prototype._update = function _update() {
+Model.prototype.updateExisting = function _updateExisting() {
   if (! this.isDirty() ) return Promise.resolve()
   
   return Promise
@@ -617,7 +618,7 @@ Model.prototype._update = function _update() {
       return this.newQuery().where(pk, id).update(data)
     })
     .then(function () {
-      this._syncOriginal()
+      this.syncOriginal()
       
       return this.trigger(EVENT_UPDATED, this)
     })
@@ -629,7 +630,7 @@ Model.prototype._update = function _update() {
  * @return Promise instance
  * @private
  */
-Model.prototype._destroy = function _destroy() {
+Model.prototype.destroyExisting = function _destroyExisting() {
   var pk = this.getKeyName(), id = this.getId()
   
   return this.newQuery().where(pk, id).destroy()
@@ -641,7 +642,7 @@ Model.prototype._destroy = function _destroy() {
  * @param {Object} attrs
  * @private
  */
-Model.prototype._init = function _init(attrs) {
+Model.prototype.init = function _init(attrs) {
   this.$rels = {}
   this.$data = {}
   this.$original = {}
@@ -655,7 +656,7 @@ Model.prototype._init = function _init(attrs) {
  * 
  * @private
  */
-Model.prototype._syncOriginal = function _syncOriginal() {
+Model.prototype.syncOriginal = function _syncOriginal() {
   this.$original = _.clone(this.$data)
 }
 

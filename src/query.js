@@ -12,7 +12,7 @@ module.exports = Query
  * @constructor
  */
 function Query(builder) {
-  this._rels = {}
+  this.rels = {}
   this.builder = builder
 }
 
@@ -38,7 +38,7 @@ Query.prototype.populate = function populate(related) {
     else if ( _.isObject(value) ) _.extend(rels, value)
   })
   
-  _.extend(this._rels, rels)
+  _.extend(this.rels, rels)
   return this
 }
 
@@ -52,7 +52,7 @@ Query.prototype.loadRelated = function loadRelated(models) {
   // no need to load related, if there is no parent model
   if ( _.isEmpty(models) ) return Promise.resolve() 
   
-  return Promise.map(_.keys(this._rels), this._eagerLoad.bind(this, models))
+  return Promise.map(_.keys(this.rels), this.eagerLoad.bind(this, models))
 }
 
 /**
@@ -155,12 +155,12 @@ Query.prototype.destroy = function destroy(cb) {
  * @return Relation instance
  * @private
  */
-Query.prototype._getRelation = function _getRelation(name) {
+Query.prototype.getRelation = function _getRelation(name) {
   var relationFn = this.model[name]
   
   if (! relationFn ) throw new Error("Undefined '" + name + "' relationship")
   
-  return this._initRelation(relationFn.call(this.model), this._rels[name])
+  return this.initRelation(relationFn.call(this.model), this.rels[name])
 }
 
 /**
@@ -171,8 +171,8 @@ Query.prototype._getRelation = function _getRelation(name) {
  * @return Promise instance
  * @private
  */
-Query.prototype._eagerLoad = function _eagerLoad(models, name) {
-  return this._getRelation(name).eagerLoad(name, models)
+Query.prototype.eagerLoad = function _eagerLoad(models, name) {
+  return this.getRelation(name).eagerLoad(name, models)
 }
 
 /**
@@ -183,7 +183,7 @@ Query.prototype._eagerLoad = function _eagerLoad(models, name) {
  * @return Relation instance
  * @private
  */
-Query.prototype._initRelation = function _initRelation(relation, custom) {
+Query.prototype.initRelation = function _initRelation(relation, custom) {
   // set nested models
   if ( _.isArray(custom) ) relation.with(custom)
   
