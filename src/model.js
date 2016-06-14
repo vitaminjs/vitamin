@@ -218,7 +218,7 @@ Model.prototype.fill = function fill(attrs) {
  * @return Model instance
  */
 Model.prototype.setData = function setData(data, sync) {
-  this.$data = data
+  this.$data = data || {}
   
   // sync original attributes with current state
   if ( sync === true ) this._syncOriginal()
@@ -415,6 +415,16 @@ Model.prototype.newQuery = function newQuery() {
  */
 Model.prototype.newInstance = function newInstance(attrs) {
   return this.constructor.factory(attrs)
+}
+
+/**
+ * Create an existing instance of the current model
+ * 
+ * @param {Object} attrs
+ * @return Model instance
+ */
+Model.prototype.newExistingInstance = function newExistingInstance(attrs) {
+  return this.newInstance().setData(attrs, true)
 }
 
 /**

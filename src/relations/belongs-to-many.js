@@ -330,7 +330,7 @@ var BelongsToMany = Relation.extend({
         }
       })
       
-      model.related('pivot', this.pivot.newInstance().setData(data, true))
+      model.related('pivot', this.pivot.newExistingInstance(data))
     }, this)
   }
   

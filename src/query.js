@@ -13,9 +13,7 @@ module.exports = Query
  */
 function Query(builder) {
   this._rels = {}
-  
-  // make the builder a read-only property
-  Object.defineProperty(this, 'query', { value: builder })
+  this.builder = builder
 }
 
 /**
@@ -61,7 +59,7 @@ Query.prototype.loadRelated = function loadRelated(models) {
  * @return Query instance
  */
 Query.prototype.setModel = function setModel(model) {
-  this.query.from(model.getTableName())
+  this.builder.from(model.getTableName())
   this.model = model
   return this
 }
@@ -76,7 +74,7 @@ Query.prototype.fetch = function fetch(cb) {
   return Promise
     .bind(this)
     .then(function () {
-      return this.query.first()
+      return this.builder.first()
     })
     .then(function (resp) {
       if ( _.isEmpty(resp) ) 
@@ -100,12 +98,12 @@ Query.prototype.fetchAll = function fetchAll(cb) {
   return Promise
     .bind(this)
     .then(function () {
-      return this.query.select()
+      return this.builder.select()
     })
     .then(function (resp) {
       // map results to model objects
       return _.map(resp, function (data) {
-        return this.newInstance().setData(data, true)
+        return this.newExistingInstance(data)
       }, this.model)
     })
     .tap(this.loadRelated)
@@ -121,7 +119,7 @@ Query.prototype.fetchAll = function fetchAll(cb) {
  */
 Query.prototype.insert = function insert(data, cb) {
   var pk = this.model.getKeyName(), 
-      query = this.query.insert(data).returning(pk)
+      query = this.builder.insert(data).returning(pk)
   
   return Promise.resolve(query).nodeify(cb)
 }
@@ -134,7 +132,7 @@ Query.prototype.insert = function insert(data, cb) {
  * @return {Promise}
  */
 Query.prototype.update = function update(data, cb) {
-  return Promise.resolve(this.query.update(data)).nodeify(cb)
+  return Promise.resolve(this.builder.update(data)).nodeify(cb)
 }
 
 /**
@@ -144,7 +142,7 @@ Query.prototype.update = function update(data, cb) {
  * @return {Promise}
  */
 Query.prototype.destroy = function destroy(cb) {
-  return Promise.resolve(this.query.del()).nodeify(cb)
+  return Promise.resolve(this.builder.del()).nodeify(cb)
 }
 
 /**
@@ -211,7 +209,7 @@ var methods = [
 _.each(methods, function (name) {
   
   Query.prototype[name] = function () {
-    (this.query[name]).apply(this.query, arguments)
+    (this.builder[name]).apply(this.builder, arguments)
     return this
   }
   
