@@ -1,6 +1,7 @@
 
 var   knex = require('knex'),
       _ = require('underscore'),
+      utils = require('./utils'),
       Events = require('./events'),
       Promise = require('bluebird'),
       ModelQuery = require('./query')
@@ -46,23 +47,10 @@ Model.prototype.$events = new Events()
  * @static
  */
 Model.extend = function extend(props, statics) {
-  var Super = this
-  
-  // default constructor simply calls the parent one
-  var Model = _.has(props, 'constructor') ? props.constructor :
-  function Model() { Super.apply(this, arguments) }
-  
-  // set the prototype chain to inherit from `parent`
-  Model.prototype = Object.create(Super.prototype, {
-    constructor: { value: Model } 
-  })
-  
-  // add static and instance properties
-  _.extend(Model, Super, statics)
-  _.extend(Model.prototype, props)
+  var Model = utils.extend(this, props, statics)
   
   // init model events
-  Model.prototype.$events = Super.prototype.$events.clone()
+  Model.prototype.$events = this.prototype.$events.clone()
   
   return Model
 }

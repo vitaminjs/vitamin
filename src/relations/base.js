@@ -1,6 +1,7 @@
 
 var _ = require('underscore'),
-    Query = require('../query')
+    Query = require('../query'),
+    utils = require('../utils')
 
 module.exports = Relation
 
@@ -23,17 +24,7 @@ function Relation(parent, related) {
  * @static
  */
 Relation.extend = function extend(props) {
-  var Super = this
-  
-  // constructor
-  var Ctor = _.has(props, 'constructor') ? props.constructor :
-  function Ctor() { Super.apply(this, arguments) }
-  
-  // inheritance
-  Ctor.prototype = Object.create(Super.prototype)
-  _.assign(Ctor.prototype, { constructor: Ctor }, props)
-  
-  return _.extend(Ctor, Super)
+  return utils.extend(this, props)
 }
 
 _.assign(Relation.prototype, {
