@@ -49,6 +49,9 @@ Query.prototype.populate = function populate(related) {
  * @return Promise instance
  */
 Query.prototype.loadRelated = function loadRelated(models) {
+  // no need to load related, if there is no parent model
+  if ( _.isEmpty(models) ) return Promise.resolve() 
+  
   return Promise.map(_.keys(this._rels), this._eagerLoad.bind(this, models))
 }
 

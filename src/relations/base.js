@@ -126,7 +126,7 @@ var methods = [
 
 _.each(methods, function (name) {
   
-  Query.prototype[name] = function () {
+  Relation.prototype[name] = function () {
     (this.query[name]).apply(this.query, arguments)
     return this
   }
