@@ -26,16 +26,29 @@ function Model() { this.init.apply(this, arguments) }
 
 /**
  * Define the primary key name
+ * 
+ * @type {String}
  */
 Model.prototype.$pk = 'id'
 
 /**
+ * Default model attributes
+ * 
+ * @type {Object|Function}
+ */
+Model.prototype.$defaults = {}
+
+/**
  * Indicates if the IDs are auto-incrementing
+ * 
+ * @type {Boolean}
  */
 Model.prototype.$incrementing = true
 
 /**
  * Model events dispatcher
+ * 
+ * @type {Events}
  */
 Model.prototype.$events = new Events()
 
@@ -646,6 +659,8 @@ Model.prototype.init = function _init(attrs) {
   this.$rels = {}
   this.$data = {}
   this.$original = {}
+  
+  this.setData(_.result(this.$defaults))
   
   // set model attributes
   this.fill(attrs)
