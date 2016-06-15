@@ -4,7 +4,8 @@ var   knex = require('knex'),
       utils = require('./utils'),
       Events = require('./events'),
       Promise = require('bluebird'),
-      ModelQuery = require('./query')
+      ModelQuery = require('./query'),
+      Collection = require('./collection')
 
 const EVENT_CREATING = "creating",
       EVENT_UPDATING = "updating",
@@ -301,9 +302,9 @@ Model.prototype.get = function get(attr, defaultValue) {
  * @return any
  */
 Model.prototype.related = function related(name, value) {
-  if ( value ) this.$rels[name] = value
+  if ( _.isUndefined(value) ) return this.$rels[name]
   
-  return this.$rels[name]
+  this.$rels[name] = value
 }
 
 /**
@@ -418,11 +419,7 @@ Model.prototype.toJSON = function toJSON() {
   
   // serialize relationships
   _.each(this.$rels, function (related, name) {
-    if ( _.isArray(related) ) {
-      json[name] = _.map(related, function (rel) {
-        return rel.toJSON()
-      })
-    }
+    if (! related ) json[name] = related
     else json[name] = related.toJSON()
   })
   
@@ -438,6 +435,16 @@ Model.prototype.newQuery = function newQuery() {
   var builder = this.$connection.queryBuilder()
   
   return (new ModelQuery(builder)).setModel(this)
+}
+
+/**
+ * Create a new collection instance
+ * 
+ * @param {Array} models
+ * @return Collection instance
+ */
+Model.prototype.newCollection = function newCollection(models) {
+  return new Collection(models)
 }
 
 /**

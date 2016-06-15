@@ -29,8 +29,8 @@ module.exports = {
   buildDictionary: function _buildDictionary(models, key) {
     this.cleanPivotAttributes(models)
     
-    return _.groupBy(models, function (model) {
-      return String(model.related('pivot').get(key))
+    return models.groupBy(function (model) {
+      return model.related('pivot').get(key)
     })
   },
   
@@ -38,11 +38,11 @@ module.exports = {
    * Get the value for the relationship
    * 
    * @param {Array} value
-   * @return Array
+   * @return Collection
    * @private
    */
   getRelationshipValue: function _getRelationshipValue(value) {
-    return value || []
+    return this.related.newCollection(value || [])
   },
   
   /**

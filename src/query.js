@@ -105,9 +105,11 @@ Query.prototype.fetchAll = function fetchAll(cb) {
     })
     .then(function (resp) {
       // map results to model objects
-      return _.map(resp, function (data) {
+      var models = _.map(resp, function (data) {
         return this.newExistingInstance(data)
       }, this.model)
+      
+      return this.model.newCollection(models)
     })
     .tap(this.loadRelated)
     .nodeify(cb)

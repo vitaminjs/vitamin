@@ -153,7 +153,7 @@ var BelongsToMany = Relation.extend({
     return Promise
       .bind(this, related)
       .map(function (model, index) {
-        return this.save(model, attrs[index])
+        return this.save(model, attrs[index] || {})
       })
       .nodeify(cb)
   },
@@ -191,7 +191,7 @@ var BelongsToMany = Relation.extend({
     return Promise
       .bind(this, records)
       .map(function (attrs, index) {
-        return this.create(attrs, pivots[index])
+        return this.create(attrs, pivots[index] || {})
       })
       .nodeify(cb)
   },
@@ -320,7 +320,7 @@ var BelongsToMany = Relation.extend({
    * @private
    */
   cleanPivotAttributes: function _cleanPivotAttributes(models) {
-    _.each(models, function (model) {
+    models.forEach(function (model) {
       var data = {}
       
       _.each(model.getData(), function (value, key) {

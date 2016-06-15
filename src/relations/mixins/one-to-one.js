@@ -23,9 +23,7 @@ module.exports = {
    * @private
    */
   buildDictionary: function _buildDictionary(models, key) {
-    return _.indexBy(models, function (model) {
-      return String(model.get(key))
-    })
+    return models.keyBy(key)
   },
   
   /**

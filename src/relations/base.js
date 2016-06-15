@@ -1,7 +1,8 @@
 
 var _ = require('underscore'),
     Query = require('../query'),
-    utils = require('../utils')
+    utils = require('../utils'),
+    Collection = require('../collection')
 
 module.exports = Relation
 
@@ -53,14 +54,16 @@ _.assign(Relation.prototype, {
   },
   
   /**
-   * Get the primary keys of all the given models
+   * Get the keys of the given models
    * 
    * @param {Array} models
-   * @param {String} key primary key name
-   * @return {Array} ids
+   * @param {String} key
+   * @return {Array} keys
    * @private
    */
   getKeys: function _getKeys(models, key) {
+    if ( models instanceof Collection ) models = models.toArray()
+    
     return _.chain(models).map(function (model) {
       return key ? model.get(key) : model.getId()
     }).uniq().value()
@@ -97,10 +100,10 @@ _.assign(Relation.prototype, {
     var local = this.localKey, other = this.otherKey,
         dictionary = this.buildDictionary(results, other)
     
-    _.each(models, function (owner) {
-      var key = String(owner.get(local))
+    models.forEach(function (owner) {
+      var value = dictionary[owner.get(local)]
       
-      owner.related(name, this.getRelationshipValue(dictionary[key]))
+      owner.related(name, this.getRelationshipValue(value))
     }, this)
   }
   

@@ -23,20 +23,18 @@ module.exports = {
    * @private
    */
   buildDictionary: function _buildDictionary(models, key) {
-    return _.groupBy(models, function (model) {
-      return String(model.get(key))
-    })
+    return models.groupBy(key)
   },
   
   /**
    * Get the value for the relationship
    * 
    * @param {Array} value
-   * @return Array
+   * @return Collection
    * @private
    */
   getRelationshipValue: function _getRelationshipValue(value) {
-    return value || []
+    return this.related.newCollection(value || [])
   }
   
 }
