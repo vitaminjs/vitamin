@@ -46,6 +46,13 @@ Model.prototype.$hidden = []
 Model.prototype.$defaults = {}
 
 /**
+ * Define attributes that are mass assignable
+ * 
+ * @type {Array|Boolean}
+ */
+Model.prototype.$fillable = false
+
+/**
  * Indicates if the IDs are auto-incrementing
  * 
  * @type {Boolean}
@@ -224,7 +231,7 @@ Model.prototype.trigger = function trigger(event) {
  */
 Model.prototype.fill = function fill(attrs) {
   for ( var name in attrs ) { 
-    this.set(name, attrs[name])
+    this.isFillable(name) && this.set(name, attrs[name])
   }
   
   return this
@@ -520,6 +527,19 @@ Model.prototype.destroy = function destroy(cb) {
     })
     .return(this)
     .nodeify(cb)
+}
+
+/**
+ * Determine if the given attribute can be mass assigned
+ * 
+ * @param {String} attr
+ * @return boolean
+ * @private
+ */
+Model.prototype.isFillable = function _isFillable(attr) {
+  if ( _.isBoolean(this.$fillable) ) return this.$fillable
+  
+  return _.contains(this.$fillable, attr)
 }
 
 /**

@@ -107,10 +107,6 @@ describe("Model Unit Tests", function() {
       
       model.set('age', 40)
       assert.equal(model.get('age'), 40)
-      
-      model.fill({ first_name: "John", last_name: "DOE" })
-      assert.ok(model.has('first_name'))
-      assert.equal(model.get('last_name'), "DOE")
     })
     
     it("manages dirty attributes", function() {
