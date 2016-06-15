@@ -32,6 +32,13 @@ function Model() { this.init.apply(this, arguments) }
 Model.prototype.$pk = 'id'
 
 /**
+ * Define hidden attributes from `toJSON`
+ * 
+ * @type {Array}
+ */
+Model.prototype.$hidden = []
+
+/**
  * Default model attributes
  * 
  * @type {Object|Function}
@@ -395,9 +402,14 @@ Model.prototype.isNew = function isNew() {
  * @return object
  */
 Model.prototype.toJSON = function toJSON() {
-  // TODO omit hidden fields
-  var json = this.getData()
+  var json = {}
   
+  // serialize model's data
+  _.each(_.keys(this.$data), function (attr) {
+    json[attr] = this.get(attr)
+  }, this)
+  
+  // serialize relationships
   _.each(this.$rels, function (related, name) {
     if ( _.isArray(related) ) {
       json[name] = _.map(related, function (rel) {
@@ -407,7 +419,7 @@ Model.prototype.toJSON = function toJSON() {
     else json[name] = related.toJSON()
   })
   
-  return json
+  return _.omit(json, this.$hidden)
 }
 
 /**
