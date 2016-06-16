@@ -26,7 +26,7 @@
 Each table or view is wrapped into a "Model" class. Thus, a model instance is tied to a single row in the table. 
 Models allow you to query for data in your tables, as well as inserting or updating records.</p>
 
-<p>It supports <strong>Postgres</strong>, <strong>MySQL</strong>, <strong>MariaDB</strong>, <strong>SQLite3</strong>, and <strong>Oracle</strong> databases, 
+<p>Based on <a href="//knejs.org">knex</a>, it supports <strong>Postgres</strong>, <strong>MySQL</strong>, <strong>MariaDB</strong>, <strong>SQLite3</strong>, and <strong>Oracle</strong> databases, 
 featuring both promise based and traditional callback interfaces, providing lazy and eager relationships loading, 
 and support for one-to-one, one-to-many, and many-to-many relations.</p>
 
@@ -83,7 +83,19 @@ and specify both, the <code>primary key</code> name, and the <code>table</code> 
   $pk<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>id<span class="pl-pds">'</span></span>,
 
   <span class="pl-c">// the table name</span>
-  $table<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>users<span class="pl-pds">'</span></span>
+  $table<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>users<span class="pl-pds">'</span></span>,
+
+  <span class="pl-c">// add default attributes</span>
+  $defaults<span class="pl-k">:</span> {
+    active<span class="pl-k">:</span> <span class="pl-c1">true</span>,
+    verified<span class="pl-k">:</span> <span class="pl-c1">false</span>
+  },
+
+  <span class="pl-c">// define the mass assignable attributes</span>
+  $fillable<span class="pl-k">:</span> [ <span class="pl-s"><span class="pl-pds">'</span>name<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>email<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>password<span class="pl-pds">'</span></span> ],
+
+  <span class="pl-c">// define the hidden fields from `toJSON()`</span>
+  $hidden<span class="pl-k">:</span> [ <span class="pl-s"><span class="pl-pds">'</span>password<span class="pl-pds">'</span></span> ]
 
 })</pre></div>
 
@@ -158,13 +170,13 @@ Below a few examples of different data access methods provided by Vitamin.</p>
 
 <span class="pl-c">// using callbacks</span>
 <span class="pl-smi">User</span>.<span class="pl-c1">all</span>(<span class="pl-k">function</span> (<span class="pl-smi">error</span>, <span class="pl-smi">result</span>) {
-  <span class="pl-smi">assert</span>.<span class="pl-en">isArray</span>(result)
+  <span class="pl-smi">assert</span>.<span class="pl-en">instanceOf</span>(result, Collection)
 })
 
 <span class="pl-c">// using promises</span>
 <span class="pl-smi">User</span>.<span class="pl-c1">all</span>().<span class="pl-en">then</span>(
   <span class="pl-k">function</span> (<span class="pl-smi">result</span>) {
-    <span class="pl-smi">assert</span>.<span class="pl-en">isArray</span>(result)
+    <span class="pl-smi">assert</span>.<span class="pl-en">instanceOf</span>(result, Collection)
   },
   <span class="pl-k">function</span> (<span class="pl-smi">error</span>) {
     <span class="pl-k">...</span>
@@ -176,13 +188,13 @@ But, if you may also add constraints to queries, you can use the <code>where</co
 
 <div class="highlight highlight-source-js"><pre><span class="pl-c">// using callbacks</span>
 <span class="pl-smi">User</span>.<span class="pl-en">where</span>(<span class="pl-s"><span class="pl-pds">'</span>role<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">"</span>guest<span class="pl-pds">"</span></span>).<span class="pl-en">offset</span>(<span class="pl-c1">10</span>).<span class="pl-en">limit</span>(<span class="pl-c1">15</span>).<span class="pl-en">fetchAll</span>(<span class="pl-k">function</span> (<span class="pl-smi">error</span>, <span class="pl-smi">result</span>) {
-  <span class="pl-k">...</span>
+  <span class="pl-smi">assert</span>.<span class="pl-en">instanceOf</span>(result, Collection)
 })
 
 <span class="pl-c">// using promises</span>
 <span class="pl-smi">User</span>.<span class="pl-en">where</span>(<span class="pl-s"><span class="pl-pds">'</span>role<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">"</span>guest<span class="pl-pds">"</span></span>).<span class="pl-en">orderBy</span>(<span class="pl-s"><span class="pl-pds">'</span>name<span class="pl-pds">'</span></span>).<span class="pl-en">fetchAll</span>().<span class="pl-en">then</span>(
   <span class="pl-k">function</span> (<span class="pl-smi">result</span>) {
-    <span class="pl-k">...</span> 
+    <span class="pl-smi">assert</span>.<span class="pl-en">instanceOf</span>(result, Collection)
   },
   <span class="pl-k">function</span> (<span class="pl-smi">error</span>) {
     <span class="pl-k">...</span>
@@ -199,13 +211,13 @@ Instead of returning an array of models, these methods return only a single mode
 
 <span class="pl-c">// using callbacks</span>
 <span class="pl-smi">User</span>.<span class="pl-c1">find</span>(<span class="pl-c1">123</span>, <span class="pl-k">function</span> (<span class="pl-smi">error</span>, <span class="pl-smi">result</span>) {
-  <span class="pl-smi">assert</span>.<span class="pl-en">instanceOf</span>(result, Model)
+  <span class="pl-smi">assert</span>.<span class="pl-en">instanceOf</span>(result, User)
 })
 
 <span class="pl-c">// using promises</span>
 <span class="pl-smi">User</span>.<span class="pl-c1">find</span>(<span class="pl-c1">123</span>).<span class="pl-en">then</span>(
   <span class="pl-k">function</span> (<span class="pl-smi">result</span>) {
-    <span class="pl-smi">assert</span>.<span class="pl-en">instanceOf</span>(result, Model)
+    <span class="pl-smi">assert</span>.<span class="pl-en">instanceOf</span>(result, User)
   },
   <span class="pl-k">function</span> (<span class="pl-smi">error</span>) {
     <span class="pl-k">...</span>
@@ -433,7 +445,7 @@ A pivot table, in this case <code>product_categories</code>, is used and contain
 <span class="pl-c">// the same can be done to retrieve all the  author's posts</span>
 <span class="pl-smi">author</span>.<span class="pl-c1">load</span>([<span class="pl-s"><span class="pl-pds">'</span>posts<span class="pl-pds">'</span></span>]).<span class="pl-en">then</span>(<span class="pl-k">function</span> (<span class="pl-smi">model</span>) {
   <span class="pl-smi">assert</span>.<span class="pl-en">equal</span>(author, model)
-  <span class="pl-smi">assert</span>.<span class="pl-en">isArray</span>(<span class="pl-smi">model</span>.<span class="pl-en">related</span>(<span class="pl-s"><span class="pl-pds">'</span>posts<span class="pl-pds">'</span></span>))
+  <span class="pl-smi">assert</span>.<span class="pl-en">instanceOf</span>(<span class="pl-smi">model</span>.<span class="pl-en">related</span>(<span class="pl-s"><span class="pl-pds">'</span>posts<span class="pl-pds">'</span></span>), Collection)
 })</pre></div>
 
 <h4>
@@ -451,8 +463,8 @@ Author
   .<span class="pl-en">populate</span>({ <span class="pl-en">posts</span><span class="pl-k">:</span> <span class="pl-k">function</span> (<span class="pl-smi">query</span>) { <span class="pl-smi">query</span>.<span class="pl-en">limit</span>(<span class="pl-c1">3</span>) } })
   .<span class="pl-en">fetchAll</span>(<span class="pl-k">function</span> (<span class="pl-smi">error</span>, <span class="pl-smi">authors</span>) {
     <span class="pl-smi">authors</span>.<span class="pl-en">forEach</span>(<span class="pl-k">function</span> (<span class="pl-smi">author</span>) {
-      <span class="pl-smi">assert</span>.<span class="pl-en">isArray</span>(<span class="pl-smi">author</span>.<span class="pl-en">related</span>(<span class="pl-s"><span class="pl-pds">'</span>posts<span class="pl-pds">'</span></span>))
-      <span class="pl-smi">assert</span>.<span class="pl-en">instanceOf</span>(<span class="pl-smi">author</span>.<span class="pl-en">related</span>(<span class="pl-s"><span class="pl-pds">'</span>posts<span class="pl-pds">'</span></span>)[<span class="pl-c1">0</span>], Post)
+      <span class="pl-smi">assert</span>.<span class="pl-en">instanceOf</span>(<span class="pl-smi">author</span>.<span class="pl-en">related</span>(<span class="pl-s"><span class="pl-pds">'</span>posts<span class="pl-pds">'</span></span>), Collection)
+      <span class="pl-smi">assert</span>.<span class="pl-en">instanceOf</span>(<span class="pl-smi">author</span>.<span class="pl-en">related</span>(<span class="pl-s"><span class="pl-pds">'</span>posts<span class="pl-pds">'</span></span>).<span class="pl-en">first</span>(), Post)
     })
   })</pre></div>
 
@@ -487,8 +499,8 @@ Author
   <span class="pl-smi">Comment</span>.<span class="pl-en">factory</span>({ body<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>first comment<span class="pl-pds">"</span></span> }),
   <span class="pl-smi">Comment</span>.<span class="pl-en">factory</span>({ body<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>second comment<span class="pl-pds">"</span></span> })
 ], <span class="pl-k">function</span> (<span class="pl-smi">error</span>, <span class="pl-smi">result</span>) {
-  <span class="pl-smi">assert</span>.<span class="pl-en">isArray</span>(result)
-  <span class="pl-smi">assert</span>.<span class="pl-en">instanceOf</span>(result[<span class="pl-c1">0</span>], Comment)
+  <span class="pl-smi">assert</span>.<span class="pl-en">instanceOf</span>(result, Collection)
+  <span class="pl-smi">assert</span>.<span class="pl-en">instanceOf</span>(<span class="pl-smi">result</span>.<span class="pl-en">first</span>(), Comment)
 })
 
 <span class="pl-c">// using promises</span>
@@ -496,8 +508,8 @@ Author
   <span class="pl-smi">Comment</span>.<span class="pl-en">factory</span>({ body<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>first comment<span class="pl-pds">"</span></span> }),
   <span class="pl-smi">Comment</span>.<span class="pl-en">factory</span>({ body<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>second comment<span class="pl-pds">"</span></span> })
 ]).<span class="pl-en">then</span>(<span class="pl-k">function</span> (<span class="pl-smi">result</span>) {
-  <span class="pl-smi">assert</span>.<span class="pl-en">isArray</span>(result)
-  <span class="pl-smi">assert</span>.<span class="pl-en">instanceOf</span>(result[<span class="pl-c1">0</span>], Comment)
+  <span class="pl-smi">assert</span>.<span class="pl-en">instanceOf</span>(result, Collection)
+  <span class="pl-smi">assert</span>.<span class="pl-en">instanceOf</span>(<span class="pl-smi">result</span>.<span class="pl-en">first</span>(), Comment)
 })</pre></div>
 
 <h4>
@@ -514,8 +526,8 @@ which accepts an array of attributes, creates a model, and inserts it into the d
 <span class="pl-smi">post</span>.<span class="pl-en">comments</span>().<span class="pl-en">createMany</span>([
   { body<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>first comment<span class="pl-pds">"</span></span> }, { body<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>second comment<span class="pl-pds">"</span></span> }
 ]).<span class="pl-en">then</span>(<span class="pl-k">function</span> (<span class="pl-smi">result</span>) {
-  <span class="pl-smi">assert</span>.<span class="pl-en">isArray</span>(result)
-  <span class="pl-smi">assert</span>.<span class="pl-en">instanceOf</span>(result[<span class="pl-c1">0</span>], Comment)
+  <span class="pl-smi">assert</span>.<span class="pl-en">instanceOf</span>(result, Collection)
+  <span class="pl-smi">assert</span>.<span class="pl-en">instanceOf</span>(<span class="pl-smi">result</span>.<span class="pl-en">first</span>(), Comment)
 })</pre></div>
 
 <h4>
