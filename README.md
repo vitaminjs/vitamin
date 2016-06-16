@@ -1,8 +1,9 @@
+## Introduction
 Vitamin provides a simple and easy to use ActiveRecord implementation for working with your database. 
 Each table or view is wrapped into a "Model" class. Thus, a model instance is tied to a single row in the table. 
 Models allow you to query for data in your tables, as well as inserting or updating records.
 
-It supports **Postgres**, **MySQL**, **MariaDB**, **SQLite3**, and **Oracle** databases, 
+Based on [knex](//knejs.org), it supports **Postgres**, **MySQL**, **MariaDB**, **SQLite3**, and **Oracle** databases, 
 featuring both promise based and traditional callback interfaces, providing lazy and eager relationships loading, 
 and support for one-to-one, one-to-many, and many-to-many relations.
 
@@ -57,7 +58,19 @@ var User = new Model.extend({
   $pk: 'id',
   
   // the table name
-  $table: 'users'
+  $table: 'users',
+  
+  // add default attributes
+  $defaults: {
+    active: true,
+    verified: false
+  },
+  
+  // define the mass assignable attributes
+  $fillable: [ 'name', 'email', 'password' ],
+  
+  // define the hidden fields from `toJSON()`
+  $hidden: [ 'password' ]
   
 })
 ```
@@ -126,13 +139,13 @@ Below a few examples of different data access methods provided by Vitamin.
 
 // using callbacks
 User.all(function (error, result) {
-  assert.isArray(result)
+  assert.instanceOf(result, Collection)
 })
 
 // using promises
 User.all().then(
   function (result) {
-    assert.isArray(result)
+    assert.instanceOf(result, Collection)
   },
   function (error) {
     ...
@@ -145,13 +158,13 @@ But, if you may also add constraints to queries, you can use the `where` method,
 ```js
 // using callbacks
 User.where('role', "guest").offset(10).limit(15).fetchAll(function (error, result) {
-  ...
+  assert.instanceOf(result, Collection)
 })
 
 // using promises
 User.where('role', "guest").orderBy('name').fetchAll().then(
   function (result) {
-    ... 
+    assert.instanceOf(result, Collection)
   },
   function (error) {
     ...
@@ -168,13 +181,13 @@ Instead of returning an array of models, these methods return only a single mode
 
 // using callbacks
 User.find(123, function (error, result) {
-  assert.instanceOf(result, Model)
+  assert.instanceOf(result, User)
 })
 
 // using promises
 User.find(123).then(
   function (result) {
-    assert.instanceOf(result, Model)
+    assert.instanceOf(result, User)
   },
   function (error) {
     ...
@@ -394,7 +407,7 @@ person.load(['phone'], function (error, model) {
 // the same can be done to retrieve all the  author's posts
 author.load(['posts']).then(function (model) {
   assert.equal(author, model)
-  assert.isArray(model.related('posts'))
+  assert.instanceOf(model.related('posts'), Collection)
 })
 ```
 
@@ -412,8 +425,8 @@ Author
   .populate({ posts: function (query) { query.limit(3) } })
   .fetchAll(function (error, authors) {
     authors.forEach(function (author) {
-      assert.isArray(author.related('posts'))
-      assert.instanceOf(author.related('posts')[0], Post)
+      assert.instanceOf(author.related('posts'), Collection)
+      assert.instanceOf(author.related('posts').first(), Post)
     })
   })
 ```
@@ -449,8 +462,8 @@ post.comments().saveMany([
   Comment.factory({ body: "first comment" }),
   Comment.factory({ body: "second comment" })
 ], function (error, result) {
-  assert.isArray(result)
-  assert.instanceOf(result[0], Comment)
+  assert.instanceOf(result, Collection)
+  assert.instanceOf(result.first(), Comment)
 })
 
 // using promises
@@ -458,8 +471,8 @@ post.comments().saveMany([
   Comment.factory({ body: "first comment" }),
   Comment.factory({ body: "second comment" })
 ]).then(function (result) {
-  assert.isArray(result)
-  assert.instanceOf(result[0], Comment)
+  assert.instanceOf(result, Collection)
+  assert.instanceOf(result.first(), Comment)
 })
 ```
 
@@ -476,12 +489,12 @@ post.comments().create(, function (error, model) {
 post.comments().createMany([
   { body: "first comment" }, { body: "second comment" }
 ]).then(function (result) {
-  assert.isArray(result)
-  assert.instanceOf(result[0], Comment)
+  assert.instanceOf(result, Collection)
+  assert.instanceOf(result.first(), Comment)
 })
 ```
 
-##### `associate()` and `dissociate`
+#### `associate()` and `dissociate`
 
 When updating a `belongsTo` relationship, you may use the `associate` method.
 
