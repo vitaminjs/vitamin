@@ -31,4 +31,7 @@ module.exports.createError = createError
 /**
  * Model Not Found Custom Error
  */
-module.exports.ModelNotFoundError = createError('ModelNotFoundError')
+module.exports.ModelNotFoundError = createError('ModelNotFoundError', {
+  message: "Model Not Found",
+  code: 404
+})

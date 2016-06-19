@@ -187,7 +187,7 @@ Query.prototype.eagerLoad = function _eagerLoad(models, name) {
  */
 Query.prototype.initRelation = function _initRelation(relation, custom) {
   // set nested models
-  if ( _.isArray(custom) ) relation.with(custom)
+  if ( _.isArray(custom) ) relation.populate(custom)
   
   // use custom constraints
   if ( _.isFunction(custom) ) custom.call(null, relation.query)

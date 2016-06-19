@@ -99,7 +99,7 @@ Model.use = function use(plugin) {
   args.unshift(this)
   
   if ( _.isFunction(plugin.install) ) {
-    plugin.install.apply(null, args)
+    plugin.install.apply(plugin, args)
   }
   else if ( _.isFunction(plugin) ) {
     plugin.apply(null, args)
@@ -115,11 +115,11 @@ Model.use = function use(plugin) {
  * Initialise the database connection
  * 
  * @param {Object} config
+ * @return Knex
  * @static
  */
 Model.connection = function connection(config) {
-  this.prototype.$connection = knex(config)
-  return this
+  return this.prototype.$connection = knex(config)
 }
 
 /**
@@ -619,7 +619,7 @@ Model.prototype.belongsToMany = function _belongsToMany(target, pivot, fk, pk) {
  * @return Promise instance
  * @private
  */
-Model.prototype.createNew = function _create() {
+Model.prototype.createNew = function _createNew() {
   return Promise
     .bind(this)
     .then(function () {
@@ -699,6 +699,7 @@ Model.prototype.init = function _init(attrs) {
   this.$data = {}
   this.$original = {}
   
+  // set default attributes
   this.setData(_.result(this.$defaults))
   
   // set model attributes
