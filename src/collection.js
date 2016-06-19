@@ -40,7 +40,7 @@ _.extend(Collection.prototype, {
    * @return Array
    */
   pluck: function pluck(key) {
-    return _.map(this, function (model) {
+    return _.map(this.models, function (model) {
       return model.get(key)
     })
   },

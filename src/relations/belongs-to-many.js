@@ -2,7 +2,8 @@
 var _ = require('underscore'),
     Model = require('../model'),
     Relation = require('./base'),
-    Promise = require('bluebird')
+    Promise = require('bluebird'),
+    Collection = require('../collection')
 
 var BelongsToMany = Relation.extend({
   
@@ -70,6 +71,10 @@ var BelongsToMany = Relation.extend({
    * @return Promise instance
    */
   attach: function attach(ids, attrs, cb) {
+    if ( ids instanceof Collection ) {
+      ids = ids.pluck(this.related.getKeyName())
+    }
+    
     if (! _.isArray(ids) ) ids = [ids]
     
     if ( _.isFunction(attrs) ) {
@@ -92,6 +97,10 @@ var BelongsToMany = Relation.extend({
    */
   detach: function detach(ids, cb) {
     var query = this.newPivotQuery()
+    
+    if ( ids instanceof Collection ) {
+      ids = ids.pluck(this.related.getKeyName())
+    }
     
     // detach all related models
     if (! ids ) ids = []
