@@ -302,6 +302,11 @@ User.create({ name: "John", occupation: "Developer" })
 ```
 ***
 
+You can also attach the same handler for many events separated by a white space
+```js
+Post.on('creating updating', updateTimestamps)
+``` 
+
 ## Associations
 Vitamin makes managing and working with relationships easy, and supports several types of relations:
 

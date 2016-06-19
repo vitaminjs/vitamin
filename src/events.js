@@ -19,9 +19,10 @@ function Events() {
  * @param {Function} fn
  */
 Events.prototype.on = function on(event, fn) {
-  var list = (this.listeners[event] = this.listeners[event] || [])
+  String(event).split(' ').forEach(function (piece) {
+    (this.listeners[piece] = this.listeners[piece] || []).push(fn)
+  }, this)
   
-  list.push(fn)
   return this
 }
 

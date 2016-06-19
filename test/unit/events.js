@@ -39,6 +39,16 @@ describe("Events Unit Tests", function () {
       assert.isFunction(events.listeners['event'][0])
     })
     
+    it("attaches the same handler for events separated by a space", function () {
+      var handler = function () {}
+      
+      events.on('ev1 ev2', handler)
+      
+      assert.property(events.listeners, 'ev1')
+      assert.property(events.listeners, 'ev2')
+      assert.equal(events.listeners['ev1'][0], events.listeners['ev2'][0])
+    })
+    
   })
   
   describe("off()", function () {
