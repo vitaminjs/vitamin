@@ -447,13 +447,19 @@ Model.prototype.newExistingInstance = function newExistingInstance(attrs) {
 /**
  * Fetch fresh data from database
  * 
- * @param {Function} cb optional callback
+ * @param {Array} relations (optional)
+ * @param {Function} cb (optional)
  * @return Promise instance
  */
-Model.prototype.fetch = function fetch(cb) {
+Model.prototype.fetch = function fetch(relations, cb) {
+  if ( _.isFunction(relations) ) {
+    cb = relations
+    relations = []
+  }
+  
   var pk = this.getKeyName(), id = this.getId()
   
-  return this.newQuery().where(pk, id).fetch(cb)
+  return this.newQuery().populate(relations).where(pk, id).fetch(cb)
 }
 
 /**
