@@ -3,7 +3,7 @@ Vitamin provides a simple and easy to use ActiveRecord implementation for workin
 Each table or view is wrapped into a "Model" class. Thus, a model instance is tied to a single row in the table. 
 Models allow you to query for data in your tables, as well as inserting or updating records.
 
-Based on [knex](//knejs.org), it supports **Postgres**, **MySQL**, **MariaDB**, **SQLite3**, and **Oracle** databases, 
+Based on [knex](//knexjs.org), it supports **Postgres**, **MySQL**, **MariaDB**, **SQLite3**, and **Oracle** databases, 
 featuring both promise based and traditional callback interfaces, providing lazy and eager relationships loading, 
 and support for one-to-one, one-to-many, and many-to-many relations.
 
@@ -288,7 +288,7 @@ Post.where('status', 'draft').destroy().then(
 ### Events
 Model events allow you to attach code to certain events in the lifecycle of yours models. 
 This enables you to add behaviors to your models when those events 
-`creating`, `created`, `saving`, `saved`, `updating`, `updated`, `deleting` or `deleted` occur.
+`ready`, `creating`, `created`, `saving`, `saved`, `updating`, `updated`, `deleting` or `deleted` occur.
 
 ```js
 // attach a listener for `created` event

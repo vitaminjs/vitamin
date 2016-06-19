@@ -704,6 +704,9 @@ Model.prototype.init = function _init(attrs) {
   
   // set model attributes
   this.fill(attrs)
+  
+  // trigger a ready event to add more logic
+  this.trigger('ready', this)
 }
 
 /**
