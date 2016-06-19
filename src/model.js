@@ -268,7 +268,7 @@ Model.prototype.set = function set(attr, newVal) {
 Model.prototype.get = function get(attr, defaultValue) {
   // TODO use attribute getter if available
   
-  return this.$data[attr] || defaultValue
+  return _.isUndefined(this.$data[attr]) ? defaultValue : this.$data[attr]
 }
 
 /**
