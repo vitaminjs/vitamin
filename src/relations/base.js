@@ -109,7 +109,7 @@ _.assign(Relation.prototype, {
   
 })
 
-// create proxies to query methods
+// create proxies to query builder methods
 var methods = [
   'where', 'orWhere', 'whereRaw',
   'whereIn', 'orWhereIn',
@@ -121,7 +121,9 @@ var methods = [
   'whereBetween', 'orWhereBetween',
   'whereNotBetween', 'orWhereNotBetween',
   'populate', 'select',
-  'limit', 'offset', 'orderBy'
+  'limit', 'offset', 'orderBy',
+  'all', 'find', 'findMany', 'findOrNew',
+  'first', 'firstOrNew', 'firstOrCreate'
 ]
 
 _.each(methods, function (name) {

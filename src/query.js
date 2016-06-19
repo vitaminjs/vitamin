@@ -68,16 +68,85 @@ Query.prototype.setModel = function setModel(model) {
 }
 
 /**
+ * Find a model by its primary key
+ * 
+ * @param {any} id
+ * @param {Array} columns (optional)
+ * @param {Function} cb (optional)
+ * @return Promise instance
+ */
+Query.prototype.find = function find(id, columns, cb) {
+  if ( _.isArray(id) ) return this.findMany.apply(this, arguments)
+  
+  if ( _.isFunction(columns) ) {
+    cb = columns
+    columns = []
+  }
+  
+  this.where(this.model.getQualifiedKeyName(), id)
+  
+  return this.fetch(columns, cb)
+}
+
+/**
+ * Find a model by its primary key or return fresh model instance
+ * 
+ * @param {any} id
+ * @param {Array} columns (optional)
+ * @param {Function} cb (optional)
+ * @return Promise instance
+ */
+Query.prototype.findOrNew = function (id, columns, cb) {
+  var model = this.model
+  
+  return this.find(id, columns).catch(function (error) {
+    if ( error instanceof ModelNotFound )
+      return Promise.resolve(model.newInstance())
+    else
+      return Promise.reject(error)
+  }).nodeify(cb)
+}
+
+/**
+ * Find multiple models by their primary keys
+ * 
+ * @param {Array} ids
+ * @param {Array} columns (optional)
+ * @param {Function} cb (optional)
+ * @return Promise instance
+ */
+Query.prototype.findMany = function findMany(ids, columns, cb) {
+  if ( _.empty(ids) ) 
+    return Promise.resolve(this.model.newCollection()).nodeify(cb)
+  
+  if ( _.isFunction(columns) ) {
+    cb = columns
+    columns = []
+  }
+  
+  this.whereIn(this.model.getQualifiedKeyName(), ids)
+  
+  return this.fetchAll(columns, cb)
+}
+
+/**
  * Fetch one record from the database
  * 
+ * @param {Array} columns (optional)
  * @param {Function} cb optional callback
- * @return {Promise}
+ * @return Promise instance
  */
-Query.prototype.fetch = function fetch(cb) {
+Query.prototype.first =
+Query.prototype.fetch = function fetch(columns, cb) {
+  if ( _.isFunction(columns) ) {
+    cb = columns
+    columns = []
+  }
+  
   return Promise
     .bind(this)
     .then(function () {
-      return this.builder.first()
+      return this.builder.first(columns)
     })
     .then(function (resp) {
       if ( _.isEmpty(resp) ) 
@@ -92,16 +161,59 @@ Query.prototype.fetch = function fetch(cb) {
 }
 
 /**
+ * Get the first record matching the attributes or instantiate it
+ * 
+ * @param {Object} attrs
+ * @param {Function} cb (optional)
+ * @return Promise instance
+ */
+Query.prototype.firstOrNew = function firstOrNew(attrs, cb) {
+  var model = this.model
+  
+  return this.where(attrs).first().catch(function (error) {
+    if ( error instanceof ModelNotFound )
+      return Promise.resolve(model.newInstance())
+    else
+      return Promise.reject(error)
+  }).nodeify(cb)
+}
+
+/**
+ * Get the first record matching the attributes or create it
+ * 
+ * @param {Object} attrs
+ * @param {Function} cb (optional)
+ * @return Promise instance
+ */
+Query.prototype.firstOrCreate = function firstOrCreate(attrs, cb) {
+  var model = this.model
+  
+  return this.where(attrs).first().catch(function (error) {
+    if ( error instanceof ModelNotFound )
+      return model.newInstance(attrs).save()
+    else
+      return Promise.reject(error)
+  }).nodeify(cb)
+}
+
+/**
  * Fetch many records from th database
  * 
+ * @param {Array} columns (optional)
  * @param {Function} cb (optional)
  * @return {Promise}
  */
-Query.prototype.fetchAll = function fetchAll(cb) {
+Query.prototype.all =
+Query.prototype.fetchAll = function fetchAll(columns, cb) {
+  if ( _.isFunction(columns) ) {
+    cb = columns
+    columns = []
+  }
+  
   return Promise
     .bind(this)
     .then(function () {
-      return this.builder.select()
+      return this.builder.select(columns)
     })
     .then(function (resp) {
       // map results to model objects

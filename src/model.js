@@ -174,29 +174,6 @@ Model.create = function create(data, cb) {
 }
 
 /**
- * Get all models from the database
- * 
- * @param {Function} cb optional callback
- * @return Promise instance
- * @static
- */
-Model.all = function all(cb) {
-  return this.factory().newQuery().fetchAll(cb)
-}
-
-/**
- * Find a model by its primary key
- * 
- * @param {any} id
- * @param {Function} cb optional callback
- * @return Promise instance
- * @static
- */
-Model.find = function find(id, cb) {
-  return this.where(this.prototype.$pk, id).fetch(cb)
-}
-
-/**
  * Load all the given relationships
  * 
  * @param {Array} rels
@@ -341,7 +318,7 @@ Model.prototype.getKeyName = function getKeyName() {
  * @return String
  */
 Model.prototype.getQualifiedKeyName = function getQualifiedKeyName() {
-  return this.$table + '.' + this.$pk
+  return this.getTableName() + '.' + this.getKeyName()
 }
 
 /**
@@ -444,7 +421,7 @@ Model.prototype.newQuery = function newQuery() {
  * @return Collection instance
  */
 Model.prototype.newCollection = function newCollection(models) {
-  return new Collection(models)
+  return new Collection(models || [])
 }
 
 /**
@@ -718,9 +695,9 @@ Model.prototype.syncOriginal = function _syncOriginal() {
   this.$original = _.clone(this.$data)
 }
 
-// add proxies to the query builder
+// add proxies to the query builder methods
 var methods = [
-  'populate',
+  'populate', 
   'select', 'distinct',   
   'where', 'orWhere', 'whereRaw',
   'whereIn', 'orWhereIn',
@@ -731,7 +708,9 @@ var methods = [
   'whereNotExists', 'orWhereNotExists',
   'whereBetween', 'orWhereBetween',
   'whereNotBetween', 'orWhereNotBetween',
-  'orderBy', 'offset', 'limit'
+  'orderBy', 'offset', 'limit',
+  'all', 'find', 'findMany', 'findOrNew',
+  'first', 'firstOrNew', 'firstOrCreate'
 ]
 
 methods.forEach(function (name) {
