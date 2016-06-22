@@ -1,3 +1,4 @@
+[![Stories in Ready](https://badge.waffle.io/vitaminjs/vitamin.png?label=ready&title=Ready)](https://waffle.io/vitaminjs/vitamin)
 ## Introduction
 Vitamin provides a simple and easy to use ActiveRecord implementation for working with your database. 
 Each table or view is wrapped into a "Model" class. Thus, a model instance is tied to a single row in the table. 
