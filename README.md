@@ -538,13 +538,15 @@ To remove a many-to-many relationship record, use the detach method.
 
 ```js
 // detach all roles of the loaded user
-user.roles().detach()
+user.roles().detach(function (error, result) {
+  ...
+})
 
 // detach only the role with the given id
-user.roles().detach(roleId)
+user.roles().detach(roleId).then(...)
 
 // detach all roles with the given ids
-user.roles().detach([1, 2, 3])
+user.roles().detach([1, 2, 3]).then(...)
 ```
 
 If you need to update an existing row in your pivot table, you may use `updatePivot` method
@@ -561,9 +563,15 @@ Any IDs that are not in the given array will be removed from the intermediate ta
 So, after this operation is complete, only the IDs in the array will exist in the intermediate table:
 
 ```js
-user->roles()->sync([1, 2, 3])
+// using callbacks
+user.roles().sync([1, 2, 3], function (error, result) {
+  ...
+})
+
+// using promises
+user.roles().sync([1, 2, 3]).then(...)
 ```
 You may also pass additional intermediate table values with the IDs:
 ```js
-user->roles()->sync([{ 1: { 'expires': true } }, 2])
+user.roles().sync([{ 1: { 'expires': true } }, 2]).then(...)
 ```
