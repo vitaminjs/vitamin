@@ -27,7 +27,7 @@ Database connection is initialized by passing a config object to `connection` st
 The [knex documentation](//knexjs.org/#Installation) provides a number of examples for different use cases.
 
 ```js
-var Model = require('vitamin/model')
+var Model = require('vitamin')
 
 // An example of config object for MySQL which will be used by knex
 Model.connection({
@@ -50,9 +50,9 @@ To get started, let's define a basic Model using the `extend` static method,
 and specify both, the `primary key` name, and the `table` name
 
 ```js
-var Model = require('vitamin/model')
+var Model = require('vitamin')
 
-var User = new Model.extend({
+var User = Model.extend({
   
   // the primary key, defaults to `id`
   $pk: 'id',
@@ -300,12 +300,11 @@ User.on('created', function (user) {
 // when we create a new model
 User.create({ name: "John", occupation: "Developer" })
 ```
-***
-
 You can also attach the same handler for many events separated by a white space
 ```js
 Post.on('creating updating', updateTimestamps)
-``` 
+```
+***
 
 ## Associations
 Vitamin makes managing and working with relationships easy, and supports several types of relations:
