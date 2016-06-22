@@ -703,7 +703,7 @@ Model.prototype.syncOriginal = function _syncOriginal() {
 
 // add proxies to the query builder methods
 var methods = [
-  'populate', 
+  'populate', 'withRelated',
   'select', 'distinct',   
   'where', 'orWhere', 'whereRaw',
   'whereIn', 'orWhereIn',

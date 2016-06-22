@@ -13,9 +13,9 @@ module.exports = {
   get: function _get(eager) {
     var results =this.query.fetchAll()
     
-    if (! eager ) results.tap(this.cleanPivotAttributes.bind(this))
+    if ( eager ) return results
     
-    return results
+    return results.tap(this.cleanPivotAttributes.bind(this))
   },
   
   /**

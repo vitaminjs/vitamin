@@ -120,7 +120,7 @@ var methods = [
   'whereNotExists', 'orWhereNotExists',
   'whereBetween', 'orWhereBetween',
   'whereNotBetween', 'orWhereNotBetween',
-  'populate', 'select',
+  'populate', 'select', 'withRelated',
   'limit', 'offset', 'orderBy',
   'all', 'find', 'findMany', 'findOrNew',
   'first', 'firstOrNew', 'firstOrCreate'

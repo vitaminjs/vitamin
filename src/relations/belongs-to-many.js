@@ -19,16 +19,15 @@ var BelongsToMany = Relation.extend({
   constructor: function BelongsToMany(parent, related, pivot, rk, pk) {
     Relation.apply(this, [parent, related])
     
-    this.pivotColumns = []
     this.localKey = this.parent.getKeyName()
     
     // use a default pivot model
     if ( pivot ) {
-      pivot = Model.extend({
+      var pivotModel = Model.extend({
         $table: String(pivot)
       })
       
-      this.through(pivot, rk, pk)
+      this.through(pivotModel, rk, pk)
     }
   },
   
@@ -44,6 +43,7 @@ var BelongsToMany = Relation.extend({
     this.pivot = model.factory()
     this.thirdKey = rk
     this.otherKey = pk
+    this.pivotColumns = []
     
     return this
   },
@@ -71,9 +71,7 @@ var BelongsToMany = Relation.extend({
    * @return Promise instance
    */
   attach: function attach(ids, attrs, cb) {
-    if ( ids instanceof Collection ) {
-      ids = ids.pluck(this.related.getKeyName())
-    }
+    if ( ids instanceof Collection ) ids = ids.keys()
     
     if (! _.isArray(ids) ) ids = [ids]
     
@@ -98,9 +96,7 @@ var BelongsToMany = Relation.extend({
   detach: function detach(ids, cb) {
     var query = this.newPivotQuery()
     
-    if ( ids instanceof Collection ) {
-      ids = ids.pluck(this.related.getKeyName())
-    }
+    if ( ids instanceof Collection ) ids = ids.keys()
     
     // detach all related models
     if (! ids ) ids = []

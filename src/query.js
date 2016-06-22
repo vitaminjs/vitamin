@@ -28,7 +28,8 @@ function Query(builder) {
  * @param {Array|String} related
  * @return Query instance
  */
-Query.prototype.populate = function populate(related) {
+Query.prototype.populate = 
+Query.prototype.withRelated = function withRelated(related) {
   var rels = {}
   
   if (! _.isArray(related) ) related = _.toArray(arguments)
