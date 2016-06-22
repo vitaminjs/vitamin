@@ -498,7 +498,7 @@ post.comments().createMany([
 })
 ```
 
-#### `associate()` and `dissociate`
+#### `associate()` and `dissociate()`
 
 When updating a `belongsTo` relationship, you may use the `associate` method.
 
@@ -512,7 +512,7 @@ phone.owner().associate(john).save()
 phone.owner().dissociate().save()
 ```
 
-#### `attach`, `detach` and `updatePivot`
+#### `attach()`, `detach()` and `updatePivot()`
 
 When working with many-to-many relationships, Vitamin provides a few additional helper methods to make working with related models more convenient.
 
@@ -551,4 +551,19 @@ If you need to update an existing row in your pivot table, you may use `updatePi
 
 ```js
 user.roles().updatePivot(roleId, pivotAttributes).then(...)
+```
+
+#### `sync()`
+
+You may also use the `sync` method to construct many-to-many associations. 
+The sync method accepts an array of IDs to place on the intermediate table. 
+Any IDs that are not in the given array will be removed from the intermediate table. 
+So, after this operation is complete, only the IDs in the array will exist in the intermediate table:
+
+```js
+user->roles()->sync([1, 2, 3])
+```
+You may also pass additional intermediate table values with the IDs:
+```js
+user->roles()->sync([{ 1: { 'expires': true } }, 2])
 ```

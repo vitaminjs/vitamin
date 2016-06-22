@@ -231,7 +231,7 @@ var BelongsToMany = Relation.extend({
     var newIds = _.keys(newRecords).map(function (id) {
       return _.isNaN(id) ? id : Number(id)
     })
-    console.log(newIds)
+    
     return this
       .newPivotQuery()
       .pluck(this.thirdKey)
