@@ -122,15 +122,33 @@ var methods = [
   'whereNotBetween', 'orWhereNotBetween',
   'populate', 'select', 'withRelated',
   'limit', 'offset', 'orderBy',
-  'all', 'find', 'findMany', 'findOrNew',
-  'first', 'firstOrNew', 'firstOrCreate'
 ]
 
 _.each(methods, function (name) {
   
+  /**
+   * @return Relation instance
+   */
   Relation.prototype[name] = function () {
     (this.query[name]).apply(this.query, arguments)
     return this
+  }
+  
+})
+
+var promiseMethods = [
+  'all', 'find', 'findMany', 'findOrNew',
+  'first', 'firstOrNew', 'firstOrCreate',
+  'pluck'
+]
+
+_.each(promiseMethods, function (name) {
+  
+  /**
+   * @return Promise instance
+   */
+  Relation.prototype[name] = function () {
+    return (this.query[name]).apply(this.query, arguments)
   }
   
 })

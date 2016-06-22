@@ -264,6 +264,17 @@ Query.prototype.destroy = function destroy(cb) {
 }
 
 /**
+ * Get an array with the values of a given column
+ * 
+ * @param {String} column
+ * @param {Function} cb (optional)
+ * @return Promise instance
+ */
+Query.prototype.pluck = function pluck(column, cb) {
+  return Promise.resolve(this.builder.pluck(column)).nodeify(cb)
+}
+
+/**
  * Get the relation instance for the given relation name
  * 
  * @param {String} name
@@ -273,7 +284,7 @@ Query.prototype.destroy = function destroy(cb) {
 Query.prototype.getRelation = function _getRelation(name) {
   var relationFn = this.model[name]
   
-  if (! relationFn ) throw new Error("Undefined '" + name + "' relationship")
+  if (! relationFn ) throw new Error("Undefined relationship: " + name)
   
   return this.initRelation(relationFn.call(this.model), this.rels[name])
 }
