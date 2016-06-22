@@ -112,7 +112,7 @@ var BelongsToMany = Relation.extend({
       return ( ids instanceof Model ) ? ids.getId() : id
     })
     
-    if ( ids.length > 0 ) query.whereIn(this.otherKey, ids)
+    if ( ids.length > 0 ) query.whereIn(this.thirdKey, ids)
     
     return Promise.resolve(query.destroy()).nodeify(cb)
   },
@@ -216,6 +216,86 @@ var BelongsToMany = Relation.extend({
   },
   
   /**
+   * Sync the intermediate table with a list of IDs 
+   * 
+   * @param {Array|Collection} ids
+   * @param {Function} cb (optional)
+   * @return Promise instance
+   */
+  sync: function sync(ids, cb) {
+    if ( ids instanceof Collection ) ids = ids.keys()
+    
+    if (! _.isArray(ids) ) ids = [ids]
+    
+    var newRecords = this.formatPivotRecords(ids)
+    var newIds = _.keys(newRecords).map(function (id) {
+      return _.isNaN(id) ? id : Number(id)
+    })
+    console.log(newIds)
+    return this
+      .newPivotQuery()
+      .pluck(this.thirdKey)
+      .bind(this)
+      
+      // detach
+      .tap(function (oldIds) {
+        var toDetach = _.difference(oldIds, newIds)
+        
+        return _.isEmpty(toDetach) ? false : this.detach(toDetach)
+      })
+      
+      // attach
+      .tap(function (oldIds) {
+        var toAttach = _.difference(newIds, oldIds)
+        
+        if ( _.isEmpty(toAttach) ) return false
+        
+        return this.attach(_.pick(newRecords, toAttach))
+      })
+      
+      // update
+      .tap(function (oldIds) {
+        var toUpdate = _.intersection(oldIds, newIds)
+        
+        if ( _.isEmpty(toUpdate) ) return false
+        
+        return Promise.map(toUpdate, function (id) {
+          var attrs = newRecords[id]
+          
+          if ( _.isEmpty(attrs) ) return false
+          
+          return this.updatePivot(id, attrs)
+        }.bind(this))
+      })
+      .nodeify(cb)
+  },
+  
+  /**
+   * Format the pivot records
+   * 
+   * @param {Array} ids
+   * @param {Object} attrs (optional)
+   * @return Object
+   * @private
+   */
+  formatPivotRecords: function _formatPivotRecords(ids, attrs) {
+    if (! _.isArray(ids) ) return ids
+    
+    // we reduce the array of ids into one object,
+    // keyed by the id of related model, and the value
+    // is an object of the pivot table attributes
+    return _.reduce(ids, function (memo, id) {
+      if ( id instanceof Model ) id = id.getId()
+      
+      if ( _.isObject(id) ) return _.extend(memo, id)
+      
+      memo[id] = attrs || {}
+      
+      return memo
+    }, {})
+  },
+  
+  /**
    * Create an array of records to insert into the pivot table
    * 
    * @param {Array} ids
@@ -224,24 +304,13 @@ var BelongsToMany = Relation.extend({
    * @private
    */
   createPivotRecords: function _createPivotRecords(ids, attrs) {
-    var temp = {}, records = []
+    var records = []
     
-    // we reduce the array of ids into one object,
-    // keyed by the id of related model, and the value
-    // is an object of the pivot table attributes
-    _.reduce(ids, function (memo, id) {
-      if ( id instanceof Model ) id = id.getId()
-      
-      if ( _.isObject(id) ) return _.extend(memo, id)
-      
-      memo[id] = attrs
-      
-      return memo
-    }, temp)
+    ids = this.formatPivotRecords(ids, attrs)
     
     // each key-value should be converted into an array 
     // of pivot table records
-    _.each(temp, function (value, key) {
+    _.each(ids, function (value, key) {
       var record = _.extend({}, value)
       
       record[this.otherKey] = this.parent.getId()
