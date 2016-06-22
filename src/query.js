@@ -275,6 +275,94 @@ Query.prototype.pluck = function pluck(column, cb) {
 }
 
 /**
+ * Get the `count` result of the query
+ * 
+ * @param {String} column (optional)
+ * @param {Function} cb (optional)
+ * @return Promise instance
+ */
+Query.prototype.count = function count(column, cb) {
+  if ( _.isFunction(column) ) {
+    cb = column
+    column = null
+  }
+  
+  if ( _.isEmpty(column) ) column = '*'
+  
+  return Promise
+    .resolve(this.builder.count(column + ' as aggregate'))
+    .then(function (result) {
+      return _.first(result)['aggregate'] || 0
+    })
+    .nodeify(cb)
+}
+
+/**
+ * Get the `sum` of the values of a given column
+ * 
+ * @param {String} column
+ * @param {Function} cb (optional)
+ * @return Promise instance
+ */
+Query.prototype.sum = function sum(column, cb) {
+  return Promise
+    .resolve(this.builder.sum(column + ' as aggregate'))
+    .then(function (result) {
+      return _.first(result)['aggregate'] || 0
+    })
+    .nodeify(cb)
+}
+
+/**
+ * Get the minimum value of a given column
+ * 
+ * @param {String} column
+ * @param {Function} cb (optional)
+ * @return Promise instance
+ */
+Query.prototype.min = function min(column, cb) {
+  return Promise
+    .resolve(this.builder.min(column + ' as aggregate'))
+    .then(function (result) {
+      return _.first(result)['aggregate']
+    })
+    .nodeify(cb)
+}
+
+/**
+ * Get the maximum value of a given column
+ * 
+ * @param {String} column
+ * @param {Function} cb (optional)
+ * @return Promise instance
+ */
+Query.prototype.max = function max(column, cb) {
+  return Promise
+    .resolve(this.builder.max(column + ' as aggregate'))
+    .then(function (result) {
+      return _.first(result)['aggregate']
+    })
+    .nodeify(cb)
+}
+
+/**
+ * Get the average of the values of a given column
+ * 
+ * @param {String} column
+ * @param {Function} cb (optional)
+ * @return Promise instance
+ */
+Query.prototype.avg = 
+Query.prototype.average = function average(column, cb) {
+  return Promise
+    .resolve(this.builder.avg(column + ' as aggregate'))
+    .then(function (result) {
+      return _.first(result)['aggregate']
+    })
+    .nodeify(cb)
+}
+
+/**
  * Get the relation instance for the given relation name
  * 
  * @param {String} name

@@ -139,7 +139,7 @@ _.each(methods, function (name) {
 var promiseMethods = [
   'all', 'find', 'findMany', 'findOrNew',
   'first', 'firstOrNew', 'firstOrCreate',
-  'pluck'
+  'pluck', 'count', 'sum', 'min', 'max', 'avg', 'average'
 ]
 
 _.each(promiseMethods, function (name) {
