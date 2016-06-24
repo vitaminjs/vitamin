@@ -50,7 +50,7 @@ $ npm install oracle
 <p>Database connection is initialized by passing a config object to <code>connection</code> static method. 
 The <a href="//knexjs.org/#Installation">knex documentation</a> provides a number of examples for different use cases.</p>
 
-<div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> Model <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>vitamin/model<span class="pl-pds">'</span></span>)
+<div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> Model <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>vitamin<span class="pl-pds">'</span></span>)
 
 <span class="pl-c">// An example of config object for MySQL which will be used by knex</span>
 <span class="pl-smi">Model</span>.<span class="pl-en">connection</span>({
@@ -75,9 +75,9 @@ The <a href="//knexjs.org/#Installation">knex documentation</a> provides a numbe
 <p>To get started, let's define a basic Model using the <code>extend</code> static method, 
 and specify both, the <code>primary key</code> name, and the <code>table</code> name</p>
 
-<div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> Model <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>vitamin/model<span class="pl-pds">'</span></span>)
+<div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> Model <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>vitamin<span class="pl-pds">'</span></span>)
 
-<span class="pl-k">var</span> User <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">Model.extend</span>({
+<span class="pl-k">var</span> User <span class="pl-k">=</span> <span class="pl-smi">Model</span>.<span class="pl-en">extend</span>({
 
   <span class="pl-c">// the primary key, defaults to `id`</span>
   $pk<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>id<span class="pl-pds">'</span></span>,
@@ -535,7 +535,7 @@ which accepts an array of attributes, creates a model, and inserts it into the d
 })</pre></div>
 
 <h4>
-<a id="associate-and-dissociate" class="anchor" href="#associate-and-dissociate" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><code>associate()</code> and <code>dissociate</code>
+<a id="associate-and-dissociate" class="anchor" href="#associate-and-dissociate" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><code>associate()</code> and <code>dissociate()</code>
 </h4>
 
 <p>When updating a <code>belongsTo</code> relationship, you may use the <code>associate</code> method.</p>
@@ -549,7 +549,7 @@ which accepts an array of attributes, creates a model, and inserts it into the d
 <span class="pl-smi">phone</span>.<span class="pl-en">owner</span>().<span class="pl-en">dissociate</span>().<span class="pl-en">save</span>()</pre></div>
 
 <h4>
-<a id="attach-detach-and-updatepivot" class="anchor" href="#attach-detach-and-updatepivot" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><code>attach</code>, <code>detach</code> and <code>updatePivot</code>
+<a id="attach-detach-and-updatepivot" class="anchor" href="#attach-detach-and-updatepivot" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><code>attach()</code>, <code>detach()</code> and <code>updatePivot()</code>
 </h4>
 
 <p>When working with many-to-many relationships, Vitamin provides a few additional helper methods to make working with related models more convenient.</p>
@@ -573,17 +573,40 @@ which accepts an array of attributes, creates a model, and inserts it into the d
 <p>To remove a many-to-many relationship record, use the detach method.</p>
 
 <div class="highlight highlight-source-js"><pre><span class="pl-c">// detach all roles of the loaded user</span>
-<span class="pl-smi">user</span>.<span class="pl-en">roles</span>().<span class="pl-en">detach</span>()
+<span class="pl-smi">user</span>.<span class="pl-en">roles</span>().<span class="pl-en">detach</span>(<span class="pl-k">function</span> (<span class="pl-smi">error</span>, <span class="pl-smi">result</span>) {
+  <span class="pl-k">...</span>
+})
 
 <span class="pl-c">// detach only the role with the given id</span>
-<span class="pl-smi">user</span>.<span class="pl-en">roles</span>().<span class="pl-en">detach</span>(roleId)
+<span class="pl-smi">user</span>.<span class="pl-en">roles</span>().<span class="pl-en">detach</span>(roleId).<span class="pl-en">then</span>(<span class="pl-k">...</span>)
 
 <span class="pl-c">// detach all roles with the given ids</span>
-<span class="pl-smi">user</span>.<span class="pl-en">roles</span>().<span class="pl-en">detach</span>([<span class="pl-c1">1</span>, <span class="pl-c1">2</span>, <span class="pl-c1">3</span>])</pre></div>
+<span class="pl-smi">user</span>.<span class="pl-en">roles</span>().<span class="pl-en">detach</span>([<span class="pl-c1">1</span>, <span class="pl-c1">2</span>, <span class="pl-c1">3</span>]).<span class="pl-en">then</span>(<span class="pl-k">...</span>)</pre></div>
 
 <p>If you need to update an existing row in your pivot table, you may use <code>updatePivot</code> method</p>
 
 <div class="highlight highlight-source-js"><pre><span class="pl-smi">user</span>.<span class="pl-en">roles</span>().<span class="pl-en">updatePivot</span>(roleId, pivotAttributes).<span class="pl-en">then</span>(<span class="pl-k">...</span>)</pre></div>
+
+<h4>
+<a id="sync" class="anchor" href="#sync" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><code>sync()</code>
+</h4>
+
+<p>You may also use the <code>sync</code> method to construct many-to-many associations. 
+The sync method accepts an array of IDs to place on the intermediate table. 
+Any IDs that are not in the given array will be removed from the intermediate table. 
+So, after this operation is complete, only the IDs in the array will exist in the intermediate table:</p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-c">// using callbacks</span>
+<span class="pl-smi">user</span>.<span class="pl-en">roles</span>().<span class="pl-en">sync</span>([<span class="pl-c1">1</span>, <span class="pl-c1">2</span>, <span class="pl-c1">3</span>], <span class="pl-k">function</span> (<span class="pl-smi">error</span>, <span class="pl-smi">result</span>) {
+  <span class="pl-k">...</span>
+})
+
+<span class="pl-c">// using promises</span>
+<span class="pl-smi">user</span>.<span class="pl-en">roles</span>().<span class="pl-en">sync</span>([<span class="pl-c1">1</span>, <span class="pl-c1">2</span>, <span class="pl-c1">3</span>]).<span class="pl-en">then</span>(<span class="pl-k">...</span>)</pre></div>
+
+<p>You may also pass additional intermediate table values with the IDs:</p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-smi">user</span>.<span class="pl-en">roles</span>().<span class="pl-en">sync</span>([{ <span class="pl-c1">1</span><span class="pl-k">:</span> { <span class="pl-s"><span class="pl-pds">'</span>expires<span class="pl-pds">'</span></span><span class="pl-k">:</span> <span class="pl-c1">true</span> } }, <span class="pl-c1">2</span>]).<span class="pl-en">then</span>(<span class="pl-k">...</span>)</pre></div>
 
       <footer class="site-footer">
         <span class="site-footer-owner"><a href="https://github.com/vitaminjs/vitamin">Vitamin</a> is maintained by <a href="https://github.com/vitaminjs">vitaminjs</a>.</span>
