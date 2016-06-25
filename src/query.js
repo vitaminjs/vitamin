@@ -290,12 +290,7 @@ Query.prototype.count = function count(column, cb) {
   
   if ( _.isEmpty(column) ) column = '*'
   
-  return Promise
-    .resolve(this.builder.count(column + ' as aggregate'))
-    .then(function (result) {
-      return _.first(result)['aggregate'] || 0
-    })
-    .nodeify(cb)
+  return this.aggregate('count', column).nodeify(cb)
 }
 
 /**
@@ -306,12 +301,7 @@ Query.prototype.count = function count(column, cb) {
  * @return Promise instance
  */
 Query.prototype.sum = function sum(column, cb) {
-  return Promise
-    .resolve(this.builder.sum(column + ' as aggregate'))
-    .then(function (result) {
-      return _.first(result)['aggregate'] || 0
-    })
-    .nodeify(cb)
+  return this.aggregate('sum', column).nodeify(cb)
 }
 
 /**
@@ -322,12 +312,7 @@ Query.prototype.sum = function sum(column, cb) {
  * @return Promise instance
  */
 Query.prototype.min = function min(column, cb) {
-  return Promise
-    .resolve(this.builder.min(column + ' as aggregate'))
-    .then(function (result) {
-      return _.first(result)['aggregate']
-    })
-    .nodeify(cb)
+  return this.aggregate('min', column).nodeify(cb)
 }
 
 /**
@@ -338,12 +323,7 @@ Query.prototype.min = function min(column, cb) {
  * @return Promise instance
  */
 Query.prototype.max = function max(column, cb) {
-  return Promise
-    .resolve(this.builder.max(column + ' as aggregate'))
-    .then(function (result) {
-      return _.first(result)['aggregate']
-    })
-    .nodeify(cb)
+  return this.aggregate('max', column).nodeify(cb)
 }
 
 /**
@@ -355,12 +335,7 @@ Query.prototype.max = function max(column, cb) {
  */
 Query.prototype.avg = 
 Query.prototype.average = function average(column, cb) {
-  return Promise
-    .resolve(this.builder.avg(column + ' as aggregate'))
-    .then(function (result) {
-      return _.first(result)['aggregate']
-    })
-    .nodeify(cb)
+  return this.aggregate('avg', column).nodeify(cb)
 }
 
 /**
@@ -390,6 +365,20 @@ Query.prototype.paginate = function paginate(page, pageSize, columns, cb) {
   this.offset((page - 1) * pageSize).limit(pageSize)
   
   return this.fetchAll(columns, cb)
+}
+
+/**
+ * Execute an aggregate function on the database
+ * 
+ * @param {String} method
+ * @param {String} column
+ * @return Promise instance
+ * @private
+ */
+Query.prototype.aggregate = function _aggregate(method, column) {
+  return Promise
+    .resolve(this.builder[method](column + ' as value'))
+    .then(function (result) { return _.first(result)['value'] })
 }
 
 /**
