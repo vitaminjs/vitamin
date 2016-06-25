@@ -34,6 +34,7 @@ Query.prototype.withRelated = function withRelated(related) {
   
   if (! _.isArray(related) ) related = _.toArray(arguments)
   
+  // parseWithRelated
   _.each(related, function (value) {
     if ( _.isString(value) ) rels[value] = function noop(q) {}
     else if ( _.isObject(value) ) _.extend(rels, value)
@@ -173,7 +174,7 @@ Query.prototype.firstOrNew = function firstOrNew(attrs, cb) {
   
   return this.where(attrs).first().catch(function (error) {
     if ( error instanceof ModelNotFound )
-      return Promise.resolve(model.newInstance())
+      return Promise.resolve(model.newInstance(attrs))
     else
       return Promise.reject(error)
   }).nodeify(cb)
