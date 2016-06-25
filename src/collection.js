@@ -40,9 +40,7 @@ _.extend(Collection.prototype, {
    * @return Array
    */
   pluck: function pluck(key) {
-    return _.map(this.models, function (model) {
-      return model.get(key)
-    })
+    return _.invoke(this.models, 'get', key)
   },
   
   /**
@@ -74,27 +72,25 @@ _.extend(Collection.prototype, {
    * @return Array
    */
   keys: function keys() {
-    return _.map(this.models, function (model) {
-      return model.getId()
-    })
+    return _.invoke(this.models, 'getId')
   },
   
   /**
-   * Get the first model, or null if the collection is empty
+   * Get the first model, or undefined if the collection is empty
    * 
    * @return Model
    */
   first: function first() {
-    return _.first(this.models) || null
+    return _.first(this.models)
   },
   
   /**
-   * Get the last model, or null if the collection is empty
+   * Get the last model, or undefined if the collection is empty
    * 
    * @return Model
    */
   last: function last() {
-    return _.last(this.models) || null
+    return _.last(this.models)
   },
   
   /**
