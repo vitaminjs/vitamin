@@ -522,6 +522,44 @@ Model.prototype.destroy = function destroy(cb) {
 }
 
 /**
+ * Increment a column's value by a given amount
+ * 
+ * @param {String} column
+ * @param {Number} amount (default to 1)
+ * @param {Function} cb (optional)
+ * @return Promise instance
+ */
+Model.prototype.increment = function increment(column, amount, cb) {
+  if ( _.isFunction(amount) ) {
+    cb = amount
+    amount = 1
+  }
+  
+  if (! amount ) amount = 1
+  
+  return this.set(column, this.get(column, 0) + amount).save(cb)
+}
+
+/**
+ * Decrement a column's value by a given amount
+ * 
+ * @param {String} column
+ * @param {Number} amount (default to 1)
+ * @param {Function} cb (optional)
+ * @return Promise instance
+ */
+Model.prototype.decrement = function decrement(column, amount, cb) {
+  if ( _.isFunction(amount) ) {
+    cb = amount
+    amount = 1
+  }
+  
+  if (! amount ) amount = 1
+  
+  return this.set(column, this.get(column, 0) - amount).save(cb)
+}
+
+/**
  * Determine if the given attribute can be mass assigned
  * 
  * @param {String} attr
