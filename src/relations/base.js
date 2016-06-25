@@ -110,7 +110,7 @@ _.assign(Relation.prototype, {
 })
 
 // create proxies to query builder methods
-var methods = [
+var queryMethods = [
   'where', 'orWhere', 'whereRaw',
   'whereIn', 'orWhereIn',
   'whereNotIn', 'orWhereNotIn',
@@ -124,7 +124,7 @@ var methods = [
   'limit', 'offset', 'orderBy',
 ]
 
-_.each(methods, function (name) {
+_.each(queryMethods, function (name) {
   
   /**
    * @return Relation instance
@@ -139,7 +139,8 @@ _.each(methods, function (name) {
 var promiseMethods = [
   'all', 'find', 'findMany', 'findOrNew',
   'first', 'firstOrNew', 'firstOrCreate',
-  'pluck', 'count', 'sum', 'min', 'max', 'avg', 'average'
+  'pluck', 'count', 'sum', 'min', 'max', 
+  'avg', 'average', 'value'
 ]
 
 _.each(promiseMethods, function (name) {

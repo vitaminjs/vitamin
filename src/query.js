@@ -364,6 +364,20 @@ Query.prototype.average = function average(column, cb) {
 }
 
 /**
+ * Get a single column's value from the first result of a query
+ * 
+ * @param {String} column
+ * @param {Function} cb (optional)
+ * @return Promise instance
+ */
+Query.prototype.value = function value(column, cb) {
+  return Promise
+    .resolve(this.builder.column(column).first())
+    .then(function (result) { return (result)[column] })
+    .nodeify(cb)
+}
+
+/**
  * Get the relation instance for the given relation name
  * 
  * @param {String} name
