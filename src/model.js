@@ -115,10 +115,12 @@ Model.use = function use(plugin) {
  * Initialise the database connection
  * 
  * @param {Object} config
- * @return Knex
+ * @return Knex instance
  * @static
  */
 Model.connection = function connection(config) {
+  if (! config ) return this.prototype.$connection
+  
   return this.prototype.$connection = knex(config)
 }
 
@@ -251,7 +253,7 @@ Model.prototype.set = function set(attr, newVal) {
   if ( _.isEmpty(attr) ) return this
   
   // TODO use attribute setter if available
-  
+    
   // set the new value
   this.$data[attr] = newVal
   
