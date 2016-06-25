@@ -378,6 +378,21 @@ Query.prototype.value = function value(column, cb) {
 }
 
 /**
+ * Simple pagination of the given query
+ * 
+ * @param {Integer} page
+ * @param {Integer} pageSize
+ * @param {Array} columns (optional)
+ * @parma {Function} cb (optional)
+ * @return Promise instance
+ */
+Query.prototype.paginate = function paginate(page, pageSize, columns, cb) {
+  this.offset((page - 1) * pageSize).limit(pageSize)
+  
+  return this.fetchAll(columns, cb)
+}
+
+/**
  * Get the relation instance for the given relation name
  * 
  * @param {String} name

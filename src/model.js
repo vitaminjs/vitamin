@@ -716,7 +716,7 @@ var methods = [
   'whereNotBetween', 'orWhereNotBetween',
   'orderBy', 'offset', 'limit',
   'pluck', 'count', 'sum', 'min', 'max', 'avg', 'average', 'value',
-  'all', 'find', 'findMany', 'findOrNew',
+  'all', 'find', 'findMany', 'findOrNew', 'paginate',
   'first', 'firstOrNew', 'firstOrCreate'
 ]
 
