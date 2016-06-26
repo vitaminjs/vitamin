@@ -253,6 +253,11 @@ Model.prototype.set = function set(attr, newVal) {
   if ( _.isEmpty(attr) ) return this
   
   // TODO use attribute setter if available
+  if ( this.hasMutator(attr) ) {
+    var method = this.getMutator(attr)
+    
+    newVal = this[method](newVal)
+  }
     
   // set the new value
   this.$data[attr] = newVal
@@ -268,9 +273,16 @@ Model.prototype.set = function set(attr, newVal) {
  * @return any
  */
 Model.prototype.get = function get(attr, defaultValue) {
-  // TODO use attribute getter if available
+  var value = this.$data[attr]
   
-  return _.isUndefined(this.$data[attr]) ? defaultValue : this.$data[attr]
+  // TODO use attribute getter if available
+  if ( this.hasAccessor(attr) ) {
+    var method = this.getAccessor(attr)
+    
+    value = this[method](value)
+  }
+  
+  return _.isUndefined(value) ? defaultValue : value
 }
 
 /**
@@ -557,6 +569,44 @@ Model.prototype.decrement = function decrement(column, amount, cb) {
   if (! amount ) amount = 1
   
   return this.set(column, this.get(column, 0) - amount).save(cb)
+}
+
+/**
+ * Determine if a accessor exists for an attribute
+ */
+Model.prototype.hasAccessor = function hasAccessor(attr) {
+  var method = this.getAccessor(attr)
+  
+  return _.isFunction(this[method])
+}
+
+/**
+ * Get the attribute accessor name
+ * 
+ * @param {String} attr
+ * @return string
+ */
+Model.prototype.getAccessor = function getAccessor(attr) {
+  return '__get' + utils.capitalize(utils.camelize(attr))
+}
+
+/**
+ * Determine if a mutator exists for an attribute
+ */
+Model.prototype.hasMutator = function hasMutator(attr) {
+  var method = this.getMutator(attr)
+  
+  return _.isFunction(this[method])
+}
+
+/**
+ * Get the attribute mutator name
+ * 
+ * @param {String} attr
+ * @return string
+ */
+Model.prototype.getMutator = function getMutator(attr) {
+  return '__set' + utils.capitalize(utils.camelize(attr))
 }
 
 /**
