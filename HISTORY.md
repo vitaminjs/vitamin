@@ -1,7 +1,14 @@
 # Vitamin changes log
 
+### _**v0.7.5** - June 26, 2016_
+* Add Attribute accessors and mutators feature
+* Add query method `paginate()` for simple pagination 
+* Add query method `value()` to get a value of a single column
+* Add `increment()` and `decrement()` model methods
+* Change `connection()` to return the current DB connection if no parameter passed in
+
 ### _**v0.7.4** - June 23, 2016_
-* Add `pluck()`, `count()`, `sum()`, `min()`, `max` and `avg()` query methods
+* Add `pluck()`, `count()`, `sum()`, `min()`, `max()` and `avg()` query methods
 * Add `sync()` method to enhance many-to-many associations
 
 ### _**v0.7.3** - June 19, 2016_
@@ -27,4 +34,4 @@
 * Add relationship methods: `create()`, `createMany()`, `save()`, `saveMany()` and `updatePivot()`
 
 ### _**v0.7.0** - June 10, 2016_
-* First release as an ActiveRecord library
+* First release as an Active Record library
