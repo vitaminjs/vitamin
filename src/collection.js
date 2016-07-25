@@ -1,47 +1,53 @@
 
-var _ = require('underscore')
-
-module.exports = Collection
+import _ from 'underscore'
 
 /**
- * Collection constructor
- * 
- * @constructor
+ * Model Collection Class
  */
-function Collection(models) {
-  this.models = ( _.isArray(models) ) ? models : []
-  this.length = this.models.length
-}
-
-_.extend(Collection.prototype, {
+class Collection {
+  
+  /**
+   * Model Collection constructor
+   * 
+   * @param {Array} models
+   * @constructor
+   */
+  constructor(models = []) {
+    this.models = models
+    this.length = models.length
+  }
+  
+  static make(models) {
+    return new this(models)
+  }
   
   /**
    * Get the collection as an array of plain objects
    * 
-   * @return Array
+   * @return array
    */
-  toJSON: function toJSON() {
+  toJSON() {
     return _.invoke(this.models, 'toJSON')
-  },
+  }
   
   /**
    * Get all items as a plain array
    * 
-   * @return Array
+   * @return array
    */
-  toArray: function toArray() {
+  toArray() {
     return this.models.slice()
-  },
+  }
   
   /**
    * Get an array with the values of the given key
    * 
    * @param {String} key
-   * @return Array
+   * @return array
    */
-  pluck: function pluck(key) {
+  pluck(key) {
     return _.invoke(this.models, 'get', key)
-  },
+  }
   
   /**
    * Run a map callback over each model
@@ -50,9 +56,9 @@ _.extend(Collection.prototype, {
    * @param {Object} context
    * @return Collection
    */
-  map: function map(fn, context) {
+  map(fn, context) {
     return new Collection(_.map(this.models, fn, context))
-  },
+  }
   
   /**
    * Execute a callback over each model
@@ -61,46 +67,46 @@ _.extend(Collection.prototype, {
    * @param {Object} context
    * @return this collection
    */
-  forEach: function forEach(fn, context) {
+  forEach(fn, context) {
     _.each(this.models, fn, context)
     return this
-  },
+  }
   
   /**
    * Get the primary keys of the collection models
    * 
-   * @return Array
+   * @return array
    */
-  keys: function keys() {
+  keys() {
     return _.invoke(this.models, 'getId')
-  },
+  }
   
   /**
    * Get the first model, or undefined if the collection is empty
    * 
    * @return Model
    */
-  first: function first() {
+  first() { 
     return _.first(this.models)
-  },
+  }
   
   /**
    * Get the last model, or undefined if the collection is empty
    * 
    * @return Model
    */
-  last: function last() {
+  last() {
     return _.last(this.models)
-  },
+  }
   
   /**
    * Group the collection by field or using a callback
    * 
    * @param {String|Function} iteratee
    * @param {Object} context
-   * @return Object
+   * @return object
    */
-  groupBy: function groupBy(iteratee, context) {
+  groupBy(iteratee, context) {
     if ( _.isString(iteratee) ) {
       var key = iteratee
       
@@ -110,7 +116,7 @@ _.extend(Collection.prototype, {
     }
     
     return _.groupBy(this.models, iteratee, context)
-  },
+  }
   
   /**
    * Key the collection by field or using a callback
@@ -119,7 +125,7 @@ _.extend(Collection.prototype, {
    * @param {Object} context
    * @return Object
    */
-  keyBy: function keyBy(iteratee, context) {
+  keyBy(iteratee, context) {
     if ( _.isString(iteratee) ) {
       var key = iteratee
       
@@ -131,4 +137,7 @@ _.extend(Collection.prototype, {
     return _.indexBy(this.models, iteratee, context)
   }
   
-})
+}
+
+// exports
+export default Collection
