@@ -2,7 +2,7 @@
   "name": "vitamin",
   "version": "0.8.0",
   "description": "Active Record library for Node.js applications",
-  "main": "src/model.js",
+  "main": "lib/index.js",
   "directories": {
     "test": "test"
   },
