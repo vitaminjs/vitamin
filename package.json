@@ -1,22 +1,27 @@
 {
   "name": "vitamin",
-  "version": "0.7.5",
-  "description": "ActiveRecord library for Node.js applications",
+  "version": "0.8.0",
+  "description": "Active Record library for Node.js applications",
   "main": "src/model.js",
   "directories": {
     "test": "test"
   },
   "dependencies": {
-    "bluebird": "^3.3.5",
-    "knex": "^0.11.5",
+    "bluebird": "^3.4.1",
+    "knex": "^0.11.9",
     "underscore": "^1.8.3"
   },
   "devDependencies": {
-    "mocha": "^2.4.5",
-    "chai": "^3.5.0"
+    "babel-cli": "^6.11.4",
+    "babel-preset-es2015": "^6.9.0",
+    "chai": "^3.5.0",
+    "mocha": "^2.5.3",
+    "sinon": "^1.17.4"
   },
   "scripts": {
-    "test": "mocha --recursive"
+    "build": "babel -q -L -D src -d lib --presets es2015",
+    "prepublish": "npm run build",
+    "test": "npm run build && mocha --recursive"
   },
   "repository": {
     "type": "git",
