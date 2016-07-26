@@ -1,4 +1,5 @@
 
+import NotFoundError from './not-found-error'
 import BaseModel from 'vitamin-model'
 import Collection from './collection'
 import Query from './query'
@@ -16,7 +17,7 @@ class Model extends BaseModel {
    * @param {Boolean} exists
    * @constructor
    */
-  constructor(data, exists = false) {
+  constructor(data = {}, exists = false) {
     super(data)
     
     if (! exists ) this.fill(data)
@@ -69,7 +70,8 @@ class Model extends BaseModel {
    * @param {Boolean} sync
    * @return this model
    */
-  setData(data, sync) {
+  setData(data, sync = true) {
+    this.exists = sync
     this.data = data || {}
     
     // sync original attributes with the current state
@@ -81,10 +83,10 @@ class Model extends BaseModel {
   /**
    * Save the model in the database
    * 
-   * @param {String|Array} returning
+   * @param {Array} returning
    * @return promise
    */
-  save(returning = '*') {
+  save(returning = ['*']) {
     if (! this.isDirty() ) return Promise.resolve(this)
     
     return Promise
@@ -99,11 +101,11 @@ class Model extends BaseModel {
    * Update the model in the database
    * 
    * @param {Object} data
-   * @param {String|Array} returning
+   * @param {Array} returning
    * @return promise
    */
-  update(data, returning = '*') {
-    if (! this.exists ) return Promise.reject(new Error('Not Found'))
+  update(data, returning = ['*']) {
+    if (! this.exists ) return Promise.reject(new NotFoundError())
     
     return this.fill(data).save(returning)
   }
@@ -114,7 +116,7 @@ class Model extends BaseModel {
    * @return promise
    */
   destroy() {
-    if (! this.exists ) return Promise.reject(new Error('Not Found'))
+    if (! this.exists ) return Promise.reject(new NotFoundError())
     
     var pk = this.getKeyName(), id = this.getId()
     
@@ -144,7 +146,7 @@ class Model extends BaseModel {
    * @param {Booleab} exists
    * @return Model instance
    */
-  newInstance(data, exists = false) {
+  newInstance(data = {}, exists = false) {
     var Ctor = this.constructor
     
     return new Ctor(...arguments)
@@ -156,7 +158,7 @@ class Model extends BaseModel {
    * @param {Array} models
    * @return Collection instance
    */
-  newCollection(models) {
+  newCollection(models = []) {
     return new Collection(models)
   }
   
@@ -183,9 +185,8 @@ class Model extends BaseModel {
       .bind(this)
       .then(() => this.emit('creating', this))
       .then(() => {
-        var query = this.newQuery()
-        
-        return query
+        return this
+          .newQuery()
           .insert(this.getData())
           .then(res => this._simulateReturning(res, returning))
           .then(res => this.setData(res, true))
@@ -205,9 +206,8 @@ class Model extends BaseModel {
       .bind(this)
       .then(() => this.emit('updating', this))
       .then(() => {
-        var query = this.newQuery()
-        
-        return query
+        return this
+          .newQuery()
           .update(this.getDirty())
           .where(this.primaryKey, this.getId())
           .then(res => this._simulateReturning(res, returning))
@@ -220,10 +220,10 @@ class Model extends BaseModel {
    * Simulate the `returning` SQL clause
    * 
    * @param {Array} result
-   * @param {String|Array} columns
+   * @param {Array} columns
    * @private
    */
-  _simulateReturning(result, columns) {
+  _simulateReturning(result, columns = ['*']) {
     var id = result[0]
     
     if ( _.isObject(id) ) return id
@@ -236,6 +236,27 @@ class Model extends BaseModel {
   }
   
 }
+
+// query methods
+[
+  'where', 'orWhere', 'whereRaw', 'whereNot',
+  'whereIn', 'orWhereIn', 'whereNotIn', 'orWhereNotIn',
+  'whereNull', 'orWhereNull', 'whereNotNull', 'orWhereNotNull',
+  'whereExists', 'orWhereExists', 'whereNotExists', 'orWhereNotExists',
+  'whereBetween', 'orWhereBetween', 'whereNotBetween', 'orWhereNotBetween',
+  'select', 'distinct', 'union', 'unionAll', 'pluck', 'increment', 'decrement',
+  'offset', 'limit', 'groupBy', 'groupByRaw', 'having', 'orderBy', 'orderByRaw',
+  'join', 'innerJoin', 'leftJoin', 'rightJoin', 'outerJoin', 'crossJoin', 'joinRaw',
+  'fetch', 'first', 'find', 'count', 'max', 'min', 'sum', 'avg', 'value', 'paginate',
+  'firstOrFail', 'firstOrNew', 'firstOrCreate', 'findOrFail', 'findOrNew', 'findMany',
+]
+.forEach((fn) => {
+  if ( _.has(Model, fn) ) return
+  
+  Model[fn] = function () {
+    return (new this()).newQuery()[name](...arguments)
+  }
+})
 
 // exports
 export default Model
