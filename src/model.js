@@ -18,7 +18,7 @@ class Model extends BaseModel {
    * @constructor
    */
   constructor(data = {}, exists = false) {
-    super(data)
+    super()
     
     if (! exists ) this.fill(data)
     else this.setData(data, true)
@@ -71,7 +71,6 @@ class Model extends BaseModel {
    * @return this model
    */
   setData(data, sync = true) {
-    this.exists = sync
     this.data = data || {}
     
     // sync original attributes with the current state
@@ -147,9 +146,7 @@ class Model extends BaseModel {
    * @return Model instance
    */
   newInstance(data = {}, exists = false) {
-    var Ctor = this.constructor
-    
-    return new Ctor(...arguments)
+    return new this.constructor(...arguments)
   }
   
   /**
