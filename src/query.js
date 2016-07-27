@@ -28,7 +28,6 @@ class Query extends BaseQuery {
    * @return this query
    */
   setModel(model) {
-    this.from(model.tableName)
     this.model = model
     return this
   }
