@@ -65,7 +65,7 @@ class Query extends BaseQuery {
   firstOrFail(columns) {
     return this.first(...arguments).then(model => {
       if ( model ) return model
-      else throw new NotFoundError('Not Found')
+      else throw new NotFoundError()
     })
   }
   
@@ -121,7 +121,7 @@ class Query extends BaseQuery {
         ( _.isArray(id) && _.uniq(id).length === res.length )
       ) return res
       
-      throw new NotFoundError('Not Found')
+      throw new NotFoundError()
     })
   }
   

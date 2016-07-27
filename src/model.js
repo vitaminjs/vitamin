@@ -146,7 +146,7 @@ class Model extends BaseModel {
    * @return Model instance
    */
   newInstance(data = {}, exists = false) {
-    return new this.constructor(...arguments)
+    return new this.constructor(...arguments).use(this.connection)
   }
   
   /**

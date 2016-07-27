@@ -17,10 +17,6 @@ class Collection {
     this.length = models.length
   }
   
-  static make(models) {
-    return new this(models)
-  }
-  
   /**
    * Get the collection as an array of plain objects
    * 
