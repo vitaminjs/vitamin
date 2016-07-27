@@ -135,7 +135,7 @@ class Model extends BaseModel {
   newQuery() {
     var qb = this.connection.queryBuilder()
     
-    return (new Query(qb)).setModel(this)
+    return (new Query(qb)).from(this.tableName).setModel(this)
   }
   
   /**
