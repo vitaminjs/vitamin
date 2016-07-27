@@ -103,7 +103,7 @@ class Query extends BaseQuery {
   find(id, columns = ['*']) {
     if ( _.isArray(id) ) return this.findMany(id, columns)
     
-    var pk = this.getQualifiedColumnName(this.model.primaryKey)
+    var pk = this.getQualifiedColumn(this.model.primaryKey)
     
     return this.where(pk, id).first(...columns)
   }
@@ -150,7 +150,7 @@ class Query extends BaseQuery {
   findMany(ids, columns = ['*']) {
     if ( _.isEmpty(ids) ) return Promise.resolve(this.model.newCollection())
     
-    var pk = this.getQualifiedColumnName(this.model.primaryKey)
+    var pk = this.getQualifiedColumn(this.model.primaryKey)
     
     return this.whereIn(pk, ids).fetch(...columns)
   }
