@@ -45,6 +45,17 @@ class Model extends BaseModel {
   }
   
   /**
+   * A factory helper to instanciate models without using `new`
+   * 
+   * @param {Object} data
+   * @param {Boolean} exists
+   * @return model instance
+   */
+  static make(data = {}, exists = false) {
+    return new this(...arguments)
+  }
+  
+  /**
    * Set the primary key value
    * 
    * @param {Any} id
@@ -146,7 +157,7 @@ class Model extends BaseModel {
    * @return Model instance
    */
   newInstance(data = {}, exists = false) {
-    return new this.constructor(...arguments).use(this.connection)
+    return this.constructor.make(...arguments)
   }
   
   /**
@@ -185,7 +196,7 @@ class Model extends BaseModel {
         return this
           .newQuery()
           .insert(this.getData())
-          .then(res => this._simulateReturning(res, returning))
+          .then(res => this._emulateReturning(res, returning))
           .then(res => this.setData(res, true))
       })
       .then(() => this.emit('created', this))
@@ -207,20 +218,20 @@ class Model extends BaseModel {
           .newQuery()
           .update(this.getDirty())
           .where(this.primaryKey, this.getId())
-          .then(res => this._simulateReturning(res, returning))
+          .then(res => this._emulateReturning(res, returning))
           .then(res => this.setData(res, true))
       })
       .then(() => this.emit('updated', this))
   }
   
   /**
-   * Simulate the `returning` SQL clause
+   * Emulate the `returning` SQL clause
    * 
    * @param {Array} result
    * @param {Array} columns
    * @private
    */
-  _simulateReturning(result, columns = ['*']) {
+  _emulateReturning(result, columns = ['*']) {
     var id = result[0]
     
     if ( _.isObject(id) ) return id
