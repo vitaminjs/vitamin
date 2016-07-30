@@ -1,6 +1,5 @@
 
 import _ from 'underscore'
-import RelationQuery from './query'
 
 // exports
 export default class {

@@ -27,15 +27,6 @@ class Model extends BaseModel {
   }
   
   /**
-   * Define the primary key name
-   * 
-   * @type {String}
-   */
-  get primaryKey() {
-    return null
-  }
-  
-  /**
    * Define the model table name
    * 
    * @type {String}
@@ -56,25 +47,6 @@ class Model extends BaseModel {
   }
   
   /**
-   * Set the primary key value
-   * 
-   * @param {Any} id
-   * @return this model
-   */
-  setId(id) {
-    return this.set(this.primaryKey, id)
-  }
-  
-  /**
-   * Get the primary key value
-   * 
-   * @return any
-   */
-  getId() {
-    return this.get(this.primaryKey)
-  }
-  
-  /**
    * Set the model raw data
    * 
    * @param {Object} data
@@ -82,6 +54,7 @@ class Model extends BaseModel {
    * @return this model
    */
   setData(data, sync = true) {
+    this.exists = !!sync
     this.data = data || {}
     
     // sync original attributes with the current state
