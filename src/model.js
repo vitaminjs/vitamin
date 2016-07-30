@@ -47,6 +47,15 @@ class Model extends BaseModel {
   }
   
   /**
+   * Begin querying the model
+   * 
+   * @return query instance
+   */
+  static query() {
+    return this.make().newQuery()
+  }
+  
+  /**
    * Set the model raw data
    * 
    * @param {Object} data
@@ -217,27 +226,6 @@ class Model extends BaseModel {
   }
   
 }
-
-// query methods
-[
-  'where', 'orWhere', 'whereRaw', 'whereNot',
-  'whereIn', 'orWhereIn', 'whereNotIn', 'orWhereNotIn',
-  'whereNull', 'orWhereNull', 'whereNotNull', 'orWhereNotNull',
-  'whereExists', 'orWhereExists', 'whereNotExists', 'orWhereNotExists',
-  'whereBetween', 'orWhereBetween', 'whereNotBetween', 'orWhereNotBetween',
-  'select', 'distinct', 'union', 'unionAll', 'pluck', 'increment', 'decrement',
-  'offset', 'limit', 'groupBy', 'groupByRaw', 'having', 'orderBy', 'orderByRaw',
-  'join', 'innerJoin', 'leftJoin', 'rightJoin', 'outerJoin', 'crossJoin', 'joinRaw',
-  'fetch', 'first', 'find', 'count', 'max', 'min', 'sum', 'avg', 'value', 'paginate',
-  'firstOrFail', 'firstOrNew', 'firstOrCreate', 'findOrFail', 'findOrNew', 'findMany',
-]
-.forEach((fn) => {
-  if ( _.has(Model, fn) ) return
-  
-  Model[fn] = function () {
-    return (new this()).newQuery()[name](...arguments)
-  }
-})
 
 // exports
 export default Model
