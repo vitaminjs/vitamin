@@ -309,14 +309,14 @@ class Model extends BaseModel {
    * Define a morph-one relationship
    * 
    * @param {Model} related
-   * @param {Object} config { as*, type, foreignKey, localKey }
+   * @param {Object} config { as*, name, type, foreignKey, localKey }
    * @return relation
    * @private
    */
   morphOne(related, config = {}) {
     var pk = config.localKey || this.primaryKey
-    var type = config.type || config.as + '_type'
-    var fk = config.foreignKey || config.as + '_id'
+    var type = config.type || config.name + '_type'
+    var fk = config.foreignKey || config.name + '_id'
     var MorphOne = require('./relations/morph-one').default
     
     return new MorphOne(this, related.make(), type, fk, pk).setName(config.as)
@@ -342,14 +342,14 @@ class Model extends BaseModel {
    * Define a morph-many relationship
    * 
    * @param {Model} related
-   * @param {Object} config { as*, type, foreignKey, localKey }
+   * @param {Object} config { as*, name, type, foreignKey, localKey }
    * @return relation
    * @private
    */
   morphMany(related, config = {}) {
     var pk = config.localKey || this.primaryKey
-    var type = config.type || config.as + '_type'
-    var fk = config.foreignKey || config.as + '_id'
+    var type = config.type || config.name + '_type'
+    var fk = config.foreignKey || config.name + '_id'
     var MorphOne = require('./relations/morph-one').default
     
     return new MorphOne(this, related.make(), type, fk, pk).setName(config.as)
