@@ -124,7 +124,7 @@ export default class {
     models.forEach(parent => {
       var value = dict[parent.get(this.localKey)]
       
-      parent.related(this.name, this.parseRelationValue(value))
+      parent.setRelated(this.name, this.parseRelationValue(value))
     })
   }
   

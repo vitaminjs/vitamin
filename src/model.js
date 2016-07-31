@@ -26,7 +26,7 @@ class Model extends BaseModel {
     else this.setData(data, true)
     
     this.exists = exists
-    this.relations = {}
+    this.related = {}
   }
   
   /**
@@ -245,18 +245,14 @@ class Model extends BaseModel {
   }
   
   /**
-   * Set or get the relationship value
+   * Set the relationship value in the model
    * 
    * @param {String} name
    * @param {Any} value
-   * @return any
+   * @return this model
    */
-  related(name, value) {
-    if (! name ) return this.relations
-    
-    if (! value ) return this.relations[name]
-    
-    this.relations[name] = value
+  setRelated(name, value) {
+    this.related[name] = value
     return this
   }
   
@@ -267,7 +263,7 @@ class Model extends BaseModel {
    * @return boolean
    */
   hasRelated(name) {
-    return !!this.relations[name]
+    return !!this.related[name]
   }
   
   /**
@@ -282,6 +278,55 @@ class Model extends BaseModel {
     if ( relation instanceof Relation ) return relation
     
     throw new Error("Relationship must be an object of type 'Relation'")
+  }
+  
+  /**
+   * Define a has-one relationship
+   * 
+   * @param {Model} related
+   * @param {Object} config { as*, foreignKey, targetKey }
+   * @return relation
+   * @private
+   */
+  hasOne(related, config = {}) {
+    var pk = config.targetKey || this.primaryKey
+    var fk = config.foreignKey || config.as + '_id'
+    var HasOne = require('./relations/has-one').default
+    
+    return new HasOne(this, related.make(), fk, pk).setName(config.as)
+  }
+  
+  /**
+   * Define a has-many relationship
+   * 
+   * @param {Model} related
+   * @param {Object} config { as*, foreignKey, targetKey }
+   * @return relation
+   * @private
+   */
+  hasMany(related, config = {}) {
+    var pk = config.targetKey || this.primaryKey
+    var fk = config.foreignKey || config.as + '_id'
+    var HasMany = require('./relations/has-many').default
+    
+    return new HasMany(this, related.make(), fk, pk).setName(config.as)
+  }
+  
+  /**
+   * Define a belongs-to relationship
+   * 
+   * @param {Model} related
+   * @param {Object} config { as*, foreignKey, targetKey }
+   * @return relation
+   * @private
+   */
+  belongsTo(related, config) {
+    var target = related.make()
+    var pk = config.targetKey || target.primaryKey
+    var fk = config.foreignKey || config.as + '_id'
+    var BelongsTo = require('./relations/belongs-to').default
+    
+    return new BelongsTo(this, target, fk, pk).setName(config.as)
   }
   
   /**
