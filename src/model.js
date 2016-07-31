@@ -39,6 +39,15 @@ class Model extends BaseModel {
   }
   
   /**
+   * Define the model's polymorphic name
+   * 
+   * @type {String}
+   */
+  get morphName() {
+    return this.tableName
+  }
+  
+  /**
    * Determine if the model uses timestamps
    * 
    * @type {Boolean}
@@ -284,12 +293,12 @@ class Model extends BaseModel {
    * Define a has-one relationship
    * 
    * @param {Model} related
-   * @param {Object} config { as*, foreignKey, targetKey }
+   * @param {Object} config { as*, foreignKey, localKey }
    * @return relation
    * @private
    */
   hasOne(related, config = {}) {
-    var pk = config.targetKey || this.primaryKey
+    var pk = config.localKey || this.primaryKey
     var fk = config.foreignKey || config.as + '_id'
     var HasOne = require('./relations/has-one').default
     
@@ -297,19 +306,53 @@ class Model extends BaseModel {
   }
   
   /**
+   * Define a morph-one relationship
+   * 
+   * @param {Model} related
+   * @param {Object} config { as*, type, foreignKey, localKey }
+   * @return relation
+   * @private
+   */
+  morphOne(related, config = {}) {
+    var pk = config.localKey || this.primaryKey
+    var type = config.type || config.as + '_type'
+    var fk = config.foreignKey || config.as + '_id'
+    var MorphOne = require('./relations/morph-one').default
+    
+    return new MorphOne(this, related.make(), type, fk, pk).setName(config.as)
+  }
+  
+  /**
    * Define a has-many relationship
    * 
    * @param {Model} related
-   * @param {Object} config { as*, foreignKey, targetKey }
+   * @param {Object} config { as*, foreignKey, localKey }
    * @return relation
    * @private
    */
   hasMany(related, config = {}) {
-    var pk = config.targetKey || this.primaryKey
+    var pk = config.localKey || this.primaryKey
     var fk = config.foreignKey || config.as + '_id'
     var HasMany = require('./relations/has-many').default
     
     return new HasMany(this, related.make(), fk, pk).setName(config.as)
+  }
+  
+  /**
+   * Define a morph-many relationship
+   * 
+   * @param {Model} related
+   * @param {Object} config { as*, type, foreignKey, localKey }
+   * @return relation
+   * @private
+   */
+  morphMany(related, config = {}) {
+    var pk = config.localKey || this.primaryKey
+    var type = config.type || config.as + '_type'
+    var fk = config.foreignKey || config.as + '_id'
+    var MorphOne = require('./relations/morph-one').default
+    
+    return new MorphOne(this, related.make(), type, fk, pk).setName(config.as)
   }
   
   /**
