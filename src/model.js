@@ -2,6 +2,7 @@
 import NotFoundError from './not-found-error'
 import BaseModel from 'vitamin-model'
 import Collection from './collection'
+import Promise from 'bluebird'
 import Query from './query'
 import _ from 'underscore'
 
@@ -33,6 +34,33 @@ class Model extends BaseModel {
    */
   get tableName() {
     return null
+  }
+  
+  /**
+   * Determine if the model uses timestamps
+   * 
+   * @type {Boolean}
+   */
+  get timestamps() {
+    return false
+  }
+  
+  /**
+   * The name of the "created at" column
+   * 
+   * @type {String}
+   */
+  get createdAtColumn() {
+    return 'created_at'
+  }
+  
+  /**
+   * The name of the "updated at" column
+   * 
+   * @type {String}
+   */
+  get updatedAtColumn() {
+    return 'updated_at'
   }
   
   /**
@@ -161,6 +189,47 @@ class Model extends BaseModel {
   use(connection) {
     this.connection = connection
     return this
+  }
+  
+  /**
+   * Get a fresh timestamp for the model
+   * 
+   * @return string ISO time
+   */
+  freshTimestamp() {
+    return new Date().toISOString()
+  }
+  
+  /**
+   * Update the creation and update timestamps
+   * 
+   * @return this model
+   */
+  updateTimestamps() {
+    var time = this.freshTimestamp()
+    var useCreatedAt = !!this.createdAtColumn
+    var useUpdatedAt = !!this.updatedAtColumn
+    
+    if ( useUpdatedAt && !this.isDirty(this.updatedAtColumn) ) {
+      this.set(this.updatedAtColumn, time)
+    }
+    
+    if ( useCreatedAt && this.exists && !this.isDirty(this.createdAtColumn) ) {
+      this.set(this.createdAtColumn, time)
+    }
+    
+    return this
+  }
+  
+  /**
+   * Update the model's update timestamp
+   * 
+   * @return promise
+   */
+  touch() {
+    if (! this.timestamps ) return Promise.resolve(this)
+  
+    return this.updateTimestamps().save()
   }
   
   /**
