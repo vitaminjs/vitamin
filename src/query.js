@@ -33,17 +33,45 @@ class Query extends BaseQuery {
   }
   
   /**
+   * Set the relationships that should be eager loaded
+   * 
+   * @param {Array} relations
+   * @return this query
+   */
+  withRelated(relations) {
+    if (! _.isArray(relations) ) relations = _.toArray(arguments)
+    
+    _.extend(this.rels, this.parseWithRelated(relations))
+    
+    return this
+  }
+  
+  /**
+   * Load the relationships of the models
+   * 
+   * @param {Array} models
+   * @return promise
+   */
+  loadRelated(models) {
+    // no need to load related, if there is no parent models
+    if ( models && models.length === 0 ) return Promise.resolve() 
+    
+    return Promise.map(_.keys(this.rels), name => this.eagerLoad(name, models))
+  }
+  
+  /**
    * Fetch many models from th database
    * 
    * @param {String|Array} columns
    * @return promise
    */
   fetch(columns) {
-    return this.super.fetch(...arguments).then(res => {
+    return super.fetch(...arguments).then(res => {
       return this.model.newCollection(_.map(res, data => {
         return this.model.newInstance(data, true)
       }))
     })
+    .tap(res => this.loadRelated(res.toArray()))
   }
   
   /**
@@ -153,6 +181,59 @@ class Query extends BaseQuery {
     
     return this.whereIn(pk, ids).fetch(...columns)
   }
+  
+  /**
+   * Eager laod a relationhip
+   * 
+   * @param {String} name
+   * @param {Array} models
+   * @return promise
+   * @private
+   */
+  eagerLoad(name, models) {
+    var config = this.rels[name]
+    var relation = this.model.getReltion(name)
+    
+    // add custom constraints
+    if ( _.isFunction(config) ) relation.modify(config)
+    
+    // set nested models
+    if ( _.isArray(config) ) relation.modify(q => q.withRelated(config))
+    
+    return relation.eagerLoad(models)
+  }
+  
+  /**
+   * Reduce an array of relations into a plain object
+   * 
+   * @param {Array} relations
+   * @return plain object
+   * @private
+   */
+  parseWithRelated(relations) {
+    return _.reduce(relations, function (memo, value) {
+      if ( _.isString(value) ) value = _.object([[value, _.noop]])
+      
+      if( _.isObject(value) ) {
+        _.each(value, function (val, key) {
+          var parts = key.split('.')
+          var parent = parts.shift()
+          var child = parts.join('.')
+          
+          if ( _.isEmpty(child) ) {
+            if (! _.isArray(val) ) memo[parent] = val
+            else memo[parent] = val.concat(memo[parent] || [])
+          }
+          else
+            (memo[parent] = memo[parent] || []).push(_.object([[child, val]]))
+        }) 
+      } 
+      
+      return memo
+    }, {})
+  }
+  
+  
   
 }
 

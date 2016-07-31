@@ -1,5 +1,6 @@
 
 import NotFoundError from './not-found-error'
+import Relation from './relations/base'
 import BaseModel from 'vitamin-model'
 import Collection from './collection'
 import Promise from 'bluebird'
@@ -25,6 +26,7 @@ class Model extends BaseModel {
     else this.setData(data, true)
     
     this.exists = exists
+    this.relations = {}
   }
   
   /**
@@ -230,6 +232,56 @@ class Model extends BaseModel {
     if (! this.timestamps ) return Promise.resolve(this)
   
     return this.updateTimestamps().save()
+  }
+  
+  /**
+   * Load the given relationships
+   * 
+   * @param {Array} relations
+   * @return promise
+   */
+  load(relations) {
+    return this.newQuery().withRelated(...arguments).loadRelated([this]).return(this)
+  }
+  
+  /**
+   * Set or get the relationship value
+   * 
+   * @param {String} name
+   * @param {Any} value
+   * @return any
+   */
+  related(name, value) {
+    if (! name ) return this.relations
+    
+    if (! value ) return this.relations[name]
+    
+    this.relations[name] = value
+    return this
+  }
+  
+  /**
+   * Determine if the given relationship is loaded
+   * 
+   * @param {String} name
+   * @return boolean
+   */
+  hasRelated(name) {
+    return !!this.relations[name]
+  }
+  
+  /**
+   * Create the relationship mapper
+   * 
+   * @param {String} name
+   * return relation instance
+   */
+  getRelation(name) {
+    var relation = _.result(this, name)
+    
+    if ( relation instanceof Relation ) return relation
+    
+    throw new Error("Relationship must be an object of type 'Relation'")
   }
   
   /**
