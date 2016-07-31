@@ -1,8 +1,9 @@
 
 import Relation from './base'
+import mixin from './mixins/one-to-one'
 
 // exports
-export default class extends Relation {
+export default class extends mixin(Relation) {
   
   /**
    * BelongsToRelation constructor
@@ -18,15 +19,6 @@ export default class extends Relation {
     
     this.localKey = fk
     this.otherKey = pk
-  }
-  
-  /**
-   * Get the result of the relationship
-   * 
-   * @return promise
-   */
-  load() {
-    this.getQuery().first()
   }
   
   /**
