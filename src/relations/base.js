@@ -1,4 +1,5 @@
 
+import Query from './query'
 import _ from 'underscore'
 
 // exports
@@ -19,7 +20,7 @@ export default class {
     this.otherKey = null
     
     this.constraints = false
-    this.query = target.newQuery()
+    this.query = new Query(target.newQuery()).setRelation(this)
   }
   
   /**
@@ -52,8 +53,8 @@ export default class {
    */
   getQuery() {
     if (! this.constraints ) {
-      this.addConstraints()
       this.constraints = true
+      this.addConstraints()
     }
     
     return this.query
