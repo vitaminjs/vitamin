@@ -26,7 +26,7 @@ export default class {
     this.otherKey = null // target key
     
     this.constraints = false
-    this.through = this.query = query.from(target.tableName, name)
+    this._through = this.query = query.from(target.tableName, name)
   }
   
   /**
@@ -66,6 +66,39 @@ export default class {
   }
   
   /**
+   * Add relationship `through` constraints
+   * 
+   * @param {String} name of the relation
+   * @param {String} key of the target model
+   * @return this relation
+   */
+  through(name, key) {
+    var relation = this.target.getRelation(name)
+    
+    this.addThroughJoin(relation)
+    this._through = relation.query
+    this.otherKey = key || relation.otherKey
+    
+    return this
+  }
+  
+  /**
+   * Add join constraints with the intermediate table
+   * 
+   * @param {Relation} relation
+   * @private
+   */
+  addThroughJoin(relation) {
+    var query = relation.query
+    
+    this.query.join(
+      query.table + ' as ' + query.alias,
+      query.getQualifiedColumn(relation.otherKey),
+      this._through.getQualifiedColumn(relation.localKey)
+    )
+  }
+  
+  /**
    * Add constraints on the relation query
    * 
    * @private
@@ -91,7 +124,7 @@ export default class {
    * @private
    */
   getCompareKey() {
-    return this.query.getQualifiedColumn(this.otherKey)
+    return this._through.getQualifiedColumn(this.otherKey)
   }
   
   /**
