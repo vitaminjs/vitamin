@@ -1,16 +1,10 @@
 
 import Relation from './has-one-or-many'
+import mixin from './mixins/one-to-one'
 
 // exports
-export default class extends Relation {
+export default class extends mixin(Relation) {
   
-  /**
-   * Get the result of the relationship
-   * 
-   * @return promise
-   */
-  load() {
-    this.getQuery().first()
-  }
+  // 
   
 }
