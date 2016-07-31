@@ -7,6 +7,7 @@ export default class extends Relation {
   /**
    * MorphOneOrManyRelation constructor
    * 
+   * @param {String} name of the relationship
    * @param {Model} parent model instance
    * @param {Model} target model instance
    * @param {String} type
@@ -14,13 +15,13 @@ export default class extends Relation {
    * @param {String} pk parent model primary key
    * @constructor
    */
-  constructor(parent, target, type, fk, pk) {
-    super(parent, target, fk, pk)
+  constructor(name, parent, target, type, fk, pk) {
+    super(name, parent, target, fk, pk)
     
     this.morphType = type
     this.morphName = this.parent.morphName
     
-    this.query.where(this.getQualifiedMorphType(), this.morphName)
+    this.query.where(this.getQualifiedTypeColumn(), this.morphName)
   }
   
   /**
@@ -38,7 +39,7 @@ export default class extends Relation {
    * 
    * @return string
    */
-  getQualifiedMorphType() {
+  getQualifiedTypeColumn() {
     return this.query.getQualifiedColumn(this.morphType)
   }
   

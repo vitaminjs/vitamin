@@ -8,31 +8,25 @@ export default class {
   /**
    * BaseRelation constructor
    * 
+   * @param {String} name of the relationship
    * @param {Model} parent model instance
    * @param {Model} target model instance
    * @constructor
    */
-  constructor(parent, target) {
+  constructor(name, parent, target) {
+    if (! name ) throw new Error("The name of the relation is required")
+    
+    var query = new Query(target.newQuery()).setRelation(this)
+    
+    this.name   = name
     this.parent = parent
     this.target = target
     
-    this.localKey = null
-    this.otherKey = null
+    this.localKey = null // parent key
+    this.otherKey = null // target key
     
     this.constraints = false
-    this.query = new Query(target.newQuery()).setRelation(this)
-  }
-  
-  /**
-   * Set the name of this relation
-   * 
-   * @param {String} name
-   * @return this relation
-   */
-  setName(name) {
-    this.query.from(this.target.tableName, name)
-    this.name = name
-    return this
+    this.through = this.query = query.from(target.tableName, name)
   }
   
   /**

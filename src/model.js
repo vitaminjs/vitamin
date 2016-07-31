@@ -302,7 +302,7 @@ class Model extends BaseModel {
     var fk = config.foreignKey || config.as + '_id'
     var HasOne = require('./relations/has-one').default
     
-    return new HasOne(this, related.make(), fk, pk).setName(config.as)
+    return new HasOne(config.as, this, related.make(), fk, pk)
   }
   
   /**
@@ -319,7 +319,7 @@ class Model extends BaseModel {
     var fk = config.foreignKey || config.name + '_id'
     var MorphOne = require('./relations/morph-one').default
     
-    return new MorphOne(this, related.make(), type, fk, pk).setName(config.as)
+    return new MorphOne(config.as, this, related.make(), type, fk, pk)
   }
   
   /**
@@ -335,7 +335,7 @@ class Model extends BaseModel {
     var fk = config.foreignKey || config.as + '_id'
     var HasMany = require('./relations/has-many').default
     
-    return new HasMany(this, related.make(), fk, pk).setName(config.as)
+    return new HasMany(config.as, this, related.make(), fk, pk)
   }
   
   /**
@@ -352,7 +352,7 @@ class Model extends BaseModel {
     var fk = config.foreignKey || config.name + '_id'
     var MorphOne = require('./relations/morph-one').default
     
-    return new MorphOne(this, related.make(), type, fk, pk).setName(config.as)
+    return new MorphOne(config.as, this, related.make(), type, fk, pk)
   }
   
   /**
@@ -369,7 +369,7 @@ class Model extends BaseModel {
     var fk = config.foreignKey || config.as + '_id'
     var BelongsTo = require('./relations/belongs-to').default
     
-    return new BelongsTo(this, target, fk, pk).setName(config.as)
+    return new BelongsTo(config.as, this, target, fk, pk)
   }
   
   /**

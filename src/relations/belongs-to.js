@@ -8,14 +8,15 @@ export default class extends mixin(Relation) {
   /**
    * BelongsToRelation constructor
    * 
+   * @param {String} name of the relationship
    * @param {Model} parent model instance
    * @param {Model} target model instance
    * @param {String} fk parent model foreign key
    * @param {String} pk target model primary key
    * @constructor
    */
-  constructor(parent, target, fk, pk) {
-    super(parent, target)
+  constructor(name, parent, target, fk, pk) {
+    super(name, parent, target)
     
     this.localKey = fk
     this.otherKey = pk
