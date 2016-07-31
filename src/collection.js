@@ -46,6 +46,16 @@ class Collection {
   }
   
   /**
+   * Get the model at the given position
+   * 
+   * @param {Integer} position
+   * @return model instance
+   */
+  at(position) {
+    return this.models[position]
+  }
+  
+  /**
    * Run a map callback over each model
    * 
    * @param {Function} fn
