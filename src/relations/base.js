@@ -73,11 +73,11 @@ export default class {
    * @return this relation
    */
   through(name, key) {
-    var relation = this.target.getRelation(name)
+    var rel = this.target.getRelation(name)
     
-    this.addThroughJoin(relation)
-    this._through = relation.query
-    this.otherKey = key || relation.otherKey
+    this.addThroughJoin(rel.query, rel.localKey, rel.otherKey)
+    this._through = rel.query
+    this.otherKey = key || rel.otherKey
     
     return this
   }
@@ -85,16 +85,16 @@ export default class {
   /**
    * Add join constraints with the intermediate table
    * 
-   * @param {Relation} relation
+   * @param {Query} query
+   * @param {String} localKey
+   * @param {String} otherKey
    * @private
    */
-  addThroughJoin(relation) {
-    var query = relation.query
-    
+  addThroughJoin(query, localKey, otherKey) {
     this.query.join(
       query.table + ' as ' + query.alias,
-      query.getQualifiedColumn(relation.otherKey),
-      this._through.getQualifiedColumn(relation.localKey)
+      query.getQualifiedColumn(otherKey),
+      this._through.getQualifiedColumn(localKey)
     )
   }
   
