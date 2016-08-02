@@ -1,20 +1,22 @@
 
+import Error from 'es6-error'
+
 /**
  * Model Not Found Error
  */
-class NotFoundError extends Error {
+class ModelNotFoundError extends Error {
   
   /**
+   * Not Found Error constructor
+   * 
    * @param {String} message
    * @constructor
    */
   constructor(message = "Not Found") {
     super(message)
-    
-    Error.captureStackTrace(this, NotFoundError)
   }
   
 }
 
 // exports
-export default NotFoundError
+export default ModelNotFoundError
