@@ -2,6 +2,7 @@
 import _ from 'underscore'
 import Model from '../model'
 import Relation from './base'
+import Promise from 'bluebird'
 import mixin from './mixins/one-to-many'
 
 // exports
@@ -17,27 +18,51 @@ export default class extends mixin(Relation) {
    * @param {String} tfk target model foreign key
    * @constructor
    */
-  constructor(name, parent, target, pivot, pfk, tfk) {
+  constructor(name, parent, target, pivot = null, pfk = null, tfk = null) {
     super(name, parent, target)
     
     this.localKey = parent.primaryKey
-    this.pivotColumns = [pfk, tfk]
-    this.targetKey = tfk
-    this.otherKey = pfk
-    this.table = pivot
+    this.pivot = new Model
+    
+    if ( pivot ) {
+      var alias = this.name + '_pivot'
+      var query = this.newPivotQuery(false).from(this.table, alias)
+      
+      this.addThroughJoin(query, target.primaryKey, tfk)
+      this.setPivot(pivot, pfk, tfk)
+      this._through = query
+    }
   }
   
   /**
    * Add `through` relationship constraints
    * 
-   * @param {String} relation name
+   * @param {String} name of the pivot relation
+   * @param {String} pfk parent model foreign key
    * @return this relation
    */
-  through(relation) {
-    // because of the special behavior of belongs-to-many relations,
-    // we should use the parent model foreign key as target key,
-    // to make possible the joining between tables
-    return super(relation, this.otherKey)
+  through(name, pfk) {
+    var rel = this.target.getRelation(name)
+    
+    this.addThroughJoin(rel.query, rel.localKey, rel.otherKey)
+    this.setPivot(rel.query.table, pfk, rel.localKey)
+    this._through = rel.query
+    
+    return this
+  }
+  
+  /**
+   * Set the pivot table informations
+   * 
+   * @param {String} table name
+   * @param {String} pfk parent model foreign key
+   * @param {String} tfk target model foreign key
+   */
+  setPivot(table, pfk, tfk) {
+    this.pivotColumns = [pfk, tfk]
+    this.targetKey = tfk
+    this.otherKey = pfk
+    this.table = table
   }
   
   /**
@@ -125,49 +150,46 @@ export default class extends mixin(Relation) {
   }
   
   /**
-   * Sync the intermediate table with a list of IDs 
+   * Sync the intermediate table with a list of IDs
    * 
    * @param {Array} ids
    * @return promise
    */
   sync(ids) {
-    var newRecords = this.formatSyncRecords(ids)
-    var newIds = newRecords.map(v => v[0])
+    var newIds = [], toAttach = [], toUpdate = [], toDetach
     
     return this
       .newPivotQuery()
       .pluck(this.targetKey)
       
-      // detach
+      // traversing
       .tap(oldIds => {
-        var toDetach = _.difference(oldIds, newIds)
+        ids.forEach(value => {
+          var id
+          
+          if ( value instanceof Model ) value = value.getId()
+          
+          if ( _.isArray(value) ) value = [value]
+          
+          // add the new id
+          newIds.push(id = value[0])
+          
+          // looking for ids that should be attached or updated
+          if (! _.contains(oldIds, id) ) toAttach.push(value)
+          else if (! _.isEmpty(value[1]) ) toUpdate.push(value)
+        })
         
-        return _.isEmpty(toDetach) ? false : this.detach(toDetach)
+        toDetach = _.difference(oldIds, newIds)
       })
+      
+      // detach
+      .tap(oldIds => _.isEmpty(toDetach) ? false : this.detach(toDetach))
       
       // attach
-      .tap(oldIds => {
-        var toAttach = _.difference(newIds, oldIds)
-        
-        if ( _.isEmpty(toAttach) ) return false
-        
-        // TODO
-      })
-  }
-  
-  /**
-   * Format the pivot records for sync operation
-   * 
-   * @param {Array} ids
-   * @return array
-   * @private
-   */
-  formatSyncRecords(ids) {
-    return ids.map(id => {
-      if ( id instanceof Model ) id = id.getId()
+      .tap(oldIds => _.isEmpty(toAttach) ? false : this.attach(toAttach))
       
-      return ( _.isArray(id) ) id : [id]
-    })
+      // update pivots
+      .tap(oldIds => Promise.map(toUpdate, args => this.updatePivot(...args)))
   }
   
   /**
@@ -178,7 +200,11 @@ export default class extends mixin(Relation) {
    * @private
    */
   newPivotQuery(constraints = true) {
-    // TODO
+    var query = this.pivot.newQuery().from(this.table)
+    
+    if ( constraints ) query.where(this.otherKey, this.parent.getId())
+    
+    return query
   }
   
   /**
@@ -206,7 +232,7 @@ export default class extends mixin(Relation) {
    * @return plain object
    * @private
    */
-  createPivotRecord(id, pivots) {
+  createPivotRecord(id, pivots = {}) {
     var record = _.extend({}, pivots)
     
     record[this.otherKey] = this.parent.getId()
