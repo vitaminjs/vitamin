@@ -44,16 +44,16 @@ export default class extends Relation {
   /**
    * Add join constraints with the intermediate table
    * 
-   * @param {Relation} relation
+   * @param {Query} query
+   * @param {String} localKey
+   * @param {String} otherKey
    * @private
    */
-  addThroughJoin(relation) {
-    var query = relation.query
-    
+  addThroughJoin(query, localKey, otherKey) {
     this.query.join(query.table + ' as ' + query.alias, (qb) => {
       qb.on(
-        query.getQualifiedColumn(relation.otherKey),
-        this._through.getQualifiedColumn(relation.localKey)
+        query.getQualifiedColumn(otherKey),
+        this._through.getQualifiedColumn(localKey)
       ).andOn(
         this.getQualifiedTypeColumn(), this.morphName
       )
