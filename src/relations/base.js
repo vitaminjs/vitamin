@@ -73,12 +73,12 @@ export default class {
    * @return this relation
    */
   through(name, key) {
-    var rel = this.target.getRelation(name)
+    var rel = this._through.model.getRelation(name)
     
     this.addThroughJoin(rel.query, rel.localKey, rel.otherKey)
-    this._through = rel.query
-    this.otherKey = key || rel.otherKey
     
+    this.otherKey = key || rel.otherKey
+    this._through = rel.query
     return this
   }
   
