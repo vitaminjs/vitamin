@@ -26,7 +26,7 @@ export default class extends mixin(Relation) {
     
     if ( pivot ) {
       var alias = this.name + '_pivot'
-      var query = this.newPivotQuery(false).from(this.table, alias)
+      var query = this.newPivotQuery(false).from(pivot, alias)
       
       this.addThroughJoin(query, target.primaryKey, tfk)
       this.setPivot(pivot, pfk, tfk)
@@ -49,20 +49,6 @@ export default class extends mixin(Relation) {
     this._through = rel.query
     
     return this
-  }
-  
-  /**
-   * Set the pivot table informations
-   * 
-   * @param {String} table name
-   * @param {String} pfk parent model foreign key
-   * @param {String} tfk target model foreign key
-   */
-  setPivot(table, pfk, tfk) {
-    this.pivotColumns = [pfk, tfk]
-    this.targetKey = tfk
-    this.otherKey = pfk
-    this.table = table
   }
   
   /**
@@ -239,6 +225,55 @@ export default class extends mixin(Relation) {
     record[this.targetKey] = id
     
     return record
+  }
+  
+  /**
+   * Set the pivot table informations
+   * 
+   * @param {String} table name
+   * @param {String} pfk parent model foreign key
+   * @param {String} tfk target model foreign key
+   * @private
+   */
+  setPivot(table, pfk, tfk) {
+    this.pivotColumns = [pfk, tfk]
+    this.targetKey = tfk
+    this.otherKey = pfk
+    this.table = table
+  }
+  
+  /**
+   * Apply constraints on the relation query
+   * 
+   * @private
+   */
+  addConstraints() {
+    super.addConstraints()
+    this.addPivotColumns()
+  }
+  
+  /**
+   * Apply eager constraints on the relation query
+   * 
+   * @param {Array} models
+   * @private
+   */
+  addEagerLoadConstraints(models) {
+    super.addEagerLoadConstraints(models)
+    this.addPivotColumns()
+  }
+  
+  /**
+   * Set the columns of the relation query
+   * 
+   * @private
+   */
+  addPivotColumns() {
+    var columns = this.pivotColumns.map(col => {
+      return this._through.getQualifiedColumn(col)
+    })
+    
+    this.query.toBase().select(columns)
   }
   
 }
