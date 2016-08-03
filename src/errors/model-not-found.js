@@ -1,10 +1,10 @@
 
-import Error from 'es6-error'
+import XError from 'es6-error'
 
 /**
  * Model Not Found Error
  */
-class ModelNotFoundError extends Error {
+class Error extends XError {
   
   /**
    * Not Found Error constructor
@@ -12,11 +12,11 @@ class ModelNotFoundError extends Error {
    * @param {String} message
    * @constructor
    */
-  constructor(message = "Not Found") {
+  constructor(message = "Model Not Found") {
     super(message)
   }
   
 }
 
 // exports
-export default ModelNotFoundError
+export default Error
