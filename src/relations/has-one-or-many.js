@@ -25,20 +25,22 @@ export default class extends Relation {
    * Create a new instance of the related model
    * 
    * @param {Object} attrs
+   * @param {Array} returning
    * @return promise
    */
-  create(attrs) {
-    return this.save(this.target.newInstance(attrs))
+  create(attrs, returning = ['*']) {
+    return this.save(this.target.newInstance(attrs), returning)
   }
   
   /**
    * Attach a model instance to the parent model
    * 
    * @param {Model} model
+   * @param {Array} returning
    * @return promise
    */
-  save(model) {
-    return model.set(this.otherKey, this.parent.get(this.localKey)).save()
+  save(model, returning = ['*']) {
+    return model.set(this.otherKey, this.parent.get(this.localKey)).save(returning)
   }
   
 }

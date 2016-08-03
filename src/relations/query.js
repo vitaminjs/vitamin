@@ -33,15 +33,16 @@ export default class extends Query {
    * Get the first record matching the attributes or create it
    * 
    * @param {Object} attrs
+   * @param {Array} returning
    * @return promise
    */
-  firstOrCreate(attrs) {
+  firstOrCreate(attrs, returning = ['*']) {
     return this.firstOrNew(attrs).then(model => {
       if ( _.isFunction(this.relation.create) ) {
-        return this.relation.create(attrs)
+        return this.relation.create(attrs, returning)
       } 
       
-      return model.save()
+      return model.save(returning)
     })
   }
   

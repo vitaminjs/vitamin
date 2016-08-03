@@ -19,17 +19,18 @@ export default class extends Relation {
     super(name, parent, target, fk, pk)
     
     this.morphType = type
-    this.morphName = this.parent.morphName
+    this.morphName = parent.morphName || parent.tableName 
   }
   
   /**
    * Attach a model instance to the parent model
    * 
    * @param {Model} model
+   * @param {Array} returning
    * @return Promise
    */
-  save(model) {
-    return super.save(model.set(this.morphType, this.morphName))
+  save(model, returning = ['*']) {
+    return super.save(model.set(this.morphType, this.morphName), returning)
   }
   
   /**

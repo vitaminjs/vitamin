@@ -77,9 +77,10 @@ export default class extends mixin(Relation) {
    * Create and attach a new instance of the related model
    * 
    * @param {Object} attrs
+   * @param {Array} returning
    * @return promise
    */
-  create(attrs) {
+  create(attrs, returning = ['*']) {
     var pivots = {}
     
     if ( attrs.pivot ) {
@@ -87,18 +88,19 @@ export default class extends mixin(Relation) {
       delete attrs.pivot
     }
     
-    return this.save(this.target.newInstance(attrs), pivots)
+    return this.save(this.target.newInstance(attrs), pivots, returning)
   }
   
   /**
    * Save a new model and attach it to the parent
    * 
    * @param {Model} related
-   * @param {Object} attrs (optional)
+   * @param {Object} pivots
+   * @param {Array} returning
    * @return promise
    */
-  save(related, pivots = {}) {
-    return related.save().then(model => {
+  save(related, pivots = {}, returning = ['*']) {
+    return related.save(returning).then(model => {
       return this.attach(this.createPivotRecord(model.getId(), pivots))
     })
   }

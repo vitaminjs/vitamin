@@ -11,4 +11,16 @@ export default (parent) => class extends parent {
     this.getQuery().first()
   }
   
+  /**
+   * Build model dictionary keyed by the given key
+   * 
+   * @param {Collection} related
+   * @param {String} key
+   * @return plain object
+   * @private
+   */
+  buildDictionary(related, key) {
+    return related.keyBy(key)
+  }
+  
 }

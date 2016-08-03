@@ -2,7 +2,7 @@
 import _ from 'underscore'
 import Promise from 'bluebird'
 import BaseQuery from 'vitamin-query'
-import NotFoundError from './not-found-error'
+import NotFoundError from './errors/model-not-found'
 
 /**
  * Model Query Class
@@ -54,7 +54,7 @@ class Query extends BaseQuery {
    */
   loadRelated(models) {
     // no need to load related, if there is no parent models
-    if ( models && models.length === 0 ) return Promise.resolve() 
+    if ( _.isEmpty(models) || _.isEmpty(this.rels) ) return Promise.resolve()
     
     return Promise.map(_.keys(this.rels), name => this.eagerLoad(name, models))
   }
@@ -66,12 +66,14 @@ class Query extends BaseQuery {
    * @return promise
    */
   fetch(columns) {
-    return super.fetch(...arguments).then(res => {
-      return this.model.newCollection(_.map(res, data => {
-        return this.model.newInstance(data, true)
-      }))
-    })
-    .tap(res => this.loadRelated(res.toArray()))
+    return super
+      .fetch(...arguments)
+      .then(res => {
+        return this.model.newCollection(_.map(res, data => {
+          return this.model.newInstance(data, true)
+        }))
+      })
+      .tap(res => this.loadRelated(res.toArray()))
   }
   
   /**
@@ -81,7 +83,7 @@ class Query extends BaseQuery {
    * @return promise
    */
   first(columns) {
-    return this.fetch(...arguments).then(res => res.first())
+    return this.limit(1).fetch(...arguments).then(res => res.first())
   }
   
   /**
@@ -93,7 +95,8 @@ class Query extends BaseQuery {
   firstOrFail(columns) {
     return this.first(...arguments).then(model => {
       if ( model ) return model
-      else throw new NotFoundError()
+      
+      throw new NotFoundError()
     })
   }
   
@@ -106,7 +109,8 @@ class Query extends BaseQuery {
   firstOrNew(attrs) {
     return this.where(attrs).firstOrFail().catch(err => {
       if (! (err instanceof NotFoundError) ) throw err
-      else return this.model.newInstance(attrs)
+      
+      return this.model.newInstance(attrs)
     })
   }
   
@@ -116,8 +120,8 @@ class Query extends BaseQuery {
    * @param {Object} attrs
    * @return promise
    */
-  firstOrCreate(attrs) {
-    return this.firstOrNew(attrs).then(res => res.save())
+  firstOrCreate(attrs, returning = ['*']) {
+    return this.firstOrNew(attrs).then(res => res.save(returning))
   }
   
   /**
@@ -192,7 +196,7 @@ class Query extends BaseQuery {
    */
   eagerLoad(name, models) {
     var config = this.rels[name]
-    var relation = this.model.getReltion(name)
+    var relation = this.model.getRelation(name)
     
     // add custom constraints
     if ( _.isFunction(config) ) relation.modify(config)

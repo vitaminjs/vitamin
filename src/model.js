@@ -1,5 +1,5 @@
 
-import NotFoundError from './not-found-error'
+import NotFoundError from './errors/model-not-found'
 import Relation from './relations/base'
 import BaseModel from 'vitamin-model'
 import Collection from './collection'
@@ -20,58 +20,12 @@ class Model extends BaseModel {
    * @constructor
    */
   constructor(data = {}, exists = false) {
-    super()
+    super(data)
     
-    if (! exists ) this.fill(data)
-    else this.setData(data, true)
+    if ( exists ) this.setData(data, true)
     
     this.exists = exists
     this.related = {}
-  }
-  
-  /**
-   * Define the model table name
-   * 
-   * @type {String}
-   */
-  get tableName() {
-    return null
-  }
-  
-  /**
-   * Define the model's polymorphic name
-   * 
-   * @type {String}
-   */
-  get morphName() {
-    return this.tableName
-  }
-  
-  /**
-   * Determine if the model uses timestamps
-   * 
-   * @type {Boolean}
-   */
-  get timestamps() {
-    return false
-  }
-  
-  /**
-   * The name of the "created at" column
-   * 
-   * @type {String}
-   */
-  get createdAtColumn() {
-    return 'created_at'
-  }
-  
-  /**
-   * The name of the "updated at" column
-   * 
-   * @type {String}
-   */
-  get updatedAtColumn() {
-    return 'updated_at'
   }
   
   /**
@@ -95,20 +49,27 @@ class Model extends BaseModel {
   }
   
   /**
-   * Set the model raw data
+   * Save a new model in the database
    * 
    * @param {Object} data
-   * @param {Boolean} sync
-   * @return this model
+   * @param {Array} returning
+   * @return promise
    */
-  setData(data, sync = true) {
-    this.exists = !!sync
-    this.data = data || {}
+  static create(data, returning = ['*']) {
+    return this.make(data).save(returning)
+  }
+  
+  /**
+   * Returns a JSON representation of this model
+   * 
+   * @return plain object
+   */
+  toJSON() {
+    var json = _.mapObject(this.related, function (related, name) {
+      return (! related ) ? related : related.toJSON()
+    })
     
-    // sync original attributes with the current state
-    if ( sync === true ) this.syncOriginal()
-    
-    return this
+    return _.extend(super.toJSON(), json)
   }
   
   /**
@@ -123,7 +84,7 @@ class Model extends BaseModel {
     return Promise
       .bind(this)
       .then(() => this.emit('saving', this))
-      .then(() => this.exists ? this._insert(returning) : this._update(returning))
+      .then(() => this.exists ? this._update(returning) : this._insert(returning))
       .then(() => this.emit('saved', this))
       .return(this)
   }
@@ -149,7 +110,7 @@ class Model extends BaseModel {
   destroy() {
     if (! this.exists ) return Promise.reject(new NotFoundError())
     
-    var pk = this.getKeyName(), id = this.getId()
+    var pk = this.primaryKey, id = this.getId()
     
     return Promise
       .bind(this)
@@ -383,6 +344,7 @@ class Model extends BaseModel {
     return Promise
       .bind(this)
       .then(() => this.emit('creating', this))
+      .then(() => this.timestamps && this.updateTimestamps())
       .then(() => {
         return this
           .newQuery()
@@ -404,11 +366,12 @@ class Model extends BaseModel {
     return Promise
       .bind(this)
       .then(() => this.emit('updating', this))
+      .then(() => this.timestamps && this.updateTimestamps())
       .then(() => {
         return this
           .newQuery()
-          .update(this.getDirty())
           .where(this.primaryKey, this.getId())
+          .update(this.getDirty())
           .then(res => this._emulateReturning(res, returning))
           .then(res => this.setData(res, true))
       })
@@ -427,7 +390,9 @@ class Model extends BaseModel {
     
     if ( _.isObject(id) ) return id
     else {
-      var qb = this.newQuery().toBase()
+      let qb = this.newQuery().toBase()
+      
+      if ( this.exists ) id = this.getId()
       
       // resolve with a plain object to populate the model data
       return qb.where(this.primaryKey, id).first(columns)
@@ -435,6 +400,41 @@ class Model extends BaseModel {
   }
   
 }
+
+/**
+ * Define the model table name
+ * 
+ * @type {String}
+ */
+Model.prototype.tableName = null
+
+/**
+ * Define the model's polymorphic name
+ * 
+ * @type {String}
+ */
+Model.prototype.morphName = null
+
+/**
+ * Determine if the model uses timestamps
+ * 
+ * @type {Boolean}
+ */
+Model.prototype.timestamps = false
+
+/**
+ * The name of the "created at" column
+ * 
+ * @type {String}
+ */
+Model.prototype.createdAtColumn = 'created_at'
+
+/**
+ * The name of the "updated at" column
+ * 
+ * @type {String}
+ */
+Model.prototype.updatedAtColumn = 'updated_at'
 
 // exports
 export default Model

@@ -114,7 +114,7 @@ export default class {
    * @private
    */
   addEagerLoadConstraints(models) {
-    this.query.whereIn(this.getCompareKey(), this.getKeys(models, this.otherKey))
+    this.query.whereIn(this.getCompareKey(), this.getKeys(models, this.localKey))
   }
   
   /**
@@ -167,18 +167,6 @@ export default class {
     if (! _.isArray(value) ) return value || null
     
     return this.target.newCollection(value || [])
-  }
-  
-  /**
-   * Build model dictionary keyed by the given key
-   * 
-   * @param {Collection} related
-   * @param {String} key
-   * @return plain object
-   * @private
-   */
-  buildDictionary(related, key) {
-    return related.keyBy(key)
   }
   
 }
