@@ -17,20 +17,22 @@ export default (parent) => class extends parent {
    * Create many instances of the related model
    * 
    * @param {Array} records
+   * @parma {Array} returning
    * @return promise
    */
-  createMany(records) {
-    return Promise.map(records, this.create)
+  createMany(records, returning = ['*']) {
+    return Promise.map(records, attrs => this.create(attrs, returning))
   }
   
   /**
    * Attach many models to the parent model
    * 
    * @param {Array} models
+   * @parma {Array} returning
    * @return promise
    */
-  saveMany(models) {
-    return Promise.map(models, this.save)
+  saveMany(models, returning = ['*']) {
+    return Promise.map(models, model => this.save(model, returning))
   }
   
   /**
