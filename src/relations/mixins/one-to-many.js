@@ -47,4 +47,15 @@ export default (parent) => class extends parent {
     return related.groupBy(key)
   }
   
+  /**
+   * Parse the value for the relationship
+   * 
+   * @param {Model} value
+   * @return any
+   * @private
+   */
+  parseRelationValue(value) {
+    return this.target.newCollection(value || [])
+  }
+  
 }

@@ -23,4 +23,15 @@ export default (parent) => class extends parent {
     return related.keyBy(key)
   }
   
+  /**
+   * Parse the value for the relationship
+   * 
+   * @param {Model} value
+   * @return any
+   * @private
+   */
+  parseRelationValue(value) {
+    return value || null
+  }
+  
 }

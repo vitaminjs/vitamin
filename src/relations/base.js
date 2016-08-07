@@ -156,17 +156,4 @@ export default class {
     })
   }
   
-  /**
-   * Parse the value for the relationship
-   * 
-   * @param {Model} value
-   * @return any
-   * @private
-   */
-  parseRelationValue(value) {
-    if (! _.isArray(value) ) return value || null
-    
-    return this.target.newCollection(value || [])
-  }
-  
 }
