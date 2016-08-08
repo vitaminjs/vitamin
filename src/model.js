@@ -334,6 +334,23 @@ class Model extends BaseModel {
   }
   
   /**
+   * Define a belongs-to-many relationship
+   * 
+   * @param {Model} related
+   * @param {Object} config { as*, pivot, foreignKey, targetKey }
+   * @return relation
+   * @private
+   */
+  belongsToMany(related, config) {
+    var table = config.pivot || null
+    var tfk = config.targetKey || null
+    var pfk = config.foreignKey || null
+    var BelongsToMany = require('./relations/belongs-to-many').default
+    
+    return new BelongsToMany(config.as, this, related.make(), table, pfk, tfk)
+  }
+  
+  /**
    * Perform a model insert operation
    * 
    * @param {String|Array} returning

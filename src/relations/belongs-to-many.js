@@ -11,6 +11,7 @@ export default class extends mixin(Relation) {
   /**
    * BelongsToManyRelation constructor
    * 
+   * @param {String} name of the relation
    * @param {Model} parent model instance
    * @param {Model} target mdoel instance
    * @param {String} pivot table name
@@ -24,9 +25,8 @@ export default class extends mixin(Relation) {
     this.localKey = parent.primaryKey
     this.pivot = new Model
     
-    if ( pivot ) {
-      var alias = this.name + '_pivot'
-      var query = this.newPivotQuery(false).from(pivot, alias)
+    if ( pivot != null ) {
+      var query = this.newPivotQuery(false).from(pivot, this.name + '_pivot')
       
       this.addThroughJoin(query, target.primaryKey, tfk)
       this.setPivot(pivot, pfk, tfk)
@@ -39,16 +39,13 @@ export default class extends mixin(Relation) {
    * 
    * @param {String} name of the pivot relation
    * @param {String} pfk parent model foreign key
+   * @param {String} tfk target model foreign key
    * @return this relation
    */
-  through(name, pfk) {
-    var rel = this.target.getRelation(name)
+  through(name, pfk, tfk) {
+    this.setPivot(this._through.table, pfk, tfk)
     
-    this.addThroughJoin(rel.query, rel.localKey, rel.otherKey)
-    this.setPivot(rel.query.table, pfk, rel.localKey)
-    this._through = rel.query
-    
-    return this
+    return super.through(name, pfk)
   }
   
   /**
@@ -106,17 +103,31 @@ export default class extends mixin(Relation) {
   }
   
   /**
-   * Attach a models the the parent model
+   * Save many models and attach them to the parent model
+   * 
+   * @param {Array} related
+   * @param {Array} pivots
+   * @parma {Array} returning
+   * @return promise
+   */
+  saveMany(related, pivots = [], returning = ['*']) {
+    return Promise.map(related, (model, i) => {
+      return this.save(model, pivots[i], returning)
+    })
+  }
+  
+  /**
+   * Attach a models to the parent model
    * 
    * @param {Array} ids
    * @return promise
    */
   attach(ids) {
-    ids = (_.isArray(ids) ? ids : [ids]).map(value => {
-      return (value instanceof Model) ? value.getId() : value
-    })
+    if (! _.isArray(ids) ) ids = [ids]
     
-    return this.newPivotQuery(false).insert(this.createPivotRecords(ids))
+    var records = this.createPivotRecords(ids)
+    
+    return this.newPivotQuery(false).insert(records)
   }
   
   /**
@@ -190,7 +201,7 @@ export default class extends mixin(Relation) {
   newPivotQuery(constraints = true) {
     var query = this.pivot.newQuery().from(this.table)
     
-    if ( constraints ) query.where(this.otherKey, this.parent.getId())
+    if ( constraints ) query.where(this.otherKey, this.parent.get(this.localKey))
     
     return query
   }
@@ -223,7 +234,7 @@ export default class extends mixin(Relation) {
   createPivotRecord(id, pivots = {}) {
     var record = _.extend({}, pivots)
     
-    record[this.otherKey] = this.parent.getId()
+    record[this.otherKey] = this.parent.get(this.localKey)
     record[this.targetKey] = id
     
     return record
@@ -249,7 +260,7 @@ export default class extends mixin(Relation) {
    * 
    * @private
    */
-  addConstraints() {
+  addLoadConstraints() {
     super.addConstraints()
     this.addPivotColumns()
   }
@@ -272,10 +283,24 @@ export default class extends mixin(Relation) {
    */
   addPivotColumns() {
     var columns = this.pivotColumns.map(col => {
-      return this._through.getQualifiedColumn(col)
+      return this._through.getQualifiedColumn(col) + ' as pivot_' + col
     })
     
     this.query.toBase().select(columns)
+  }
+  
+  /**
+   * Build model dictionary keyed by the given key
+   * 
+   * @param {Collection} related
+   * @param {String} key
+   * @return plain object
+   * @private
+   */
+  buildDictionary(related, key) {
+    return related.groupBy(model => {
+      return model.get('pivot_' + key)
+    })
   }
   
 }

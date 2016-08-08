@@ -48,7 +48,7 @@ export default class {
   getQuery() {
     if (! this.constraints ) {
       this.constraints = true
-      this.addConstraints()
+      this.addLoadConstraints()
     }
     
     return this.query
@@ -77,7 +77,7 @@ export default class {
     
     this.addThroughJoin(rel.query, rel.localKey, rel.otherKey)
     
-    this.otherKey = key || rel.otherKey
+    // this.otherKey = key || rel.otherKey
     this._through = rel.query
     return this
   }
@@ -103,7 +103,7 @@ export default class {
    * 
    * @private
    */
-  addConstraints() {
+  addLoadConstraints() {
     this.query.where(this.getCompareKey(), this.parent.get(this.localKey))
   }
   

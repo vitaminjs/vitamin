@@ -75,8 +75,8 @@ export default class extends Relation {
    * 
    * @private
    */
-  addConstraints() {
-    super.addConstraints()
+  addLoadConstraints() {
+    super.addLoadConstraints()
     this.addMorphTypeConstraint()
   }
   
