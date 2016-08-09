@@ -229,12 +229,22 @@ export default class extends mixin(Relation) {
   }
   
   /**
+   * Get the fully qualified compare key of the relation
+   * 
+   * @return string
+   * @private
+   */
+  getCompareKey() {
+    return this.getPivotAlias() + '.' + this.otherKey
+  }
+  
+  /**
    * Apply constraints on the relation query
    * 
    * @private
    */
   addLoadConstraints() {
-    super.addConstraints()
+    super.addLoadConstraints()
     this.addPivotColumns()
   }
   
@@ -256,7 +266,7 @@ export default class extends mixin(Relation) {
    */
   addPivotColumns() {
     var columns = this.pivotColumns.map(col => {
-      return this._through.getQualifiedColumn(col) + ' as pivot_' + col
+      return this.getPivotAlias() + '.' + col + ' as pivot_' + col
     })
     
     this.query.toBase().select(columns)
@@ -282,13 +292,23 @@ export default class extends mixin(Relation) {
    * @private
    */
   addPivotJoin() {
-    var alias = this.name + '_pivot'
+    var alias = this.getPivotAlias()
     
     this.query.join(
-      this.table + ' as ' + alias
+      this.table + ' as ' + alias,
       alias + '.' + this.targetKey,
       this.query.getQualifiedColumn(this.target.primaryKey)
     )
+  }
+  
+  /**
+   * Get the pivot table alias name
+   * 
+   * @return string
+   * @private
+   */
+  getPivotAlias() {
+    return this.name + '_pivot'
   }
   
 }
