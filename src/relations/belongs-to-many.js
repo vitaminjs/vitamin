@@ -19,33 +19,18 @@ export default class extends mixin(Relation) {
    * @param {String} tfk target model foreign key
    * @constructor
    */
-  constructor(name, parent, target, pivot = null, pfk = null, tfk = null) {
+  constructor(name, parent, target, pivot, pfk, tfk) {
     super(name, parent, target)
     
     this.localKey = parent.primaryKey
+    this.pivotColumns = [pfk, tfk]
     this.pivot = new Model
+    this.targetKey = tfk
+    this.otherKey = pfk
+    this.table = pivot
     
-    if ( pivot != null ) {
-      var query = this.newPivotQuery(false).from(pivot, this.name + '_pivot')
-      
-      this.addThroughJoin(query, target.primaryKey, tfk)
-      this.setPivot(pivot, pfk, tfk)
-      this._through = query
-    }
-  }
-  
-  /**
-   * Add `through` relationship constraints
-   * 
-   * @param {String} name of the pivot relation
-   * @param {String} pfk parent model foreign key
-   * @param {String} tfk target model foreign key
-   * @return this relation
-   */
-  through(name, pfk, tfk) {
-    this.setPivot(this._through.table, pfk, tfk)
-    
-    return super.through(name, pfk)
+    // add pivot table join
+    this.addPivotJoin()
   }
   
   /**
@@ -55,7 +40,10 @@ export default class extends mixin(Relation) {
    * @return this relation
    */
   withPivot(columns) {
-    this.pivotColumns.push(..._.flatten(arguments))
+    if (! _.isArray(columns) ) columns = _.toArray(arguments)
+    
+    this.pivotColumns = _.uniq(this.pivotColumns.concat(columns))
+    
     return this
   }
   
@@ -241,21 +229,6 @@ export default class extends mixin(Relation) {
   }
   
   /**
-   * Set the pivot table informations
-   * 
-   * @param {String} table name
-   * @param {String} pfk parent model foreign key
-   * @param {String} tfk target model foreign key
-   * @private
-   */
-  setPivot(table, pfk, tfk) {
-    this.pivotColumns = [pfk, tfk]
-    this.targetKey = tfk
-    this.otherKey = pfk
-    this.table = table
-  }
-  
-  /**
    * Apply constraints on the relation query
    * 
    * @private
@@ -301,6 +274,21 @@ export default class extends mixin(Relation) {
     return related.groupBy(model => {
       return model.get('pivot_' + key)
     })
+  }
+  
+  /**
+   * Add `join`constraints to the intermediate table
+   * 
+   * @private
+   */
+  addPivotJoin() {
+    var alias = this.name + '_pivot'
+    
+    this.query.join(
+      this.table + ' as ' + alias
+      alias + '.' + this.targetKey,
+      this.query.getQualifiedColumn(this.target.primaryKey)
+    )
   }
   
 }
