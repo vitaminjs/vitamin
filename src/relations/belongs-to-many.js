@@ -22,14 +22,16 @@ export default class extends mixin(Relation) {
   constructor(name, parent, target, pivot, pfk, tfk) {
     super(name, parent, target)
     
+    this.pivot = _.isFunction(pivot) ? pivot.make() : new Model
+    this.table = _.isString(pivot) ? pivot : this.pivot.tableName
+    
     this.localKey = parent.primaryKey
     this.pivotColumns = [pfk, tfk]
-    this.pivot = new Model
     this.targetKey = tfk
     this.otherKey = pfk
-    this.table = pivot
     
     // add pivot table join
+    this._through = this.newPivotQuery(false).from(this.table, name + '_pivot')
     this.addPivotJoin()
   }
   
@@ -111,9 +113,7 @@ export default class extends mixin(Relation) {
    * @return promise
    */
   attach(ids) {
-    if (! _.isArray(ids) ) ids = [ids]
-    
-    var records = this.createPivotRecords(ids)
+    var records = this.createPivotRecords(_.isArray(ids) ? ids : [ids])
     
     return this.newPivotQuery(false).insert(records)
   }
@@ -235,7 +235,7 @@ export default class extends mixin(Relation) {
    * @private
    */
   getCompareKey() {
-    return this.getPivotAlias() + '.' + this.otherKey
+    return this._through.getQualifiedColumn(this.otherKey)
   }
   
   /**
@@ -266,7 +266,7 @@ export default class extends mixin(Relation) {
    */
   addPivotColumns() {
     var columns = this.pivotColumns.map(col => {
-      return this.getPivotAlias() + '.' + col + ' as pivot_' + col
+      return this._through.getQualifiedColumn(col) + ' as pivot_' + col
     })
     
     this.query.toBase().select(columns)
@@ -281,9 +281,7 @@ export default class extends mixin(Relation) {
    * @private
    */
   buildDictionary(related, key) {
-    return related.groupBy(model => {
-      return model.get('pivot_' + key)
-    })
+    return related.groupBy(model => model.related.pivot.get(key))
   }
   
   /**
@@ -292,23 +290,11 @@ export default class extends mixin(Relation) {
    * @private
    */
   addPivotJoin() {
-    var alias = this.getPivotAlias()
-    
     this.query.join(
-      this.table + ' as ' + alias,
-      alias + '.' + this.targetKey,
+      this.table + ' as ' + this._through.alias,
+      this._through.getQualifiedColumn(this.targetKey),
       this.query.getQualifiedColumn(this.target.primaryKey)
     )
-  }
-  
-  /**
-   * Get the pivot table alias name
-   * 
-   * @return string
-   * @private
-   */
-  getPivotAlias() {
-    return this.name + '_pivot'
   }
   
 }

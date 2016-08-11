@@ -40,9 +40,47 @@ export default class extends Query {
     return this.firstOrNew(attrs).then(model => {
       if ( _.isFunction(this.relation.create) ) {
         return this.relation.create(attrs, returning)
-      } 
+      }
       
       return model.save(returning)
+    })
+  }
+  
+  /**
+   * Fetch many records from the database
+   * 
+   * @param {Array} columns
+   * @return promise
+   */
+  fetch(columns) {
+    return super.fetch(...arguments).tap(this.hydratePivotAttributes.bind(this))
+  }
+  
+  /**
+   * Hydrate pivot attributes
+   * 
+   * @param {Collection} collection
+   * @private
+   */
+  hydratePivotAttributes(collection) {
+    if ( _.isEmpty(this.relation.pivotColumns) ) return
+    
+    collection.forEach(model => {
+      var data = {}
+      
+      // unset the pivot attributes from the target model
+      _.each(model.getData(), (value, attr) => {
+        if ( attr.indexOf('pivot_') === 0 ) {
+          data[attr.substring(6)] = value
+          model.unset(attr, true)
+        }
+      })
+      
+      // prevent adding an empty `pivot` model
+      if ( _.isEmpty(data) ) return
+      
+      // set the pivot attributes as a pivot model
+      model.setRelated('pivot', this.relation.pivot.newInstance(data, true))
     })
   }
   
