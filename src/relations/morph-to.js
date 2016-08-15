@@ -16,8 +16,8 @@ export default class extends Relation {
    * @param {String} pk target model primary key
    * @constructor
    */
-  constructor(name, parent, type, fk, pk = null) {
-    super(name, parent, parent, fk, pk)
+  constructor(name, parent, target, type, fk, pk = null) {
+    super(name, parent, target, fk, pk)
     
     this.morphType = type
   }
@@ -29,7 +29,9 @@ export default class extends Relation {
    * @return parent model
    */
   associate(model) {
-    return super.associate(model).set(this.morphType, model.morphName || model.tableName)
+    var morphName = model.morphName || model.tableName
+    
+    return super.associate(model).set(this.morphType, morphName)
   }
   
   /**
@@ -67,7 +69,7 @@ export default class extends Relation {
         
         this.otherKey = target.primaryKey
         
-        // run a separate query for each model group
+        // run a separate query for each model type
         return target.newQuery()
           .findMany(this.getKeys(_models))
           .then(res => this.populate(_models, res))
