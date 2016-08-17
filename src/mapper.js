@@ -69,18 +69,33 @@ export default class {
    * @return model constructor
    */
   build() {
-    var ctor = this.modelClass.extend(this.methods, this.statics)
+    var _this = this
+    var proto = _.clone(this.methods)
     
-    ctor.prototype.mapper       = this
-    ctor.prototype.idAttribute  = this.primaryKey
-    ctor.prototype.defaults     = this.getDefaults()
+    // add prototype properties
+    proto.mapper = this
+    proto.idAttribute = this.primaryKey
+    proto.defaults = this.getDefaults()
     
-    return ctor
+    // TODO add relationship queries
+    _.each(this.relations, name => {
+      Object.defineProperty(proto, name, {
+        writable: true,
+        enumerable: true,
+        configurable: true,
+        get: function () {
+          return _this.getRelation(name).addConstraints(this)
+        }
+      })
+    })
+    
+    return this.modelClass.extend(proto, this.statics)
   }
   
   /**
    * Get the model constructor from the registry
    * 
+   * @param {String} name
    * @return model constructor
    */
   model(name) {
@@ -107,6 +122,28 @@ export default class {
   }
   
   /**
+   * Create a new record into the database
+   * 
+   * @param {Object} attrs
+   * @param {Array} returning
+   * @return promise
+   */
+  create(attrs, returning = ['*']) {
+    return this.save(this.newInstance(attrs), returning)
+  }
+  
+  /**
+   * Create many instances of the related model
+   * 
+   * @param {Array} records
+   * @parma {Array} returning
+   * @return promise
+   */
+  createMany(records, returning = ['*']) {
+    return Promise.map(records, attrs => this.create(attrs, returning))
+  }
+  
+  /**
    * Save the model in the database
    * 
    * @param {Model} model
@@ -119,6 +156,17 @@ export default class {
       .tap(() => this.emitter.emit('saving', model))
       .tap(() => model.exists ? this._update(...arguments) : this._insert(...arguments))
       .tap(() => this.emitter.emit('saved', model))
+  }
+  
+  /**
+   * Save the related models
+   * 
+   * @param {Array} models
+   * @parma {Array} returning
+   * @return promise
+   */
+  saveMany(models, returning = ['*']) {
+    return Promise.map(models, model => this.save(model, returning))
   }
   
   /**
@@ -138,11 +186,11 @@ export default class {
   /**
    * Begin querying the mapper on a given connection
    * 
-   * @param {Object} connection knex instance
+   * @param {Object} knex instance
    * @return this mapper
    */
-  use(connection) {
-    this.connection = connection
+  use(knex) {
+    this.connection = knex
     return this
   }
   
@@ -167,28 +215,6 @@ export default class {
     }
     
     return Promise.resolve(model)
-  }
-  
-  /**
-   * Update the creation and update timestamps
-   * 
-   * @param {Model} model
-   * @return this mapper
-   */
-  updateTimestamps(model) {
-    var time = this.freshTimestamp()
-    var useCreatedAt = !!this.createdAtColumn
-    var useUpdatedAt = !!this.updatedAtColumn
-    
-    if ( useUpdatedAt && !model.isDirty(this.updatedAtColumn) ) {
-      model.set(this.updatedAtColumn, time)
-    }
-    
-    if ( useCreatedAt && this.exists && !model.isDirty(this.createdAtColumn) ) {
-      model.set(this.createdAtColumn, time)
-    }
-    
-    return this
   }
   
   /**
@@ -234,8 +260,109 @@ export default class {
     
     if ( relation instanceof Relation ) return relation
     
-    // TODO use custom error class
+    // TODO use a custom error class
     throw new Error("Relationship must be an object of type 'Relation'")
+  }
+  
+  /**
+   * Define a has-one relationship
+   * 
+   * @param {Model} related
+   * @param {Object} config { as*, foreignKey, localKey }
+   * @return relation
+   * @private
+   */
+  hasOne(related, config = {}) {
+    var pk = config.localKey || this.primaryKey
+    var target = this.model(related).prototype.mapper
+    var HasOne = require('./relations/has-one').default
+    
+    return new HasOne(config.as, this, target, config.foreignKey, pk)
+  }
+  
+  /**
+   * Define a morph-one relationship
+   * 
+   * @param {Model} related
+   * @param {Object} config { as*, name, type, foreignKey, localKey }
+   * @return relation
+   * @private
+   */
+  morphOne(related, config = {}) {
+    var pk = config.localKey || this.primaryKey
+    var type = config.type || config.name + '_type'
+    var fk = config.foreignKey || config.name + '_id'
+    var target = this.model(related).prototype.mapper
+    var MorphOne = require('./relations/morph-one').default
+    
+    return new MorphOne(config.as, this, target, type, fk, pk)
+  }
+  
+  /**
+   * Define a has-many relationship
+   * 
+   * @param {Model} related
+   * @param {Object} config { as*, foreignKey, localKey }
+   * @return relation
+   * @private
+   */
+  hasMany(related, config = {}) {
+    var pk = config.localKey || this.primaryKey
+    var target = this.model(related).prototype.mapper
+    var HasMany = require('./relations/has-many').default
+    
+    return new HasMany(config.as, this, target, config.foreignKey, pk)
+  }
+  
+  /**
+   * Define a morph-many relationship
+   * 
+   * @param {Model} related
+   * @param {Object} config { as*, name, type, foreignKey, localKey }
+   * @return relation
+   * @private
+   */
+  morphMany(related, config = {}) {
+    var pk = config.localKey || this.primaryKey
+    var type = config.type || config.name + '_type'
+    var fk = config.foreignKey || config.name + '_id'
+    var MorphOne = require('./relations/morph-one').default
+    
+    return new MorphOne(config.as, this, related.make(), type, fk, pk)
+  }
+  
+  /**
+   * Define a belongs-to relationship
+   * 
+   * @param {Model} related
+   * @param {Object} config { as*, foreignKey, targetKey }
+   * @return relation
+   * @private
+   */
+  belongsTo(related, config) {
+    var target = related.make()
+    var pk = config.targetKey || target.primaryKey
+    var fk = config.foreignKey || config.as + '_id'
+    var BelongsTo = require('./relations/belongs-to').default
+    
+    return new BelongsTo(config.as, this, target, fk, pk)
+  }
+  
+  /**
+   * Define a belongs-to-many relationship
+   * 
+   * @param {Model} related
+   * @param {Object} config { as*, pivot, foreignKey, targetKey }
+   * @return relation
+   * @private
+   */
+  belongsToMany(related, config) {
+    var table = config.pivot || null
+    var tfk = config.targetKey || null
+    var pfk = config.foreignKey || null
+    var BelongsToMany = require('./relations/belongs-to-many').default
+    
+    return new BelongsToMany(config.as, this, related.make(), table, pfk, tfk)
   }
   
   /**
@@ -262,7 +389,7 @@ export default class {
     return Promise
       .resolve(model)
       .tap(() => this.emitter.emit('creating', model))
-      .tap(() => this.timestamps && this.updateTimestamps(model))
+      .tap(() => this.timestamps && this._updateTimestamps(model))
       .tap(() => {
         return this
           .newQuery()
@@ -285,7 +412,7 @@ export default class {
     return Promise
       .resolve(model)
       .tap(() => this.emitter.emit('updating', model))
-      .tap(() => this.timestamps && this.updateTimestamps(model))
+      .tap(() => this.timestamps && this._updateTimestamps(model))
       .tap(() => {
         return this
           .newQuery()
@@ -315,6 +442,26 @@ export default class {
       
       // resolve with a plain object to populate the model data
       return qb.where(this.primaryKey, id).first(columns)
+    }
+  }
+  
+  /**
+   * Update the creation and update timestamps
+   * 
+   * @param {Model} model
+   * @private
+   */
+  _updateTimestamps(model) {
+    var time = this.freshTimestamp()
+    var useCreatedAt = !!this.createdAtColumn
+    var useUpdatedAt = !!this.updatedAtColumn
+    
+    if ( useUpdatedAt && !model.isDirty(this.updatedAtColumn) ) {
+      model.set(this.updatedAtColumn, time)
+    }
+    
+    if ( useCreatedAt && this.exists && !model.isDirty(this.createdAtColumn) ) {
+      model.set(this.createdAtColumn, time)
     }
   }
   
