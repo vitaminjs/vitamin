@@ -1,4 +1,5 @@
 
+import Promise from 'bluebird'
 import Query from './query'
 import _ from 'underscore'
 
@@ -9,24 +10,85 @@ export default class {
    * BaseRelation constructor
    * 
    * @param {String} name of the relationship
-   * @param {Model} parent model instance
-   * @param {Model} target model instance
+   * @param {Model} parent mapper instance
+   * @param {Model} target mapper instance
    * @constructor
    */
-  constructor(name, parent, target) {
+  constructor(name, parent, target = null) {
     if (! name ) throw new Error("The name of the relation is required")
-    
-    var query = new Query(target.newQuery()).setRelation(this)
     
     this.name   = name
     this.parent = parent
-    this.target = target
     
     this.localKey = null // parent key
     this.otherKey = null // target key
     
-    this.constraints = false
-    this.query = query.from(target.tableName, name)
+    if ( target != null ) this.setTarget(target)
+  }
+  
+  /**
+   * Set the target mapper instance
+   * 
+   * @param {Mapper} target
+   * @return this relation
+   */
+  setTarget(target) {
+    this.query = new Query(target.newQuery()).setRelation(this)
+    this.target = target
+    return this
+  }
+  
+  /**
+   * Get the relation query
+   * 
+   * @return query
+   */
+  getQuery() {
+    return this.query
+  }
+  
+  /**
+   * Create a new instance of the related model
+   * 
+   * @param {Object} attrs
+   * @param {Array} returning
+   * @return promise
+   */
+  create(attrs, returning = ['*']) {
+    return this.target.create(...arguments)
+  }
+  
+  /**
+   * Create many instances of the related model
+   * 
+   * @param {Array} records
+   * @parma {Array} returning
+   * @return promise
+   */
+  createMany(records, returning = ['*']) {
+    return Promise.map(records, attrs => this.create(attrs, returning))
+  }
+  
+  /**
+   * Save the related model
+   * 
+   * @param {Model} model
+   * @param {Array} returning
+   * @return promise
+   */
+  save(model, returning = ['*']) {
+    return this.target.save(...arguments)
+  }
+  
+  /**
+   * Save the related models
+   * 
+   * @param {Array} models
+   * @parma {Array} returning
+   * @return promise
+   */
+  saveMany(models, returning = ['*']) {
+    return Promise.map(models, model => this.save(model, returning))
   }
   
   /**
@@ -38,20 +100,6 @@ export default class {
   modify(fn) {
     fn(this.query, ..._.rest(arguments))
     return this
-  }
-  
-  /**
-   * Get the relation query
-   * 
-   * @return query
-   */
-  getQuery() {
-    if (! this.constraints ) {
-      this.constraints = true
-      this.addLoadConstraints()
-    }
-    
-    return this.query
   }
   
   /**
@@ -68,10 +116,13 @@ export default class {
   /**
    * Add constraints on the relation query
    * 
-   * @private
+   * @param {Model} model
+   * @return this relation
    */
-  addLoadConstraints() {
-    this.query.where(this.getCompareKey(), this.parent.get(this.localKey))
+  addConstraints(model) {
+    this.query.where(this.getCompareKey(), model.get(this.localKey))
+    this.model = model
+    return this
   }
   
   /**
