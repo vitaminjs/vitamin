@@ -6,8 +6,6 @@ import registry from './registry'
  * Initialize Vitamin
  */
 module.exports = function initialize(knex) {
-  // add knex instance to all models as `connection` property
-  Mapper.prototype.connection = knex
   
   return {
     
@@ -24,11 +22,12 @@ module.exports = function initialize(knex) {
       if ( options ) {
         var mapper = options instanceof Mapper ? options : new Mapper(options)
         
-        return registry.set(name, mapper.build())
+        return registry.set(name, mapper.use(knex).build())
       }
       
       return registry.get(name)
     }
     
   }
+  
 }
