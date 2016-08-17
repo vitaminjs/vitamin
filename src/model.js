@@ -1,10 +1,7 @@
 
 import NotFoundError from './errors/model-not-found'
-import Relation from './relations/base'
 import BaseModel from 'vitamin-model'
-import Collection from './collection'
 import Promise from 'bluebird'
-import Query from './query'
 import _ from 'underscore'
 
 /**
@@ -20,23 +17,9 @@ class Model extends BaseModel {
    * @constructor
    */
   constructor(data = {}, exists = false) {
-    super(data)
+    super(...arguments)
     
-    if ( exists ) this.setData(data, true)
-    
-    this.exists = exists
     this.related = {}
-  }
-  
-  /**
-   * A factory helper to instanciate models without using `new`
-   * 
-   * @param {Object} data
-   * @param {Boolean} exists
-   * @return model instance
-   */
-  static make(data = {}, exists = false) {
-    return new this(...arguments)
   }
   
   /**
@@ -45,7 +28,7 @@ class Model extends BaseModel {
    * @return query instance
    */
   static query() {
-    return this.make().newQuery()
+    return this.prototype.mapper.newQuery()
   }
   
   /**
@@ -81,12 +64,7 @@ class Model extends BaseModel {
   save(returning = ['*']) {
     if (! this.isDirty() ) return Promise.resolve(this)
     
-    return Promise
-      .bind(this)
-      .then(() => this.emit('saving', this))
-      .then(() => this.exists ? this._update(returning) : this._insert(returning))
-      .then(() => this.emit('saved', this))
-      .return(this)
+    return this.mapper.save(this, returning)
   }
   
   /**
@@ -110,87 +88,7 @@ class Model extends BaseModel {
   destroy() {
     if (! this.exists ) return Promise.reject(new NotFoundError())
     
-    var pk = this.primaryKey, id = this.getId()
-    
-    return Promise
-      .bind(this)
-      .then(() => this.emit('deleting', this))
-      .then(() => this.newQuery().where(pk, id).destroy())
-      .then(() => this.emit('deleted', this))
-      .return(this)
-  }
-  
-  /**
-   * Get the model query builder
-   * 
-   * @return Query instance
-   */
-  newQuery() {
-    var qb = this.connection.queryBuilder()
-    
-    return (new Query(qb)).from(this.tableName).setModel(this)
-  }
-  
-  /**
-   * Create a new instance of the current model
-   * 
-   * @param {Object} data
-   * @param {Booleab} exists
-   * @return Model instance
-   */
-  newInstance(data = {}, exists = false) {
-    return this.constructor.make(...arguments)
-  }
-  
-  /**
-   * Create a new collection of models
-   * 
-   * @param {Array} models
-   * @return Collection instance
-   */
-  newCollection(models = []) {
-    return new Collection(models)
-  }
-  
-  /**
-   * Begin querying the model on a given connection
-   * 
-   * @param {Object} connection knex instance
-   * @return this model
-   */
-  use(connection) {
-    this.connection = connection
-    return this
-  }
-  
-  /**
-   * Get a fresh timestamp for the model
-   * 
-   * @return string ISO time
-   */
-  freshTimestamp() {
-    return new Date().toISOString()
-  }
-  
-  /**
-   * Update the creation and update timestamps
-   * 
-   * @return this model
-   */
-  updateTimestamps() {
-    var time = this.freshTimestamp()
-    var useCreatedAt = !!this.createdAtColumn
-    var useUpdatedAt = !!this.updatedAtColumn
-    
-    if ( useUpdatedAt && !this.isDirty(this.updatedAtColumn) ) {
-      this.set(this.updatedAtColumn, time)
-    }
-    
-    if ( useCreatedAt && this.exists && !this.isDirty(this.createdAtColumn) ) {
-      this.set(this.createdAtColumn, time)
-    }
-    
-    return this
+    return this.mapper.destroy(this)
   }
   
   /**
@@ -199,9 +97,7 @@ class Model extends BaseModel {
    * @return promise
    */
   touch() {
-    if (! this.timestamps ) return Promise.resolve(this)
-  
-    return this.updateTimestamps().save()
+    return this.mapper.touch(this)
   }
   
   /**
@@ -211,7 +107,7 @@ class Model extends BaseModel {
    * @return promise
    */
   load(relations) {
-    return this.newQuery().withRelated(...arguments).loadRelated([this]).return(this)
+    return this.mapper.newQuery().withRelated(...arguments).loadRelated([this]).return(this)
   }
   
   /**
@@ -227,27 +123,22 @@ class Model extends BaseModel {
   }
   
   /**
+   * Get the relationship value
+   * 
+   * @return any
+   */
+  getRelated(name) {
+    return this.related[name]
+  }
+  
+  /**
    * Determine if the given relationship is loaded
    * 
    * @param {String} name
    * @return boolean
    */
   hasRelated(name) {
-    return !!this.related[name]
-  }
-  
-  /**
-   * Create the relationship mapper
-   * 
-   * @param {String} name
-   * return relation instance
-   */
-  getRelation(name) {
-    var relation = _.result(this, name)
-    
-    if ( relation instanceof Relation ) return relation
-    
-    throw new Error("Relationship must be an object of type 'Relation'")
+    return !!this.getRelated(name)
   }
   
   /**
@@ -350,80 +241,7 @@ class Model extends BaseModel {
     return new BelongsToMany(config.as, this, related.make(), table, pfk, tfk)
   }
   
-  /**
-   * Perform a model insert operation
-   * 
-   * @param {String|Array} returning
-   * @return promise
-   * @private
-   */
-  _insert(returning) {
-    return Promise
-      .bind(this)
-      .then(() => this.emit('creating', this))
-      .then(() => this.timestamps && this.updateTimestamps())
-      .then(() => {
-        return this
-          .newQuery()
-          .insert(this.getData())
-          .then(res => this._emulateReturning(res, returning))
-          .then(res => this.setData(res, true))
-      })
-      .then(() => this.emit('created', this))
-  }
-  
-  /**
-   * Perform a model update operation
-   * 
-   * @param {String|Array} returning
-   * @return promise
-   * @private
-   */
-  _update(returning) {
-    return Promise
-      .bind(this)
-      .then(() => this.emit('updating', this))
-      .then(() => this.timestamps && this.updateTimestamps())
-      .then(() => {
-        return this
-          .newQuery()
-          .where(this.primaryKey, this.getId())
-          .update(this.getDirty())
-          .then(res => this._emulateReturning(res, returning))
-          .then(res => this.setData(res, true))
-      })
-      .then(() => this.emit('updated', this))
-  }
-  
-  /**
-   * Emulate the `returning` SQL clause
-   * 
-   * @param {Array} result
-   * @param {Array} columns
-   * @private
-   */
-  _emulateReturning(result, columns = ['*']) {
-    var id = result[0]
-    
-    if ( _.isObject(id) ) return id
-    else {
-      let qb = this.newQuery().toBase()
-      
-      if ( this.exists ) id = this.getId()
-      
-      // resolve with a plain object to populate the model data
-      return qb.where(this.primaryKey, id).first(columns)
-    }
-  }
-  
 }
-
-/**
- * Define the model table name
- * 
- * @type {String}
- */
-Model.prototype.tableName = null
 
 /**
  * Define the model's polymorphic name
@@ -431,27 +249,6 @@ Model.prototype.tableName = null
  * @type {String}
  */
 Model.prototype.morphName = null
-
-/**
- * Determine if the model uses timestamps
- * 
- * @type {Boolean}
- */
-Model.prototype.timestamps = false
-
-/**
- * The name of the "created at" column
- * 
- * @type {String}
- */
-Model.prototype.createdAtColumn = 'created_at'
-
-/**
- * The name of the "updated at" column
- * 
- * @type {String}
- */
-Model.prototype.updatedAtColumn = 'updated_at'
 
 // exports
 export default Model
