@@ -256,113 +256,145 @@ export default class {
    * return relation instance
    */
   getRelation(name) {
-    var relation = _.result(this.relations, name)
+    var relation = this.relations[name].call(this)
     
-    if ( relation instanceof Relation ) return relation
+    if ( relation instanceof Relation ) return relation.setName(name)
     
     // TODO use a custom error class
-    throw new Error("Relationship must be an object of type 'Relation'")
+    throw new Error("The relationship must be an object of type 'Relation'")
   }
   
   /**
    * Define a has-one relationship
    * 
    * @param {Model} related
-   * @param {Object} config { as*, foreignKey, localKey }
+   * @param {String} fk target model foreign key
+   * @param {String} pk parent model primary key
    * @return relation
-   * @private
    */
-  hasOne(related, config = {}) {
-    var pk = config.localKey || this.primaryKey
-    var target = this.model(related).prototype.mapper
+  hasOne(related, fk = null, pk = null) {
     var HasOne = require('./relations/has-one').default
     
-    return new HasOne(config.as, this, target, config.foreignKey, pk)
+    if (! pk ) pk = this.primaryKey
+    
+    if (! fk ) fk = this.name + '_id'
+    
+    if ( _.isString(related) ) related = this.model(related)
+    
+    return new HasOne(this, related.prototype.mapper, fk, pk)
   }
   
   /**
    * Define a morph-one relationship
    * 
    * @param {Model} related
-   * @param {Object} config { as*, name, type, foreignKey, localKey }
+   * @param {String} name of the morph
+   * @param {String} type target model type column
+   * @param {String} fk target model foreign key
+   * @param {String} pk parent model primary key
    * @return relation
-   * @private
    */
-  morphOne(related, config = {}) {
-    var pk = config.localKey || this.primaryKey
-    var type = config.type || config.name + '_type'
-    var fk = config.foreignKey || config.name + '_id'
-    var target = this.model(related).prototype.mapper
+  morphOne(related, name, type = null, fk = null, pk = null) {
     var MorphOne = require('./relations/morph-one').default
     
-    return new MorphOne(config.as, this, target, type, fk, pk)
+    if (! pk ) pk = this.primaryKey
+    
+    if (! type ) type = name + '_type'
+    
+    if (! fk ) fk = name + '_id'
+    
+    if ( _.isString(related) ) related = this.model(related)
+    
+    return new MorphOne(this, related.prototype.mapper, type, fk, pk)
   }
   
   /**
    * Define a has-many relationship
    * 
    * @param {Model} related
-   * @param {Object} config { as*, foreignKey, localKey }
+   * @param {String} fk target model foreign key
+   * @param {String} pk parent model primary key
    * @return relation
-   * @private
    */
-  hasMany(related, config = {}) {
-    var pk = config.localKey || this.primaryKey
-    var target = this.model(related).prototype.mapper
+  hasMany(related, fk = null, pk = null) {
     var HasMany = require('./relations/has-many').default
     
-    return new HasMany(config.as, this, target, config.foreignKey, pk)
+    if (! pk ) pk = this.primaryKey
+    
+    if (! fk ) fk = this.name + '_id'
+    
+    if ( _.isString(related) ) related = this.model(related)
+    
+    return new HasMany(this, related.prototype.mapper, fk, pk)
   }
   
   /**
    * Define a morph-many relationship
    * 
    * @param {Model} related
-   * @param {Object} config { as*, name, type, foreignKey, localKey }
+   * @param {String} name of the morph
+   * @param {String} type target model type column
+   * @param {String} fk target model foreign key
+   * @param {String} pk parent model primary key
    * @return relation
-   * @private
    */
-  morphMany(related, config = {}) {
-    var pk = config.localKey || this.primaryKey
-    var type = config.type || config.name + '_type'
-    var fk = config.foreignKey || config.name + '_id'
-    var MorphOne = require('./relations/morph-one').default
+  morphMany(related, name, type = null, fk = null, pk = null) {
+    var MorphMany = require('./relations/morph-many').default
     
-    return new MorphOne(config.as, this, related.make(), type, fk, pk)
+    if (! pk ) pk = this.primaryKey
+    
+    if (! type ) type = name + '_type'
+    
+    if (! fk ) fk = name + '_id'
+    
+    if ( _.isString(related) ) related = this.model(related)
+    
+    return new MorphMany(this, related.prototype.mapper, type, fk, pk)
   }
   
   /**
    * Define a belongs-to relationship
    * 
    * @param {Model} related
-   * @param {Object} config { as*, foreignKey, targetKey }
+   * @param {String} fk parent model foreign key
+   * @param {String} pk target model primary key
    * @return relation
-   * @private
    */
-  belongsTo(related, config) {
-    var target = related.make()
-    var pk = config.targetKey || target.primaryKey
-    var fk = config.foreignKey || config.as + '_id'
+  belongsTo(related, fk = null, pk = null) {
     var BelongsTo = require('./relations/belongs-to').default
     
-    return new BelongsTo(config.as, this, target, fk, pk)
+    if ( _.isString(related) ) related = this.model(related)
+    
+    related = related.prototype.mapper
+    
+    if (! pk ) pk = related.primaryKey
+    
+    if (! fk ) fk = related.name + '_id'
+    
+    return new BelongsTo(this, related, fk, pk)
   }
   
   /**
    * Define a belongs-to-many relationship
    * 
    * @param {Model} related
-   * @param {Object} config { as*, pivot, foreignKey, targetKey }
+   * @param {String} pivot table name
+   * @param {String} pfk parent model foreign key
+   * @param {String} tfk target model foreign key
    * @return relation
-   * @private
    */
-  belongsToMany(related, config) {
-    var table = config.pivot || null
-    var tfk = config.targetKey || null
-    var pfk = config.foreignKey || null
+  belongsToMany(related, pivot, pfk = null, tfk = null) {
     var BelongsToMany = require('./relations/belongs-to-many').default
     
-    return new BelongsToMany(config.as, this, related.make(), table, pfk, tfk)
+    if ( _.isString(related) ) related = this.model(related)
+    
+    related = related.prototype.mapper
+    
+    if (! pfk ) pfk = this.name + 'id'
+    
+    if (! tfk ) tfk = related.name = '_id'
+    
+    return new BelongsToMany(this, related, pivot, pfk, tfk)
   }
   
   /**
