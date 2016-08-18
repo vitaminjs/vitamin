@@ -1,6 +1,7 @@
 
 import Query from './query'
 import Promise from 'bluebird'
+import registry from '../registry'
 import Relation from './belongs-to'
 
 // exports
@@ -9,15 +10,14 @@ export default class extends Relation {
   /**
    * MorphToRelation constructor
    * 
-   * @param {String} name of the relationship
    * @param {Model} parent model instance
    * @param {String} type
    * @param {String} fk parent model foreign key
    * @param {String} pk target model primary key
    * @constructor
    */
-  constructor(name, parent, target, type, fk, pk = null) {
-    super(name, parent, target, fk, pk)
+  constructor(parent, target, type, fk, pk) {
+    super(parent, target, fk, pk)
     
     this.morphType = type
   }
@@ -29,9 +29,7 @@ export default class extends Relation {
    * @return parent model
    */
   associate(model) {
-    var morphName = model.morphName || model.tableName
-    
-    return super.associate(model).set(this.morphType, morphName)
+    return super.associate(model).set(this.morphType, model.mapper.name)
   }
   
   /**
@@ -49,7 +47,7 @@ export default class extends Relation {
    * @return promise
    */
   load() {
-    var target = this.createModelByName(this.parent.get(this.morphType))
+    var target = this._createModelByName(this.model.get(this.morphType))
     
     return this.setTarget(target).getQuery().first()
   }
@@ -65,7 +63,7 @@ export default class extends Relation {
     
     return Promise
       .map(groups, (_models, type) => {
-        var target = this.createModelByName(type)
+        var target = this._createModelByName(type)
         
         this.otherKey = target.primaryKey
         
@@ -85,12 +83,8 @@ export default class extends Relation {
    * @private
    */
   setTarget(target) {
-    var query = target.newQuery()
-    
-    this.query = query.from(target.tableName, name)
     this.otherKey = target.primaryKey
-    this.target = target
-    
+    super.setTarget(target)
     return this
   }
   
@@ -101,7 +95,7 @@ export default class extends Relation {
    * @return model instance
    * @private
    */
-  createModelByName(name) {
+  _createModelByName(name) {
     return registry.get(name).make()
   }
   
