@@ -7,7 +7,6 @@ export default class extends Relation {
   /**
    * MorphToManyRelation constructor
    * 
-   * @param {String} name of the relation
    * @param {Model} parent model instance
    * @param {Model} target mdoel instance
    * @param {String} type
@@ -16,11 +15,11 @@ export default class extends Relation {
    * @param {String} tfk target model foreign key
    * @constructor
    */
-  constructor(name, parent, target, type, pivot, pfk, tfk) {
-    super(name, parent, target, pivot, pfk, tfk)
+  constructor(parent, target, type, pivot, pfk, tfk) {
+    super(parent, target, pivot, pfk, tfk)
     
     this.morphType = type
-    this.morphName = parent.morphName || parent.tableName
+    this.morphName = parent.name
   }
   
   /**
