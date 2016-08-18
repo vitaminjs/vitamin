@@ -7,23 +7,22 @@ export default class extends Relation {
   /**
    * MorphOneOrManyRelation constructor
    * 
-   * @param {String} name of the relationship
-   * @param {Model} parent model instance
-   * @param {Model} target model instance
+   * @param {Model} parent mapper instance
+   * @param {Model} target mapper instance
    * @param {String} type
    * @param {String} fk target model foreign key
    * @param {String} pk parent model primary key
    * @constructor
    */
-  constructor(name, parent, target, type, fk, pk) {
-    super(name, parent, target, fk, pk)
+  constructor(parent, target, type, fk, pk) {
+    super(parent, target, fk, pk)
     
     this.morphType = type
-    this.morphName = parent.morphName || parent.tableName 
+    this.morphName = parent.name
   }
   
   /**
-   * Attach a model instance to the parent model
+   * Save a related model instance into the database
    * 
    * @param {Model} model
    * @param {Array} returning
