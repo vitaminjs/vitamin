@@ -28,7 +28,7 @@ export default class extends Relation {
    * @return promise
    */
   save(model, returning = ['*']) {
-    return model.set(this.otherKey, this.parent.get(this.localKey)).save(returning)
+    return this.target.save(model.set(this.otherKey, this.model.get(this.localKey)), returning)
   }
   
 }
