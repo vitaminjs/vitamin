@@ -1,6 +1,7 @@
 
 import _ from 'underscore'
 import Model from '../model'
+import Mapper from './mapper'
 import Relation from './base'
 import Promise from 'bluebird'
 import mixin from './mixins/one-to-many'
@@ -11,18 +12,17 @@ export default class extends mixin(Relation) {
   /**
    * BelongsToManyRelation constructor
    * 
-   * @param {String} name of the relation
-   * @param {Model} parent model instance
-   * @param {Model} target mdoel instance
+   * @param {Model} parent mapper instance
+   * @param {Model} target mapper instance
    * @param {String} pivot table name
    * @param {String} pfk parent model foreign key
    * @param {String} tfk target model foreign key
    * @constructor
    */
-  constructor(name, parent, target, pivot, pfk, tfk) {
-    super(name, parent, target)
+  constructor(parent, target, pivot, pfk, tfk) {
+    super(parent, target)
     
-    this.pivot = _.isFunction(pivot) ? pivot.make() : new Model
+    this.pivot = _.isObject(pivot) ? pivot : new Mapper
     this.table = _.isString(pivot) ? pivot : this.pivot.tableName
     
     this.localKey = parent.primaryKey
@@ -31,7 +31,7 @@ export default class extends mixin(Relation) {
     this.otherKey = pfk
     
     // add pivot table join
-    this._through = this.newPivotQuery(false).from(this.table, name + '_pivot')
+    this._through = this.newPivotQuery(false).from(this.table, target.name + '_pivot')
     this.addPivotJoin()
   }
   
