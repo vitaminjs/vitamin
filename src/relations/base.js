@@ -9,17 +9,13 @@ export default class {
   /**
    * BaseRelation constructor
    * 
-   * @param {String} name of the relationship
    * @param {Model} parent mapper instance
    * @param {Model} target mapper instance
    * @constructor
    */
-  constructor(name, parent, target = null) {
-    if (! name ) throw new Error("The name of the relation is required")
-    
-    this.name   = name
+  constructor(parent, target = null) {
+    this.name   = null
     this.parent = parent
-    
     this.localKey = null // parent key
     this.otherKey = null // target key
     
@@ -36,6 +32,19 @@ export default class {
     this.query = new Query(target.newQuery()).setRelation(this)
     this.target = target
     return this
+  }
+  
+  /**
+   * Set the name of the relationship
+   * 
+   * @param {String} name
+   * @return this relation
+   */
+  setName(name) {
+    if ( this.query ) this.query.from(this.target.tableName, name)
+    
+    this.name = name
+    return
   }
   
   /**
@@ -95,10 +104,11 @@ export default class {
    * Modify the query of the relationship
    * 
    * @param {Function} fn
+   * @param {Array} args
    * @return this relation
    */
-  modify(fn) {
-    fn(this.query, ..._.rest(arguments))
+  modify(fn, ...args) {
+    fn(this.query, ...args)
     return this
   }
   
