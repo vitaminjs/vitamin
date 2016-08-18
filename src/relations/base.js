@@ -64,7 +64,7 @@ export default class {
    * @return promise
    */
   create(attrs, returning = ['*']) {
-    return this.target.create(...arguments)
+    return this.save(this.target.newInstance(attrs), returning)
   }
   
   /**
