@@ -1,7 +1,7 @@
 
+import EventEmitter from 'vitamin-events'
 import Relation from './relations/base'
 import Collection from './collection'
-import Emitter from 'vitamin-events'
 import registry from './registry'
 import Promise from 'bluebird'
 import Model from './model'
@@ -30,7 +30,7 @@ export default class {
     this.createAtColumn = options.createdAtColumn || 'created_at'
     this.updatedAtColumn = options.updatedAtColumn || 'updated_at'
     
-    this.emitter = new Emitter()
+    this.emitter = new EventEmitter()
     this._registerEvents(options.events)
   }
   
@@ -74,8 +74,8 @@ export default class {
     
     // add prototype properties
     proto.mapper = this
-    proto.idAttribute = this.primaryKey
     proto.defaults = this.getDefaults()
+    proto.idAttribute = this.primaryKey
     
     // TODO add relationship queries
     _.each(this.relations, name => {
@@ -184,7 +184,7 @@ export default class {
   }
   
   /**
-   * Begin querying the mapper on a given connection
+   * Use a knex object as connection
    * 
    * @param {Object} knex instance
    * @return this mapper
