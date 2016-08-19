@@ -141,6 +141,41 @@ class Model extends BaseModel {
     return !!this.getRelated(name)
   }
   
+  /**
+   * Add a listener for the given event
+   * 
+   * @param {String} event
+   * @param {Function} fn
+   * @return this model
+   */
+  on(event, fn) {
+    this.mapper.emitter.on(...arguments)
+    return this
+  }
+  
+  /**
+   * Remove an event listener
+   * 
+   * @param {String} event
+   * @param {Function} fn
+   * @return this model
+   */
+  off(event, fn) {
+    this.mapper.emitter.off(...arguments)
+    return this
+  }
+  
+  /**
+   * Trigger an event with arguments
+   * 
+   * @param {String} event
+   * @param {Array} args
+   * @return promise
+   */
+  emit(event, ...args) {
+    return this.mapper.emitter.emit(...arguments)
+  }
+  
 }
 
 // exports
