@@ -28,7 +28,7 @@ export default class extends mixin(Relation) {
    * @return parent model
    */
   associate(model) {
-    return this.parent.set(this.localKey, model.get(this.otherKey))
+    return this.model.set(this.localKey, model.get(this.otherKey))
   }
   
   /**
@@ -37,7 +37,7 @@ export default class extends mixin(Relation) {
    * @return parent model
    */
   dissociate() {
-    return this.parent.set(this.localKey, null)
+    return this.model.set(this.localKey, null)
   }
   
 }
