@@ -123,6 +123,17 @@ class Model extends BaseModel {
   }
   
   /**
+   * Unset the relationship value in the model
+   * 
+   * @param {String} name
+   * @return this model
+   */
+  unsetRelated(name) {
+    delete this.related[name]
+    return this
+  }
+  
+  /**
    * Get the relationship value
    * 
    * @return any
