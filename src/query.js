@@ -1,5 +1,7 @@
 
 import _ from 'underscore'
+import Model from './model'
+import Mapper from './mapper'
 import Promise from 'bluebird'
 import BaseQuery from 'vitamin-query'
 import NotFoundError from './errors/model-not-found'
@@ -24,11 +26,11 @@ class Query extends BaseQuery {
   /**
    * Set the model being queried
    * 
-   * @param {Model} model
+   * @param {Mapper} mapper
    * @return this query
    */
-  setModel(model) {
-    this.model = model
+  setModel(mapper) {
+    this.model = mapper
     return this
   }
   
@@ -148,12 +150,13 @@ class Query extends BaseQuery {
    */
   findOrFail(id, columns = ['*']) {
     return this.find(id, columns).then(res => {
-      if (
-        res instanceof this.model.constructor ||
-        ( _.isArray(id) && _.uniq(id).length === res.length )
-      ) return res
+      // it will throw a error if there is no result,
+      // or the models found are different than the given ids,
+      // in case of an array of ids passed in
+      if ( !res || _.isArray(id) && _.uniq(id).length === res.length ) 
+        throw new NotFoundError()
       
-      throw new NotFoundError()
+      return res
     })
   }
   
