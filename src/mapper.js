@@ -19,6 +19,7 @@ export default class {
    */
   constructor(options = {}) {
     this.name = options.name
+    this.defaults = options.defaults
     this.methods = options.methods || {}
     this.statics = options.statics || {}
     this.relations = options.relations || {}
@@ -77,12 +78,10 @@ export default class {
     proto.defaults = this.getDefaults()
     proto.idAttribute = this.primaryKey
     
-    // TODO add relationship queries
+    // add relationship accessors
     _.each(this.relations, name => {
       Object.defineProperty(proto, name, {
-        writable: true,
         enumerable: true,
-        configurable: true,
         get: function () {
           return _this.getRelation(name).addConstraints(this)
         }
@@ -105,20 +104,17 @@ export default class {
   /**
    * Get the model default attributes
    * 
-   * @return function
+   * @return function or plain object
    */
   getDefaults() {
-    if (! this.defaults ) {
-      this.defaults = {}
-      
-      // add only the attributes which have a default value
-      _.each(this.attributes, (config, attr) => {
-        if ( _.has(config, 'default') )
-          this.defaults[attr] = _.result(config, 'default')
-      })
+    return this.defaults ? this.defaults : () => {
+      return _.reduce(this.attributes, (memo, config, attr) => {
+        if ( _.has(config, 'default') ) 
+          memo[attr] = _.result(config, 'default')
+        
+        return memo
+      }, {})
     }
-    
-    return () => { return this.defaults }
   }
   
   /**
