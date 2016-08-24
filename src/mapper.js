@@ -1,4 +1,5 @@
 
+import InvalidRelationError from './errors/invalid-relation-object'
 import EventEmitter from 'vitamin-events'
 import Relation from './relations/base'
 import Collection from './collection'
@@ -256,8 +257,7 @@ export default class {
     
     if ( relation instanceof Relation ) return relation.setName(name)
     
-    // TODO use a custom error class
-    throw new Error("The relationship must be an object of type 'Relation'")
+    throw new InvalidRelationError(name)
   }
   
   /**
