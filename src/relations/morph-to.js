@@ -1,4 +1,5 @@
 
+import _ from 'underscore'
 import Query from './query'
 import Promise from 'bluebird'
 import registry from '../registry'

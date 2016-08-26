@@ -26,8 +26,6 @@ export default class extends Query {
    */
   setRelation(relation) {
     this.relation = relation
-    this.from(this.model.tableName, relation.name)
-    
     return this
   }
   
