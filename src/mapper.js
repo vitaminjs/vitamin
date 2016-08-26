@@ -250,9 +250,11 @@ export default class {
    * return relation instance
    */
   getRelation(name) {
-    var relation = this.relations[name].call(this)
-    
-    if ( relation instanceof Relation ) return relation.setName(name)
+    if ( this.relations[name] ) {
+      let relation = this.relations[name].call(this)
+      
+      if ( relation instanceof Relation ) return relation.setName(name)
+    }
     
     throw new InvalidRelationError(name)
   }
