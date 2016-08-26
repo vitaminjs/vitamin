@@ -80,13 +80,10 @@ export default class {
     proto.idAttribute = this.primaryKey
     
     // add relationship accessors
-    _.each(this.relations, name => {
-      Object.defineProperty(proto, name, {
-        enumerable: true,
-        get: function () {
-          return _this.getRelation(name).addConstraints(this)
-        }
-      })
+    _.each(this.relations, (_, name) => {
+      proto[name] = function () {
+        return _this.getRelation(name).addConstraints(this)
+      }
     })
     
     return this.modelClass.extend(proto, this.statics)
@@ -110,7 +107,7 @@ export default class {
   getDefaults() {
     return this.defaults ? this.defaults : () => {
       return _.reduce(this.attributes, (memo, config, attr) => {
-        if ( _.has(config, 'default') ) 
+        if ( _.has(config, 'default') )
           memo[attr] = _.result(config, 'default')
         
         return memo
