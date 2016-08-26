@@ -1,5 +1,4 @@
 
-import Mapper from './mapper'
 import registry from './registry'
 
 /**
@@ -8,8 +7,6 @@ import registry from './registry'
 module.exports = function initialize(knex) {
   
   return {
-    
-    Mapper,
     
     /**
      * Set/Get a model constructor
@@ -28,7 +25,11 @@ module.exports = function initialize(knex) {
           mapper = new Mapper(options)
         }
         
-        return registry.set(name, mapper.use(knex).build())
+        // we set by default knex as the connection object,
+        // for the given mapper, if not already provided
+        if (! mapper.connection ) mapper.use(knex)
+        
+        return registry.set(name, mapper.build())
       }
       
       return registry.get(name)
