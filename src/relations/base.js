@@ -44,7 +44,7 @@ export default class {
     if ( this.query ) this.query.from(this.target.tableName, name)
     
     this.name = name
-    return
+    return this
   }
   
   /**

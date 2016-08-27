@@ -7,10 +7,11 @@ export default (parent) => class extends parent {
   /**
    * Get the result of the relationship
    * 
+   * @param {Array} columns
    * @return promise
    */
-  load() {
-    this.getQuery().fetch()
+  load(columns) {
+    return this.getQuery().fetch(...arguments)
   }
   
   /**

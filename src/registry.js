@@ -12,10 +12,11 @@ export default {
    * @return model
    */
   set(name, model) {
-    if( this.has(name) ) throw new Error(name + " is already defined in the registry")
+    if ( this.has(name) ) 
+      throw new Error(name + " is already defined in the registry")
     
     return models[name] = model
-  }
+  },
   
   /**
    * Get the model by name
@@ -24,8 +25,11 @@ export default {
    * @return model constructor
    */
   get(name) {
+    if (! this.has(name) ) 
+      throw new Error(name + " is not defined in the registry")
+    
     return models[name]
-  }
+  },
   
   /**
    * Determine if the model name exists in the registry
@@ -34,7 +38,7 @@ export default {
    * @return boolean
    */
   has(name) {
-    return !!this.get(name)
+    return !!models[name]
   }
   
 }

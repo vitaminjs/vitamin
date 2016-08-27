@@ -1,4 +1,5 @@
 
+import Mapper from './mapper'
 import registry from './registry'
 
 /**
@@ -20,10 +21,9 @@ module.exports = function initialize(knex) {
         let mapper
         
         if ( options instanceof Mapper ) mapper = options
-        else {
-          options.name = name
-          mapper = new Mapper(options)
-        }
+        else mapper = new Mapper(options)
+        
+        mapper.name = name
         
         // we set by default knex as the connection object,
         // for the given mapper, if not already provided

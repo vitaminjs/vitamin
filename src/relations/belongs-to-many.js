@@ -1,9 +1,9 @@
 
 import _ from 'underscore'
 import Model from '../model'
-import Mapper from './mapper'
 import Relation from './base'
 import Promise from 'bluebird'
+import Mapper from '../mapper'
 import mixin from './mixins/one-to-many'
 
 // exports
@@ -12,8 +12,8 @@ export default class extends mixin(Relation) {
   /**
    * BelongsToManyRelation constructor
    * 
-   * @param {Model} parent mapper instance
-   * @param {Model} target mapper instance
+   * @param {Mapper} parent mapper instance
+   * @param {Mapper} target mapper instance
    * @param {String} pivot table name
    * @param {String} pfk parent model foreign key
    * @param {String} tfk target model foreign key
@@ -22,7 +22,7 @@ export default class extends mixin(Relation) {
   constructor(parent, target, pivot, pfk, tfk) {
     super(parent, target)
     
-    this.pivot = _.isObject(pivot) ? pivot : new Mapper
+    this.pivot = pivot // TODO create a pivot table mapper 
     this.table = _.isString(pivot) ? pivot : this.pivot.tableName
     
     this.localKey = parent.primaryKey
@@ -30,9 +30,7 @@ export default class extends mixin(Relation) {
     this.targetKey = tfk
     this.otherKey = pfk
     
-    // add pivot table join
     this._through = this.newPivotQuery(false).from(this.table, target.name + '_pivot')
-    this.addPivotJoin()
   }
   
   /**
@@ -187,9 +185,10 @@ export default class extends mixin(Relation) {
    * @private
    */
   newPivotQuery(constraints = true) {
-    var query = this.pivot.newQuery().from(this.table)
+    var query = this.pivot.newQuery()
     
-    if ( constraints ) query.where(this.otherKey, this.parent.get(this.localKey))
+    if ( constraints ) 
+      query.where(this.otherKey, this.parent.get(this.localKey))
     
     return query
   }
@@ -246,6 +245,7 @@ export default class extends mixin(Relation) {
   addLoadConstraints() {
     super.addLoadConstraints()
     this.addPivotColumns()
+    this.addPivotJoin()
   }
   
   /**
@@ -257,6 +257,7 @@ export default class extends mixin(Relation) {
   addEagerLoadConstraints(models) {
     super.addEagerLoadConstraints(models)
     this.addPivotColumns()
+    this.addPivotJoin()
   }
   
   /**
@@ -291,7 +292,7 @@ export default class extends mixin(Relation) {
    */
   addPivotJoin() {
     this.query.join(
-      this.table + ' as ' + this._through.alias,
+      this._through.table + ' as ' + this._through.alias,
       this._through.getQualifiedColumn(this.targetKey),
       this.query.getQualifiedColumn(this.target.primaryKey)
     )
