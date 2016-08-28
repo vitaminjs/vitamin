@@ -9,13 +9,13 @@ export default class extends Relation {
    * 
    * @param {Model} parent model instance
    * @param {Model} target mdoel instance
-   * @param {String} type
    * @param {String} pivot table name
+   * @param {String} type
    * @param {String} pfk parent model foreign key
    * @param {String} tfk target model foreign key
    * @constructor
    */
-  constructor(parent, target, type, pivot, pfk, tfk) {
+  constructor(parent, target, pivot, type, pfk, tfk) {
     super(parent, target, pivot, pfk, tfk)
     
     this.morphType = type

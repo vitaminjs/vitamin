@@ -395,6 +395,52 @@ export default class {
   }
 
   /**
+   * Define a morph-to-many relationship
+   *
+   * @param {Model} related
+   * @param {String} pivot table name
+   * @param {String} name of the morph
+   * @param {String} type column name
+   * @param {String} pfk parent model foreign key
+   * @param {String} tfk target model foreign key
+   * @return relation
+   */
+  morphToMany(related, pivot, name, type = null, pfk = null, tfk = null) {
+    var MorphToMany = require('./relations/morph-to-many').default
+
+    if ( _.isString(related) ) related = this.model(related)
+
+    related = related.prototype.mapper
+
+    if (! pfk ) pfk = name + '_id'
+    
+    if (! type ) type = name + '_type'
+
+    if (! tfk ) tfk = related.name + '_id'
+    
+    return new MorphToMany(this, related, pivot, type, pfk, tfk)
+  }
+  
+  /**
+   * Define the inverse of morph-to-many relationship
+   * 
+   * @param {Model} related
+   * @param {String} pivot table name
+   * @param {String} name of the morph
+   * @param {String} type column name
+   * @param {String} pfk parent model foreign key
+   * @param {String} tfk target model foreign key
+   * @return relation
+   */
+  morphedByMany(related, pivot, name, type = null, pfk = null, tfk = null) {
+    if (! tfk ) tfk = name + '_id'
+    
+    if (! pfk ) pfk = this.name + '_id'
+    
+    return this.morphToMany(related, pivot, name, type, pfk, tfk)
+  }
+
+  /**
    * Override it to register shared events between mappers
    *
    * @param {Object} events
