@@ -23,6 +23,17 @@ export default class extends Relation {
   }
   
   /**
+   * Add constraints on the relation query
+   * 
+   * @param {Model} model
+   * @return this relation
+   */
+  addConstraints(model) {
+    this.addMorphTypeConstraint()
+    return super.addConstraints(model)
+  }
+  
+  /**
    * Create a query for the pivot table
    * 
    * @param {Boolean} constraints
@@ -69,16 +80,6 @@ export default class extends Relation {
    */
   addMorphTypeConstraint() {
     this.query.where(this.getQualifiedTypeColumn(), this.morphName)
-  }
-  
-  /**
-   * Add constraints on the relation query
-   * 
-   * @private
-   */
-  addLoadConstraints() {
-    super.addLoadConstraints()
-    this.addMorphTypeConstraint()
   }
   
   /**

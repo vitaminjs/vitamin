@@ -27,10 +27,10 @@ export default class {
     this.defaults = null
     this.tableName = null
     this.primaryKey = 'id'
+    this.modelClass = Model
     this.timestamps = false
     this.createdAtColumn = 'created_at'
     this.updatedAtColumn = 'updated_at'
-    this.modelClass = Model
 
     _.extend(this, options)
 

@@ -33,6 +33,17 @@ export default class extends Relation {
   }
   
   /**
+   * Add constraints on the relation query
+   * 
+   * @param {Model} model
+   * @return this relation
+   */
+  addConstraints(model) {
+    this.addMorphTypeConstraint()
+    return super.addConstraints(model)
+  }
+  
+  /**
    * Get the qualified morph type name
    * 
    * @return string
@@ -48,16 +59,6 @@ export default class extends Relation {
    */
   addMorphTypeConstraint() {
     this.query.where(this.getQualifiedTypeColumn(), this.morphName)
-  }
-  
-  /**
-   * Add constraints on the relation query
-   * 
-   * @private
-   */
-  addLoadConstraints() {
-    super.addLoadConstraints()
-    this.addMorphTypeConstraint()
   }
   
   /**

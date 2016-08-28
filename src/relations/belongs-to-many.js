@@ -3,7 +3,7 @@ import _ from 'underscore'
 import Model from '../model'
 import Relation from './base'
 import Promise from 'bluebird'
-import Mapper from '../mapper'
+import PivotMapper from './pivot-mapper'
 import mixin from './mixins/one-to-many'
 
 // exports
@@ -22,8 +22,8 @@ export default class extends mixin(Relation) {
   constructor(parent, target, pivot, pfk, tfk) {
     super(parent, target)
     
-    this.pivot = pivot // TODO create a pivot table mapper 
-    this.table = _.isString(pivot) ? pivot : this.pivot.tableName
+    this.pivot = new PivotMapper(parent, pivot)
+    this.table = this.pivot.tableName
     
     this.localKey = parent.primaryKey
     this.pivotColumns = [pfk, tfk]
@@ -178,6 +178,18 @@ export default class extends mixin(Relation) {
   }
   
   /**
+   * Apply constraints on the relation query
+   * 
+   * @param {Model} model
+   * @return this relation
+   */
+  addConstraints(model) {
+    this.addPivotJoin()
+    this.addPivotColumns()
+    return super.addConstraints(model)
+  }
+  
+  /**
    * Create a query for the pivot table
    * 
    * @param {Boolean} constraints
@@ -235,17 +247,6 @@ export default class extends mixin(Relation) {
    */
   getCompareKey() {
     return this._through.getQualifiedColumn(this.otherKey)
-  }
-  
-  /**
-   * Apply constraints on the relation query
-   * 
-   * @private
-   */
-  addLoadConstraints() {
-    super.addLoadConstraints()
-    this.addPivotColumns()
-    this.addPivotJoin()
   }
   
   /**
