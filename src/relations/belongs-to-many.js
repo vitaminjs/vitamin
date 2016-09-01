@@ -148,7 +148,7 @@ export default class extends mixin(Relation) {
       .pluck(this.targetKey)
       
       // traversing
-      .tap(oldIds => {
+      .then(oldIds => {
         ids.forEach(value => {
           var id
           
@@ -168,13 +168,23 @@ export default class extends mixin(Relation) {
       })
       
       // detach
-      .tap(oldIds => _.isEmpty(toDetach) ? false : this.detach(toDetach))
+      .then(() => _.isEmpty(toDetach) ? false : this.detach(toDetach))
       
       // attach
-      .tap(oldIds => _.isEmpty(toAttach) ? false : this.attach(toAttach))
+      .then(() => _.isEmpty(toAttach) ? false : this.attach(toAttach))
       
       // update pivots
-      .tap(oldIds => Promise.map(toUpdate, args => this.updatePivot(...args)))
+      .then(() => Promise.map(toUpdate, args => this.updatePivot(...args)))
+      
+      // return
+      .then(() => {
+        return {
+          'detached': toDetach.length,
+          'attached': toAttach.length,
+          'updated': toUpdate.length,
+        }
+      })
+
   }
   
   /**
