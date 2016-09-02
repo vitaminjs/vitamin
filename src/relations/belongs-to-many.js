@@ -154,7 +154,7 @@ export default class extends mixin(Relation) {
           
           if ( value instanceof Model ) value = value.getId()
           
-          if ( _.isArray(value) ) value = [value]
+          if (! _.isArray(value) ) value = [value]
           
           // add the new id
           newIds.push(id = value[0])
@@ -210,7 +210,7 @@ export default class extends mixin(Relation) {
     var query = this.pivot.newQuery()
     
     if ( constraints ) 
-      query.where(this.otherKey, this.parent.get(this.localKey))
+      query.where(this.otherKey, this.model.get(this.localKey))
     
     return query
   }
@@ -243,7 +243,7 @@ export default class extends mixin(Relation) {
   createPivotRecord(id, pivots = {}) {
     var record = _.extend({}, pivots)
     
-    record[this.otherKey] = this.parent.get(this.localKey)
+    record[this.otherKey] = this.model.get(this.localKey)
     record[this.targetKey] = id
     
     return record
