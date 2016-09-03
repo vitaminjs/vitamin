@@ -29,6 +29,7 @@ export default class {
     this.primaryKey = 'id'
     this.modelClass = Model
     this.timestamps = false
+    this.connection = 'default'
     this.createdAtColumn = 'created_at'
     this.updatedAtColumn = 'updated_at'
 
@@ -158,17 +159,6 @@ export default class {
   }
 
   /**
-   * Use a knex object as connection
-   *
-   * @param {Object} knex instance
-   * @return this mapper
-   */
-  use(knex) {
-    this.connection = knex
-    return this
-  }
-
-  /**
    * Get a fresh timestamp for the model
    *
    * @return string ISO time
@@ -215,9 +205,13 @@ export default class {
    * Get the model query builder
    *
    * @return Query instance
+   * @alias query
    */
   newQuery() {
-    return this.query(this.connection)
+    var conn = registry.connection()
+    var query = new Query(conn.queryBuilder())
+    
+    return query.from(this.tableName).setModel(this)
   }
 
   /**
@@ -233,13 +227,11 @@ export default class {
   /**
    * Begin querying the model
    * 
-   * @param {Object} connection
    * @return query
+   * @alias newQuery
    */
-  query(connection = null) {
-    var qb = (connection || this.connection).queryBuilder()
-    
-    return (new Query(qb)).from(this.tableName).setModel(this)
+  query() {
+    return this.newQuery()
   }
 
   /**
