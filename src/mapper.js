@@ -190,6 +190,15 @@ export default class {
 
     return Promise.resolve(model)
   }
+  
+  /**
+   * Alias of `newInstance`
+   * 
+   * @return model
+   */
+  make() {
+    return this.newInstance(...arguments)
+  }
 
   /**
    * Create a new model instance
@@ -355,6 +364,27 @@ export default class {
     if (! fk ) fk = related.name + '_id'
 
     return new BelongsTo(this, related, fk, pk)
+  }
+  
+  /**
+   * Define a morph-to relationship
+   * 
+   * @param {String} name of the morph
+   * @param {String} type column name
+   * @param {String} fk
+   * @param {String} pk
+   * @return relation
+   */
+  morphTo(name, type = null, fk = null, pk = null) {
+    var MorphTo = require('./relations/morph-to').default
+    
+    if (! fk ) fk = name + '_id'
+    
+    if (! pk ) pk = this.primaryKey
+    
+    if (! type ) type = name + '_type'
+    
+    return new MorphTo(this, type, fk, pk)
   }
 
   /**

@@ -66,15 +66,28 @@ export default class extends Relation {
   eagerLoad(models) {
     var groups = _.groupBy(models, m => m.get(this.morphType))
     
-    return Promise
-      .map(groups, (_models, type) => {
-        // we define the current target mapper object
-        this.setTarget(registry.get(type))
-        
-        // run a separate query for each model type
-        return super.eagerLoad(_models)
-      })
-      .return(models)
+    return Promise.map(_.keys(groups), type => {
+      // we define the current target mapper object
+      this.setTarget(registry.get(type))
+      
+      // run a separate query for each model type
+      return super.eagerLoad(groups[type])
+    })
+    .return(models)
+  }
+  
+  /**
+   * Add constraints on the relation query
+   * 
+   * @param {Model} model
+   * @return this relation
+   */
+  addConstraints(model) {
+    this.model = model
+    
+    this.getQuery().where(this.getCompareKey(), model.get(this.localKey))
+    
+    return this
   }
   
   /**
