@@ -120,7 +120,7 @@ export default class {
    */
   eagerLoad(models) {
     this.addEagerLoadConstraints(models)
-    return this.query.fetch().then(res => this.populate(models, res))
+    return this.getQuery().fetch().then(res => this.populate(models, res))
   }
   
   /**

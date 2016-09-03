@@ -17,8 +17,8 @@ export default class extends Relation {
    * @param {String} pk target model primary key
    * @constructor
    */
-  constructor(parent, target, type, fk, pk) {
-    super(parent, target, fk, pk)
+  constructor(parent, type, fk, pk) {
+    super(parent, null, fk, pk)
     
     this.morphType = type
   }
@@ -43,14 +43,18 @@ export default class extends Relation {
   }
   
   /**
-   * Get the result of the relationship
+   * Get the relation query
    * 
-   * @return promise
+   * @return query
    */
-  load() {
-    var target = this._createModelByName(this.model.get(this.morphType))
+  getQuery() {
+    if (! this.target ) {
+      let target = registry.get(this.model.get(this.morphType))
+      
+      this.setTarget(target)
+    }
     
-    return this.setTarget(target).getQuery().first()
+    return super.getQuery()
   }
   
   /**
@@ -60,18 +64,15 @@ export default class extends Relation {
    * @return promise
    */
   eagerLoad(models) {
-    var groups = _.groupBy(models, model => model.get(this.morphType))
+    var groups = _.groupBy(models, m => m.get(this.morphType))
     
     return Promise
       .map(groups, (_models, type) => {
-        var target = this._createModelByName(type)
-        
-        this.otherKey = target.primaryKey
+        // we define the current target mapper object
+        this.setTarget(registry.get(type))
         
         // run a separate query for each model type
-        return target.newQuery()
-          .findMany(this.getKeys(_models))
-          .then(res => this.populate(_models, res))
+        return super.eagerLoad(_models)
       })
       .return(models)
   }
@@ -85,19 +86,7 @@ export default class extends Relation {
    */
   setTarget(target) {
     this.otherKey = target.primaryKey
-    super.setTarget(target)
-    return this
-  }
-  
-  /**
-   * Create an instance of the given model name
-   * 
-   * @param {String} name
-   * @return model instance
-   * @private
-   */
-  _createModelByName(name) {
-    return registry.get(name).make()
+    return super.setTarget(target)
   }
   
 }

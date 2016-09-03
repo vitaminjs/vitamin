@@ -222,7 +222,10 @@ export default class {
   }
   
   /**
+   * Begin querying the model
    * 
+   * @param {Object} connection
+   * @return query
    */
   query(connection = null) {
     var qb = (connection || this.connection).queryBuilder()
