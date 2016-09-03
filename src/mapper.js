@@ -33,6 +33,8 @@ export default class {
     this.updatedAtColumn = 'updated_at'
 
     _.extend(this, options)
+    
+    this.modelClass = this._setupModel()
 
     this.emitter = new EventEmitter()
     this._registerEvents(this.events)
@@ -68,37 +70,13 @@ export default class {
   }
 
   /**
-   * Build a model class
-   *
-   * @return model constructor
-   */
-  build() {
-    var _this = this
-    var proto = _.clone(this.methods)
-
-    // add prototype properties
-    proto.mapper = this
-    proto.defaults = this.getDefaults()
-    proto.idAttribute = this.primaryKey
-
-    // add relationship accessors
-    _.each(this.relations, (_, name) => {
-      proto[name] = function () {
-        return _this.getRelation(name).addConstraints(this)
-      }
-    })
-
-    return this.modelClass.extend(proto, this.statics)
-  }
-
-  /**
-   * Get the model constructor from the registry
+   * Get the model mapper from the registry
    *
    * @param {String} name
-   * @return model constructor
+   * @return mapper
    */
   model(name) {
-    return registry.get(name || this.name)
+    return registry.get(name)
   }
 
   /**
@@ -109,8 +87,8 @@ export default class {
   getDefaults() {
     return this.defaults ? this.defaults : () => {
       return _.reduce(this.attributes, (memo, config, attr) => {
-        if ( _.has(config, 'default') )
-          memo[attr] = _.result(config, 'default')
+        if ( _.has(config, 'defaultValue') )
+          memo[attr] = _.result(config, 'defaultValue')
 
         return memo
       }, {})
@@ -207,7 +185,7 @@ export default class {
    */
   touch(model) {
     if ( this.timestamps && this.updatedAtColumn ) {
-      return model.set(this.updatedAtColumn, this.freshTimestamp()).save()
+      return this.save(model.set(this.updatedAtColumn, this.freshTimestamp()))
     }
 
     return Promise.resolve(model)
@@ -221,7 +199,7 @@ export default class {
    * @return model instance
    */
   newInstance(data = {}, exists = false) {
-    return this.model().make(...arguments)
+    return this.modelClass.make(...arguments)
   }
 
   /**
@@ -230,9 +208,7 @@ export default class {
    * @return Query instance
    */
   newQuery() {
-    var qb = this.connection.queryBuilder()
-
-    return (new Query(qb)).from(this.tableName).setModel(this)
+    return this.query(this.connection)
   }
 
   /**
@@ -243,6 +219,15 @@ export default class {
    */
   newCollection(models = []) {
     return new Collection(models)
+  }
+  
+  /**
+   * 
+   */
+  query(connection = null) {
+    var qb = (connection || this.connection).queryBuilder()
+    
+    return (new Query(qb)).from(this.tableName).setModel(this)
   }
 
   /**
@@ -278,7 +263,7 @@ export default class {
 
     if ( _.isString(related) ) related = this.model(related)
 
-    return new HasOne(this, related.prototype.mapper, fk, pk)
+    return new HasOne(this, related, fk, pk)
   }
 
   /**
@@ -302,7 +287,7 @@ export default class {
 
     if ( _.isString(related) ) related = this.model(related)
 
-    return new MorphOne(this, related.prototype.mapper, type, fk, pk)
+    return new MorphOne(this, related, type, fk, pk)
   }
 
   /**
@@ -322,7 +307,7 @@ export default class {
 
     if ( _.isString(related) ) related = this.model(related)
 
-    return new HasMany(this, related.prototype.mapper, fk, pk)
+    return new HasMany(this, related, fk, pk)
   }
 
   /**
@@ -346,7 +331,7 @@ export default class {
 
     if ( _.isString(related) ) related = this.model(related)
 
-    return new MorphMany(this, related.prototype.mapper, type, fk, pk)
+    return new MorphMany(this, related, type, fk, pk)
   }
 
   /**
@@ -361,8 +346,6 @@ export default class {
     var BelongsTo = require('./relations/belongs-to').default
 
     if ( _.isString(related) ) related = this.model(related)
-
-    related = related.prototype.mapper
 
     if (! pk ) pk = related.primaryKey
 
@@ -384,8 +367,6 @@ export default class {
     var BelongsToMany = require('./relations/belongs-to-many').default
 
     if ( _.isString(related) ) related = this.model(related)
-
-    related = related.prototype.mapper
 
     if (! pfk ) pfk = this.name + '_id'
 
@@ -409,8 +390,6 @@ export default class {
     var MorphToMany = require('./relations/morph-to-many').default
 
     if ( _.isString(related) ) related = this.model(related)
-
-    related = related.prototype.mapper
 
     if (! pfk ) pfk = name + '_id'
     
@@ -539,6 +518,31 @@ export default class {
     if ( useCreatedAt && !model.exists && !model.isDirty(this.createdAtColumn) ) {
       model.set(this.createdAtColumn, time)
     }
+  }
+
+  /**
+   * Set up the model class
+   *
+   * @return model constructor
+   * @private
+   */
+  _setupModel() {
+    var _this = this
+    var proto = _.clone(this.methods)
+
+    // add prototype properties
+    proto.mapper = this
+    proto.defaults = this.getDefaults()
+    proto.idAttribute = this.primaryKey
+
+    // add relationship accessors
+    _.each(this.relations, (_, name) => {
+      proto[name] = function () {
+        return _this.getRelation(name).addConstraints(this)
+      }
+    })
+
+    return this.modelClass.extend(proto, this.statics)
   }
 
 }
