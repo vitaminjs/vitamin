@@ -1,7 +1,7 @@
 {
   "name": "vitamin",
   "version": "0.8.0",
-  "description": "Active Record library for Node.js applications",
+  "description": "Data Mapper library for Node.js applications",
   "main": "lib/index.js",
   "directories": {
     "test": "test"
@@ -39,7 +39,7 @@
     "postgresql",
     "orm",
     "model",
-    "active-record",
+    "data-mapper",
     "vitamin"
   ],
   "author": "absolux",
