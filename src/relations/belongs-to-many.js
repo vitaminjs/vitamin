@@ -3,7 +3,7 @@ import _ from 'underscore'
 import Model from '../model'
 import Relation from './base'
 import Promise from 'bluebird'
-import PivotMapper from './pivot-mapper'
+import Mapper from '../mapper'
 import mixin from './mixins/one-to-many'
 
 // exports
@@ -22,7 +22,7 @@ export default class extends mixin(Relation) {
   constructor(parent, target, pivot, pfk, tfk) {
     super(parent, target)
     
-    this.pivot = new PivotMapper(parent, pivot)
+    this.pivot = new Mapper({ tableName: pivot })
     this.table = this.pivot.tableName
     
     this.localKey = parent.primaryKey

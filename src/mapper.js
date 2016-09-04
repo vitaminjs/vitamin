@@ -76,7 +76,7 @@ export default class {
    * @param {String} name
    * @return mapper
    */
-  model(name) {
+  mapper(name) {
     return registry.get(name)
   }
 
@@ -265,7 +265,7 @@ export default class {
 
     if (! fk ) fk = this.name + '_id'
 
-    if ( _.isString(related) ) related = this.model(related)
+    if ( _.isString(related) ) related = this.mapper(related)
 
     return new HasOne(this, related, fk, pk)
   }
@@ -289,7 +289,7 @@ export default class {
 
     if (! fk ) fk = name + '_id'
 
-    if ( _.isString(related) ) related = this.model(related)
+    if ( _.isString(related) ) related = this.mapper(related)
 
     return new MorphOne(this, related, type, fk, pk)
   }
@@ -309,7 +309,7 @@ export default class {
 
     if (! fk ) fk = this.name + '_id'
 
-    if ( _.isString(related) ) related = this.model(related)
+    if ( _.isString(related) ) related = this.mapper(related)
 
     return new HasMany(this, related, fk, pk)
   }
@@ -333,7 +333,7 @@ export default class {
 
     if (! fk ) fk = name + '_id'
 
-    if ( _.isString(related) ) related = this.model(related)
+    if ( _.isString(related) ) related = this.mapper(related)
 
     return new MorphMany(this, related, type, fk, pk)
   }
@@ -349,7 +349,7 @@ export default class {
   belongsTo(related, fk = null, pk = null) {
     var BelongsTo = require('./relations/belongs-to').default
 
-    if ( _.isString(related) ) related = this.model(related)
+    if ( _.isString(related) ) related = this.mapper(related)
 
     if (! pk ) pk = related.primaryKey
 
@@ -391,7 +391,7 @@ export default class {
   belongsToMany(related, pivot, pfk = null, tfk = null) {
     var BelongsToMany = require('./relations/belongs-to-many').default
 
-    if ( _.isString(related) ) related = this.model(related)
+    if ( _.isString(related) ) related = this.mapper(related)
 
     if (! pfk ) pfk = this.name + '_id'
 
@@ -414,7 +414,7 @@ export default class {
   morphToMany(related, pivot, name, type = null, pfk = null, tfk = null) {
     var MorphToMany = require('./relations/morph-to-many').default
 
-    if ( _.isString(related) ) related = this.model(related)
+    if ( _.isString(related) ) related = this.mapper(related)
 
     if (! pfk ) pfk = name + '_id'
     
@@ -442,6 +442,41 @@ export default class {
     if (! pfk ) pfk = this.name + '_id'
     
     return this.morphToMany(related, pivot, name, type, pfk, tfk)
+  }
+  
+  /**
+   * Add a listener for the given event
+   * 
+   * @param {String} event
+   * @param {Function} fn
+   * @return this model
+   */
+  on(event, fn) {
+    this.emitter.on(...arguments)
+    return this
+  }
+  
+  /**
+   * Remove an event listener
+   * 
+   * @param {String} event
+   * @param {Function} fn
+   * @return this model
+   */
+  off(event, fn) {
+    this.emitter.off(...arguments)
+    return this
+  }
+  
+  /**
+   * Trigger an event with arguments
+   * 
+   * @param {String} event
+   * @param {Array} args
+   * @return promise
+   */
+  emit(event, ...args) {
+    return this.emitter.emit(...arguments)
   }
 
   /**

@@ -13,13 +13,13 @@ module.exports = function initialize(knex) {
   return {
     
     /**
-     * Set/Get a model constructor
+     * Set/Get a mapper object
      * 
      * @param {String} name
      * @param {Object} options object or a mapper instance
      * @return model constructor
      */
-    register: function(name, options = null) {
+    mapper: function(name, options = null) {
       if ( options != null ) {
         let mapper
         
