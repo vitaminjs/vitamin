@@ -43,6 +43,32 @@ class Model extends BaseModel {
   }
   
   /**
+   * Add a listener for the given event
+   * 
+   * @param {String} event
+   * @param {Function} fn
+   * @return model
+   * @static
+   */
+  static on(event, fn) {
+    this.prototype.mapper.emitter.on(...arguments)
+    return this
+  }
+  
+  /**
+   * Remove an event listener
+   * 
+   * @param {String} event
+   * @param {Function} fn
+   * @return model
+   * @static
+   */
+  static off(event, fn) {
+    this.prototype.mapper.emitter.off(...arguments)
+    return this
+  }
+  
+  /**
    * Returns a JSON representation of this model
    * 
    * @return plain object
@@ -153,30 +179,6 @@ class Model extends BaseModel {
   }
   
   /**
-   * Add a listener for the given event
-   * 
-   * @param {String} event
-   * @param {Function} fn
-   * @return this model
-   */
-  on(event, fn) {
-    this.mapper.emitter.on(...arguments)
-    return this
-  }
-  
-  /**
-   * Remove an event listener
-   * 
-   * @param {String} event
-   * @param {Function} fn
-   * @return this model
-   */
-  off(event, fn) {
-    this.mapper.emitter.off(...arguments)
-    return this
-  }
-  
-  /**
    * Trigger an event with arguments
    * 
    * @param {String} event
@@ -184,7 +186,7 @@ class Model extends BaseModel {
    * @return promise
    */
   emit(event, ...args) {
-    return this.mapper.emitter.emit(...arguments)
+    return this.mapper.emit(...arguments)
   }
   
 }

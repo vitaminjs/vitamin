@@ -53,7 +53,7 @@ export default class extends Query {
    * @return promise
    */
   fetch(columns) {
-    return super.fetch(...arguments).tap(this.hydratePivotAttributes.bind(this))
+    return super.fetch(...arguments).tap(res => this._hydratePivotAttributes(res))
   }
   
   /**
@@ -62,7 +62,7 @@ export default class extends Query {
    * @param {Collection} collection
    * @private
    */
-  hydratePivotAttributes(collection) {
+  _hydratePivotAttributes(collection) {
     if ( _.isEmpty(this.relation.pivotColumns) ) return
     
     collection.forEach(model => {

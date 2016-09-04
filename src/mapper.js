@@ -180,15 +180,6 @@ export default class {
 
     return Promise.resolve(model)
   }
-  
-  /**
-   * Alias of `newInstance`
-   * 
-   * @return model
-   */
-  make() {
-    return this.newInstance(...arguments)
-  }
 
   /**
    * Create a new model instance
@@ -222,16 +213,6 @@ export default class {
    */
   newCollection(models = []) {
     return new Collection(models)
-  }
-  
-  /**
-   * Begin querying the model
-   * 
-   * @return query
-   * @alias newQuery
-   */
-  query() {
-    return this.newQuery()
   }
 
   /**
