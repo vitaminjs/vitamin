@@ -4,8 +4,10 @@
 > This is a breaking changes version, Vitamin become a Data Mapper implementation instead of the Active Record. So the mapping logic was moved to the `Mapper` class
 
 * Export the `BaseModel`, `BaseQuery` and `Events` to separate projects
+* Wrote in ES6 style and use `babeljs` as compiler
 * Add the polymorphic relationships
-* 
+* Add models registry
+* Provide a new API
 
 ### _**v0.7.5** - June 26, 2016_
 * Add Attribute accessors and mutators feature
