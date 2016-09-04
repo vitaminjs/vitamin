@@ -10,7 +10,10 @@
     "bluebird": "^3.4.1",
     "es6-error": "^3.0.1",
     "knex": "^0.11.9",
-    "underscore": "^1.8.3"
+    "underscore": "^1.8.3",
+    "vitamin-events": "^0.1.2",
+    "vitamin-model": "0.0.4",
+    "vitamin-query": "0.0.6"
   },
   "devDependencies": {
     "babel-cli": "^6.11.4",
