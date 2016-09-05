@@ -12,7 +12,7 @@
   <body>
     <section class="page-header">
       <h1 class="project-name">Vitamin</h1>
-      <h2 class="project-tagline">ActiveRecord library for Node.js applications</h2>
+      <h2 class="project-tagline">Data Mapper library for Node.js applications</h2>
       <a href="https://github.com/vitaminjs/vitamin" class="btn">View on GitHub</a>
       <a href="https://github.com/vitaminjs/vitamin/zipball/master" class="btn">Download .zip</a>
       <a href="https://github.com/vitaminjs/vitamin/tarball/master" class="btn">Download .tar.gz</a>
@@ -22,9 +22,7 @@
       <h2>
 <a id="introduction" class="anchor" href="#introduction" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Introduction</h2>
 
-<p>Vitamin provides a simple and easy to use ActiveRecord implementation for working with your database. 
-Each table or view is wrapped into a "Model" class. Thus, a model instance is tied to a single row in the table. 
-Models allow you to query for data in your tables, as well as inserting or updating records.</p>
+<p>Vitamin provides a simple and easy to use Data Mapper implementation for working with your relational database.</p>
 
 <p>Based on <a href="//knexjs.org">knex</a>, it supports <strong>Postgres</strong>, <strong>MySQL</strong>, <strong>MariaDB</strong>, <strong>SQLite3</strong>, and <strong>Oracle</strong> databases, 
 featuring both promise based and traditional callback interfaces, providing lazy and eager relationships loading, 
@@ -47,134 +45,103 @@ $ npm install strong-oracle
 $ npm install oracle
 </code></pre>
 
-<p>Database connection is initialized by passing a config object to <code>connection</code> static method. 
+<p>Vitamin is initialized by passing an initialized Knex client instance. 
 The <a href="//knexjs.org/#Installation">knex documentation</a> provides a number of examples for different use cases.</p>
 
-<div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> Model <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>vitamin<span class="pl-pds">'</span></span>)
-
-<span class="pl-c">// An example of config object for MySQL which will be used by knex</span>
-<span class="pl-smi">Model</span>.<span class="pl-en">connection</span>({
+<div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> knex <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>knex<span class="pl-pds">'</span></span>)({
   client<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>mysql<span class="pl-pds">'</span></span>,
   connection<span class="pl-k">:</span> {
     host     <span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>127.0.0.1<span class="pl-pds">'</span></span>,
     user     <span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>your_database_user<span class="pl-pds">'</span></span>,
     password <span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>your_database_password<span class="pl-pds">'</span></span>,
-    database <span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>myapp_test<span class="pl-pds">'</span></span>,
+    database <span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>your_database_name<span class="pl-pds">'</span></span>,
     charset  <span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>utf8<span class="pl-pds">'</span></span>
   }
-})</pre></div>
+})
+
+<span class="pl-c1">module</span>.<span class="pl-smi">exports</span> <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>vitamin<span class="pl-pds">'</span></span>)(knex)</pre></div>
 
 <hr>
 
 <h2>
-<a id="examples-of-usage" class="anchor" href="#examples-of-usage" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Examples of usage</h2>
+<a id="getting-started" class="anchor" href="#getting-started" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Getting started</h2>
 
 <h3>
-<a id="defining-models" class="anchor" href="#defining-models" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Defining models</h3>
+<a id="defining-data-mappers" class="anchor" href="#defining-data-mappers" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Defining data mappers</h3>
 
-<p>To get started, let's define a basic Model using the <code>extend</code> static method, 
-and specify both, the <code>primary key</code> name, and the <code>table</code> name</p>
+<p>To get started, let's define a user data mapper by specifying both, the <code>primary key</code> name, and the <code>table</code> name</p>
 
-<div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> Model <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>vitamin<span class="pl-pds">'</span></span>)
+<div class="highlight highlight-source-js"><pre><span class="pl-c">// using the previous initialized vitamin object,</span>
+<span class="pl-c">// we define a mapper called `user` using `mapper` method of vitamin object</span>
+<span class="pl-c1">module</span>.<span class="pl-smi">exports</span> <span class="pl-k">=</span> <span class="pl-smi">vitamin</span>.<span class="pl-en">model</span>(<span class="pl-s"><span class="pl-pds">'</span>user<span class="pl-pds">'</span></span>, {
 
-<span class="pl-k">var</span> User <span class="pl-k">=</span> <span class="pl-smi">Model</span>.<span class="pl-en">extend</span>({
-
-  <span class="pl-c">// the primary key, defaults to `id`</span>
-  $pk<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>id<span class="pl-pds">'</span></span>,
+  <span class="pl-c">// the primary key, default to `id`</span>
+  primaryKey<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>user_id<span class="pl-pds">'</span></span>,
 
   <span class="pl-c">// the table name</span>
-  $table<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>users<span class="pl-pds">'</span></span>,
+  tableName<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>users<span class="pl-pds">'</span></span>,
 
   <span class="pl-c">// add default attributes</span>
-  $defaults<span class="pl-k">:</span> {
+  defaults<span class="pl-k">:</span> {
     active<span class="pl-k">:</span> <span class="pl-c1">true</span>,
     verified<span class="pl-k">:</span> <span class="pl-c1">false</span>
-  },
-
-  <span class="pl-c">// define the mass assignable attributes</span>
-  $fillable<span class="pl-k">:</span> [ <span class="pl-s"><span class="pl-pds">'</span>name<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>email<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>password<span class="pl-pds">'</span></span> ],
-
-  <span class="pl-c">// define the hidden fields from `toJSON()`</span>
-  $hidden<span class="pl-k">:</span> [ <span class="pl-s"><span class="pl-pds">'</span>password<span class="pl-pds">'</span></span> ]
+  }
 
 })</pre></div>
 
 <blockquote>
-<p>Vitamin assumes that the primary key is an auto-increment key, if you wish to use a non-numeric key, 
-you must set to <code>false</code> the flag property <code>$incrementing</code> when you define the model.</p>
+<p><code>model()</code> also accepts a mapper instance passed as a second argument instead of a config object</p>
 </blockquote>
 
 <h3>
 <a id="crud--reading-and-writing-data" class="anchor" href="#crud--reading-and-writing-data" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>CRUD : Reading and writing data</h3>
+
+<blockquote>
+<p>You can use the standard Node.js style callbacks by calling <code>.asCallback(function (error, result) {})</code> on any promise method</p>
+</blockquote>
 
 <h4>
 <a id="1---create" class="anchor" href="#1---create" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>1 - Create</h4>
 
 <p>To create a new record in the database, simply create a new model instance, set its attributes, then call the <code>save</code> method</p>
 
-<div class="highlight highlight-source-js"><pre><span class="pl-c">// we create a new instance of User model with `factory` method</span>
-<span class="pl-k">var</span> user <span class="pl-k">=</span> <span class="pl-smi">User</span>.<span class="pl-en">factory</span>({ name<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>John<span class="pl-pds">"</span></span>, occupation<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>Developer<span class="pl-pds">"</span></span> })
+<div class="highlight highlight-source-js"><pre><span class="pl-c">// access the model generated by the mapper via vitamin's `model` method</span>
+<span class="pl-k">var</span> User <span class="pl-k">=</span> <span class="pl-smi">vitamin</span>.<span class="pl-en">model</span>(<span class="pl-s"><span class="pl-pds">'</span>user<span class="pl-pds">'</span></span>)
 
-<span class="pl-c">// or set the attributes manually after instantiation</span>
-<span class="pl-k">var</span> user <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">User</span>
-<span class="pl-smi">user</span>.<span class="pl-en">set</span>(<span class="pl-s"><span class="pl-pds">'</span>name<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">"</span>John<span class="pl-pds">"</span></span>)
-<span class="pl-smi">user</span>.<span class="pl-en">set</span>(<span class="pl-s"><span class="pl-pds">'</span>occupation<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">"</span>Developer<span class="pl-pds">"</span></span>)
+<span class="pl-c">// we create a new instance of User model with `make` method</span>
+<span class="pl-k">var</span> user <span class="pl-k">=</span> <span class="pl-smi">User</span>.<span class="pl-en">make</span>({ name<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>John<span class="pl-pds">"</span></span>, occupation<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>Developer<span class="pl-pds">"</span></span> })
+<span class="pl-c">// or simply with the new operator</span>
+<span class="pl-k">var</span> user <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">User</span>({ name<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>John<span class="pl-pds">"</span></span>, occupation<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>Developer<span class="pl-pds">"</span></span> })
 
 <span class="pl-c">// then we save it</span>
-
-<span class="pl-c">// using callbacks</span>
-<span class="pl-smi">user</span>.<span class="pl-en">save</span>(<span class="pl-k">function</span> (<span class="pl-smi">error</span>, <span class="pl-smi">result</span>) {
+<span class="pl-smi">user</span>.<span class="pl-en">save</span>()
+.<span class="pl-en">then</span>(<span class="pl-k">function</span> (<span class="pl-smi">result</span>) {
+  <span class="pl-smi">assert</span>.<span class="pl-en">equal</span>(result, user)
   <span class="pl-smi">assert</span>.<span class="pl-en">instanceOf</span>(result, User)
 })
-
-<span class="pl-c">// or using promises</span>
-<span class="pl-smi">user</span>.<span class="pl-en">save</span>().<span class="pl-en">then</span>(
-  <span class="pl-k">function</span> (<span class="pl-smi">result</span>) {
-    <span class="pl-smi">assert</span>.<span class="pl-en">instanceOf</span>(result, User)
-  },
-  <span class="pl-k">function</span> (<span class="pl-smi">error</span>) {
-    <span class="pl-k">...</span>
-  }
-)</pre></div>
+.<span class="pl-en">catch</span>(<span class="pl-k">function</span> (<span class="pl-smi">error</span>) {
+  <span class="pl-k">...</span>
+})</pre></div>
 
 <p>Another shorthand to create and save a new user is the <code>create</code> static method</p>
 
 <div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> data <span class="pl-k">=</span> { name<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>John<span class="pl-pds">"</span></span>, occupation<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>Developer<span class="pl-pds">"</span></span> }
 
-<span class="pl-c">// using callabcks</span>
-<span class="pl-smi">User</span>.<span class="pl-en">create</span>(data, <span class="pl-k">function</span> (<span class="pl-smi">error</span>, <span class="pl-smi">result</span>) {
+<span class="pl-smi">User</span>.<span class="pl-en">create</span>(data).<span class="pl-en">then</span>(<span class="pl-k">function</span> (<span class="pl-smi">result</span>) {
   <span class="pl-smi">assert</span>.<span class="pl-en">instanceOf</span>(result, User)
-})
-
-<span class="pl-c">// using promises</span>
-<span class="pl-smi">User</span>.<span class="pl-en">create</span>(data).<span class="pl-en">then</span>(
-  <span class="pl-k">function</span> (<span class="pl-smi">result</span>) {
-    <span class="pl-smi">assert</span>.<span class="pl-en">instanceOf</span>(result, User)
-  }, 
-  <span class="pl-k">function</span> (<span class="pl-smi">error</span>) {
-    <span class="pl-k">...</span>
-  }
-)</pre></div>
+})</pre></div>
 
 <h4>
 <a id="2---read" class="anchor" href="#2---read" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>2 - Read</h4>
 
-<p>Vitamin uses the standard Node.js style callbacks and promises when dealing with queries.
-Below a few examples of different data access methods provided by Vitamin.</p>
+<p>Below a few examples of different data access methods provided by Vitamin.</p>
 
 <ul>
 <li>Retrieving multiple models</li>
 </ul>
 
-<div class="highlight highlight-source-js"><pre><span class="pl-c">// get na array of all users </span>
-
-<span class="pl-c">// using callbacks</span>
-<span class="pl-smi">User</span>.<span class="pl-c1">all</span>(<span class="pl-k">function</span> (<span class="pl-smi">error</span>, <span class="pl-smi">result</span>) {
-  <span class="pl-smi">assert</span>.<span class="pl-en">instanceOf</span>(result, Collection)
-})
-
-<span class="pl-c">// using promises</span>
-<span class="pl-smi">User</span>.<span class="pl-c1">all</span>().<span class="pl-en">then</span>(
+<div class="highlight highlight-source-js"><pre><span class="pl-c">// get a collection of all users</span>
+<span class="pl-smi">User</span>.<span class="pl-en">query</span>().<span class="pl-en">fetch</span>().<span class="pl-en">then</span>(
   <span class="pl-k">function</span> (<span class="pl-smi">result</span>) {
     <span class="pl-smi">assert</span>.<span class="pl-en">instanceOf</span>(result, Collection)
   },
@@ -183,16 +150,10 @@ Below a few examples of different data access methods provided by Vitamin.</p>
   }
 )</pre></div>
 
-<p>The <code>all</code> static method will return all of the results of the model. 
+<p>The <code>fetch</code> method will return all the rows in the <code>users</code> table as a collection of <code>User</code> models. 
 But, if you may also add constraints to queries, you can use the <code>where</code> method, which returns a <code>query builder</code> instance</p>
 
-<div class="highlight highlight-source-js"><pre><span class="pl-c">// using callbacks</span>
-<span class="pl-smi">User</span>.<span class="pl-en">where</span>(<span class="pl-s"><span class="pl-pds">'</span>role<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">"</span>guest<span class="pl-pds">"</span></span>).<span class="pl-en">offset</span>(<span class="pl-c1">10</span>).<span class="pl-en">limit</span>(<span class="pl-c1">15</span>).<span class="pl-en">fetchAll</span>(<span class="pl-k">function</span> (<span class="pl-smi">error</span>, <span class="pl-smi">result</span>) {
-  <span class="pl-smi">assert</span>.<span class="pl-en">instanceOf</span>(result, Collection)
-})
-
-<span class="pl-c">// using promises</span>
-<span class="pl-smi">User</span>.<span class="pl-en">where</span>(<span class="pl-s"><span class="pl-pds">'</span>role<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">"</span>guest<span class="pl-pds">"</span></span>).<span class="pl-en">orderBy</span>(<span class="pl-s"><span class="pl-pds">'</span>name<span class="pl-pds">'</span></span>).<span class="pl-en">fetchAll</span>().<span class="pl-en">then</span>(
+<div class="highlight highlight-source-js"><pre><span class="pl-smi">User</span>.<span class="pl-en">query</span>().<span class="pl-en">where</span>(<span class="pl-s"><span class="pl-pds">'</span>role<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">"</span>guest<span class="pl-pds">"</span></span>).<span class="pl-en">offset</span>(<span class="pl-c1">10</span>).<span class="pl-en">limit</span>(<span class="pl-c1">15</span>).<span class="pl-en">fetch</span>().<span class="pl-en">then</span>(
   <span class="pl-k">function</span> (<span class="pl-smi">result</span>) {
     <span class="pl-smi">assert</span>.<span class="pl-en">instanceOf</span>(result, Collection)
   },
@@ -203,19 +164,12 @@ But, if you may also add constraints to queries, you can use the <code>where</co
 
 <ul>
 <li>Retrieving single model
-Of course, in addition to retrieving all of the records for a given table, you may also retrieve single records using <code>find</code> and <code>fetch</code>.
-Instead of returning an array of models, these methods return only a single model instance</li>
+Of course, in addition to retrieving all of the records for a given table, you may also retrieve single records using <code>find</code> and <code>first</code>.
+Instead of returning a collection of models, these methods return only a single model instance</li>
 </ul>
 
 <div class="highlight highlight-source-js"><pre><span class="pl-c">// find a user by its primary key</span>
-
-<span class="pl-c">// using callbacks</span>
-<span class="pl-smi">User</span>.<span class="pl-c1">find</span>(<span class="pl-c1">123</span>, <span class="pl-k">function</span> (<span class="pl-smi">error</span>, <span class="pl-smi">result</span>) {
-  <span class="pl-smi">assert</span>.<span class="pl-en">instanceOf</span>(result, User)
-})
-
-<span class="pl-c">// using promises</span>
-<span class="pl-smi">User</span>.<span class="pl-c1">find</span>(<span class="pl-c1">123</span>).<span class="pl-en">then</span>(
+<span class="pl-smi">User</span>.<span class="pl-en">query</span>().<span class="pl-c1">find</span>(<span class="pl-c1">123</span>).<span class="pl-en">then</span>(
   <span class="pl-k">function</span> (<span class="pl-smi">result</span>) {
     <span class="pl-smi">assert</span>.<span class="pl-en">instanceOf</span>(result, User)
   },
@@ -224,15 +178,10 @@ Instead of returning an array of models, these methods return only a single mode
   }
 )</pre></div>
 
-<p>To retrieve the first model matching the query constraints, use <code>fetch</code></p>
+<p>To retrieve the first model matching the query constraints, use <code>first</code></p>
 
-<div class="highlight highlight-source-js"><pre><span class="pl-c">// using callbacks</span>
-<span class="pl-smi">User</span>.<span class="pl-en">where</span>(<span class="pl-s"><span class="pl-pds">'</span>is_admin<span class="pl-pds">'</span></span>, <span class="pl-c1">true</span>).<span class="pl-en">fetch</span>(<span class="pl-k">function</span> (<span class="pl-smi">error</span>, <span class="pl-smi">result</span>) {
-  <span class="pl-smi">assert</span>.<span class="pl-en">instanceOf</span>(result, User)
-})
-
-<span class="pl-c">// using promises</span>
-<span class="pl-smi">User</span>.<span class="pl-en">where</span>(<span class="pl-s"><span class="pl-pds">'</span>name<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>!=<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>John<span class="pl-pds">'</span></span>).<span class="pl-en">fetch</span>().<span class="pl-en">then</span>(
+<div class="highlight highlight-source-js"><pre><span class="pl-c">// fetch the `id` and `email` of the first admin user</span>
+<span class="pl-smi">User</span>.<span class="pl-en">query</span>().<span class="pl-en">where</span>(<span class="pl-s"><span class="pl-pds">'</span>is_admin<span class="pl-pds">'</span></span>, <span class="pl-c1">true</span>).<span class="pl-en">first</span>(<span class="pl-s"><span class="pl-pds">'</span>id<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>email<span class="pl-pds">'</span></span>).<span class="pl-en">then</span>(
   <span class="pl-k">function</span> (<span class="pl-smi">result</span>) {
     <span class="pl-smi">assert</span>.<span class="pl-en">instanceOf</span>(result, User)
   },
@@ -249,25 +198,16 @@ To update a model, you should retrieve it, set any attributes you wish to update
 
 <div class="highlight highlight-source-js"><pre><span class="pl-c">// post model is retrieved from `posts` table</span>
 <span class="pl-c">// then we modify the status attribute and save it</span>
-Post
-  .<span class="pl-c1">find</span>(<span class="pl-c1">1</span>)
-  .<span class="pl-en">then</span>(<span class="pl-k">function</span> (<span class="pl-smi">post</span>) {
-    <span class="pl-k">return</span> <span class="pl-smi">post</span>.<span class="pl-en">set</span>(<span class="pl-s"><span class="pl-pds">'</span>status<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">"</span>draft<span class="pl-pds">"</span></span>).<span class="pl-en">save</span>()
-  })</pre></div>
+<span class="pl-k">var</span> Post <span class="pl-k">=</span> <span class="pl-smi">vitamin</span>.<span class="pl-en">model</span>(<span class="pl-s"><span class="pl-pds">'</span>post<span class="pl-pds">'</span></span>)
 
-<p>In case you have many attributes to edit, you may use the <code>update</code> method:</p>
+<span class="pl-smi">Post</span>.<span class="pl-en">query</span>().<span class="pl-c1">find</span>(<span class="pl-c1">1</span>).<span class="pl-en">then</span>(<span class="pl-k">function</span> (<span class="pl-smi">post</span>) {
+  <span class="pl-k">return</span> <span class="pl-smi">post</span>.<span class="pl-c1">set</span>(<span class="pl-s"><span class="pl-pds">'</span>status<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">"</span>draft<span class="pl-pds">"</span></span>).<span class="pl-en">save</span>()
+})</pre></div>
 
-<div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> data <span class="pl-k">=</span> {
-  <span class="pl-s"><span class="pl-pds">'</span>status<span class="pl-pds">'</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>published<span class="pl-pds">"</span></span>,
-  <span class="pl-s"><span class="pl-pds">'</span>published_at<span class="pl-pds">'</span></span><span class="pl-k">:</span> <span class="pl-k">new</span> <span class="pl-en">Date</span>
-}
+<p>In case you have many attributes to edit, you may use the <code>update</code> method directly:</p>
 
-<span class="pl-c">// Using callbacks</span>
-<span class="pl-smi">post</span>.<span class="pl-en">update</span>(data, <span class="pl-k">function</span> (<span class="pl-smi">error</span>, <span class="pl-smi">result</span>) {
-  <span class="pl-k">...</span>
-})
+<div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> data <span class="pl-k">=</span> { <span class="pl-s"><span class="pl-pds">'</span>status<span class="pl-pds">'</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>published<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">'</span>published_at<span class="pl-pds">'</span></span><span class="pl-k">:</span> <span class="pl-k">new</span> <span class="pl-en">Date</span> }
 
-<span class="pl-c">// Using promises</span>
 <span class="pl-smi">post</span>.<span class="pl-en">update</span>(data).<span class="pl-en">then</span>(
   <span class="pl-k">function</span> (<span class="pl-smi">result</span>) {
     <span class="pl-k">...</span>
@@ -283,13 +223,7 @@ Post
 <p>Likewise, once retrieved, a model can be destroyed which removes it from the database.
 To delete a model, call the <code>destroy</code> method on an existing model instance:</p>
 
-<div class="highlight highlight-source-js"><pre><span class="pl-c">// Using callbacks</span>
-<span class="pl-smi">post</span>.<span class="pl-en">destroy</span>(<span class="pl-k">function</span> (<span class="pl-smi">error</span>, <span class="pl-smi">result</span>) {
-  <span class="pl-smi">assert</span>.<span class="pl-en">equal</span>(result, post)
-})
-
-<span class="pl-c">// Using promises</span>
-<span class="pl-smi">post</span>.<span class="pl-en">destroy</span>().<span class="pl-en">then</span>(
+<div class="highlight highlight-source-js"><pre><span class="pl-smi">Post</span>.<span class="pl-en">make</span>({ id <span class="pl-k">:</span> <span class="pl-c1">45</span> }).<span class="pl-en">destroy</span>().<span class="pl-en">then</span>(
   <span class="pl-k">function</span> (<span class="pl-smi">result</span>) {
     <span class="pl-smi">assert</span>.<span class="pl-en">equal</span>(result, post)
   },
@@ -298,15 +232,10 @@ To delete a model, call the <code>destroy</code> method on an existing model ins
   }
 )</pre></div>
 
-<p>Of course, you may also run a delete query on a set of models. In this example, we will delete all posts that are marked as draft:</p>
+<p>Of course, you may also run a delete query on a set of models.</p>
 
-<div class="highlight highlight-source-js"><pre><span class="pl-c">// Using callbacks</span>
-<span class="pl-smi">Post</span>.<span class="pl-en">where</span>(<span class="pl-s"><span class="pl-pds">'</span>status<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>draft<span class="pl-pds">'</span></span>).<span class="pl-en">destroy</span>(<span class="pl-k">function</span> (<span class="pl-smi">error</span>, <span class="pl-smi">result</span>) {
-  <span class="pl-k">...</span>
-})
-
-<span class="pl-c">// Using promises</span>
-<span class="pl-smi">Post</span>.<span class="pl-en">where</span>(<span class="pl-s"><span class="pl-pds">'</span>status<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>draft<span class="pl-pds">'</span></span>).<span class="pl-en">destroy</span>().<span class="pl-en">then</span>(
+<div class="highlight highlight-source-js"><pre><span class="pl-c">// we will delete all posts that are marked as draft</span>
+<span class="pl-smi">Post</span>.<span class="pl-en">query</span>().<span class="pl-en">where</span>(<span class="pl-s"><span class="pl-pds">'</span>status<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>draft<span class="pl-pds">'</span></span>).<span class="pl-en">destroy</span>().<span class="pl-en">then</span>(
   <span class="pl-k">function</span> (<span class="pl-smi">result</span>) {
     <span class="pl-k">...</span>
   },
@@ -319,21 +248,46 @@ To delete a model, call the <code>destroy</code> method on an existing model ins
 <a id="events" class="anchor" href="#events" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Events</h3>
 
 <p>Model events allow you to attach code to certain events in the lifecycle of yours models. 
-This enables you to add behaviors to your models when those events 
+This enables you to add behaviors to your models when those built-in events 
 <code>ready</code>, <code>creating</code>, <code>created</code>, <code>saving</code>, <code>saved</code>, <code>updating</code>, <code>updated</code>, <code>deleting</code> or <code>deleted</code> occur.</p>
+
+<p>Events can be defined when you register the model</p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-smi">vitamin</span>.<span class="pl-en">model</span>(<span class="pl-s"><span class="pl-pds">'</span>user<span class="pl-pds">'</span></span>, {
+
+  <span class="pl-k">...</span>
+
+  events<span class="pl-k">:</span> {
+
+    <span class="pl-s"><span class="pl-pds">'</span>creating<span class="pl-pds">'</span></span><span class="pl-k">:</span> <span class="pl-smi">_</span>.<span class="pl-smi">noop</span>,
+
+    <span class="pl-s"><span class="pl-pds">'</span>saved<span class="pl-pds">'</span></span><span class="pl-k">:</span> [
+      handler1,
+      handler2,
+    ]
+  }
+
+})</pre></div>
+
+<p>Or, later with the static method <code>on</code></p>
 
 <div class="highlight highlight-source-js"><pre><span class="pl-c">// attach a listener for `created` event</span>
 <span class="pl-smi">User</span>.<span class="pl-en">on</span>(<span class="pl-s"><span class="pl-pds">'</span>created<span class="pl-pds">'</span></span>, <span class="pl-k">function</span> (<span class="pl-smi">user</span>) {
-  <span class="pl-smi">assert</span>.<span class="pl-en">instanceOf</span>(user, Model)
+  <span class="pl-smi">assert</span>.<span class="pl-en">instanceOf</span>(user, User)
 })
 
-<span class="pl-c">// Events `saving - creating - created - saved` are fired in order</span>
-<span class="pl-c">// when we create a new model</span>
-<span class="pl-smi">User</span>.<span class="pl-en">create</span>({ name<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>John<span class="pl-pds">"</span></span>, occupation<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>Developer<span class="pl-pds">"</span></span> })</pre></div>
+<span class="pl-c">// Events `saving - creating - created - saved` are fired in order when we create a new model</span>
+<span class="pl-k">&gt;&gt;&gt;</span> <span class="pl-smi">User</span>.<span class="pl-en">create</span>({ name<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>John<span class="pl-pds">"</span></span>, occupation<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>Developer<span class="pl-pds">"</span></span> })</pre></div>
 
 <p>You can also attach the same handler for many events separated by a white space</p>
 
 <div class="highlight highlight-source-js"><pre><span class="pl-smi">Post</span>.<span class="pl-en">on</span>(<span class="pl-s"><span class="pl-pds">'</span>creating updating<span class="pl-pds">'</span></span>, updateTimestamps)</pre></div>
+
+<p>The built-in events are fired automatically by the mapper, but you can trigger manually those events, or any custom ones</p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-smi">Post</span>.<span class="pl-en">make</span>().<span class="pl-en">emit</span>(<span class="pl-s"><span class="pl-pds">'</span>saving<span class="pl-pds">'</span></span>)
+
+<span class="pl-smi">Order</span>.<span class="pl-en">make</span>().<span class="pl-en">emit</span>(<span class="pl-s"><span class="pl-pds">'</span>purchased<span class="pl-pds">'</span></span>, <span class="pl-k">...</span>arguments)</pre></div>
 
 <hr>
 
@@ -354,52 +308,73 @@ This enables you to add behaviors to your models when those events
 <h4>
 <a id="one-to-one" class="anchor" href="#one-to-one" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>One to One</h4>
 
-<p>Let's define a relation one to one between <code>Person</code> model and <code>Phone</code> model</p>
+<p>Let's define a relation one to one between <code>Person</code> and <code>Phone</code>.</p>
 
-<div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> Phone <span class="pl-k">=</span> <span class="pl-smi">Model</span>.<span class="pl-en">extend</span>({
+<div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> Phone <span class="pl-k">=</span> <span class="pl-smi">vitamin</span>.<span class="pl-en">model</span>(<span class="pl-s"><span class="pl-pds">'</span>phone<span class="pl-pds">'</span></span>, {
 
-  $table<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>phones<span class="pl-pds">'</span></span>,
+  tableName<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>phones<span class="pl-pds">'</span></span>,
 
-  <span class="pl-en">owner</span><span class="pl-k">:</span> <span class="pl-k">function</span> () {
-    <span class="pl-c">// `user_id` is the foreign key of `users` in `phones` table</span>
-    <span class="pl-k">return</span> <span class="pl-v">this</span>.<span class="pl-en">belongsTo</span>(Person, <span class="pl-s"><span class="pl-pds">'</span>owner_id<span class="pl-pds">'</span></span>)
+  relations<span class="pl-k">:</span> {
+
+    <span class="pl-en">owner</span><span class="pl-k">:</span> <span class="pl-k">function</span> () {
+      <span class="pl-c">// we refer to`Person` mapper by its name</span>
+      <span class="pl-c">// `owner_id` is the foreign key of `users` in `phones` table</span>
+      <span class="pl-k">return</span> <span class="pl-v">this</span>.<span class="pl-en">belongsTo</span>(<span class="pl-s"><span class="pl-pds">'</span>person<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>owner_id<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>id<span class="pl-pds">'</span></span>)
+    }
+
   }
 
 })
 
-<span class="pl-k">var</span> Person <span class="pl-k">=</span> <span class="pl-smi">Model</span>.<span class="pl-en">extend</span>({
+<span class="pl-k">var</span> Person <span class="pl-k">=</span> <span class="pl-smi">vitamin</span>.<span class="pl-en">model</span>(<span class="pl-s"><span class="pl-pds">'</span>person<span class="pl-pds">'</span></span>, {
 
-  $table<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>people<span class="pl-pds">'</span></span>,
+  tableName<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>people<span class="pl-pds">'</span></span>,
 
-  <span class="pl-en">phone</span><span class="pl-k">:</span> <span class="pl-k">function</span> () {
-    <span class="pl-c">// the  first argument is the target model</span>
-    <span class="pl-c">// the second is the foreign key in phones table</span>
-    <span class="pl-c">// the third parameter is optional, it corresponds to the primary key of person model</span>
-    <span class="pl-k">return</span> <span class="pl-v">this</span>.<span class="pl-en">hasOne</span>(Phone, <span class="pl-s"><span class="pl-pds">'</span>owner_id<span class="pl-pds">'</span></span>)
+  relations<span class="pl-k">:</span> {
+
+    <span class="pl-en">phone</span><span class="pl-k">:</span> <span class="pl-k">function</span> () {
+      <span class="pl-c">// the first argument is the target mapper name</span>
+      <span class="pl-c">// the second is the foreign key in phones table</span>
+      <span class="pl-c">// the third parameter is optional, it corresponds to the primary key of person model</span>
+      <span class="pl-k">return</span> <span class="pl-v">this</span>.<span class="pl-en">hasOne</span>(<span class="pl-s"><span class="pl-pds">'</span>phone<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>owner_id<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>id<span class="pl-pds">'</span></span>)
+    }
+
   }
+
 })</pre></div>
 
 <h4>
 <a id="one-to-many" class="anchor" href="#one-to-many" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>One To Many</h4>
 
-<p>An example for this type, is the relation between blog <code>Post</code> and its <code>Author</code></p>
+<p>An example for this type, is the relation between blog <code>post</code> and its <code>author</code></p>
 
-<div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> Author <span class="pl-k">=</span> <span class="pl-smi">Model</span>.<span class="pl-en">extend</span>({
+<div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> User <span class="pl-k">=</span> <span class="pl-smi">vitamin</span>.<span class="pl-en">model</span>(<span class="pl-s"><span class="pl-pds">'</span>user<span class="pl-pds">'</span></span>, {
 
-  $table<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>authors<span class="pl-pds">'</span></span>,
+  tableName<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>users<span class="pl-pds">'</span></span>,
 
-  <span class="pl-en">articles</span><span class="pl-k">:</span> <span class="pl-k">function</span> () {
-    <span class="pl-k">return</span> <span class="pl-v">this</span>.<span class="pl-en">hasMany</span>(Post, <span class="pl-s"><span class="pl-pds">'</span>author_id<span class="pl-pds">'</span></span>)
+  relations<span class="pl-k">:</span> {
+
+    <span class="pl-en">posts</span><span class="pl-k">:</span> <span class="pl-k">function</span> () {
+      <span class="pl-c">// if the foreign key is not provided, </span>
+      <span class="pl-c">// vitamin will use the parent mapper name suffixed by '_id',</span>
+      <span class="pl-c">// as a foreign key in the `posts` table, in this case `author_id`</span>
+      <span class="pl-k">return</span> <span class="pl-v">this</span>.<span class="pl-en">hasMany</span>(<span class="pl-s"><span class="pl-pds">'</span>post<span class="pl-pds">'</span></span>)
+    }
+
   }
 
 })
 
-<span class="pl-k">var</span> Post <span class="pl-k">=</span> <span class="pl-smi">Model</span>.<span class="pl-en">extend</span>({
+<span class="pl-k">var</span> Post <span class="pl-k">=</span> <span class="pl-smi">vitamin</span>.<span class="pl-en">model</span>(<span class="pl-s"><span class="pl-pds">'</span>post<span class="pl-pds">'</span></span>, {
 
-  $table<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>posts<span class="pl-pds">'</span></span>,
+  tableName<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>posts<span class="pl-pds">'</span></span>,
 
-  <span class="pl-en">author</span><span class="pl-k">:</span> <span class="pl-k">function</span> () {
-    <span class="pl-k">return</span> <span class="pl-v">this</span>.<span class="pl-en">belongsTo</span>(Author, <span class="pl-s"><span class="pl-pds">'</span>author_id<span class="pl-pds">'</span></span>)
+  relations<span class="pl-k">:</span> {
+
+    <span class="pl-en">author</span><span class="pl-k">:</span> <span class="pl-k">function</span> () {
+      <span class="pl-k">return</span> <span class="pl-v">this</span>.<span class="pl-en">belongsTo</span>(<span class="pl-s"><span class="pl-pds">'</span>author<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>author_id<span class="pl-pds">'</span></span>)
+    }
+
   }
 
 })</pre></div>
@@ -407,26 +382,34 @@ This enables you to add behaviors to your models when those events
 <h4>
 <a id="many-to-many" class="anchor" href="#many-to-many" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Many To Many</h4>
 
-<p>this relation is more complicated than the previous. 
+<p>This relation is more complicated than the previous. 
 An example of that is the relation between <code>Product</code> and <code>Category</code>, when a product has many categories, and the same category is assigned to many products. 
-A pivot table, in this case <code>product_categories</code>, is used and contains the relative keys <code>product_id</code> and <code>category_id</code></p>
+A pivot table <code>product_categories</code> is used and contains the relative keys <code>product_id</code> and <code>category_id</code></p>
 
-<div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> Product <span class="pl-k">=</span> <span class="pl-smi">Model</span>.<span class="pl-en">extend</span>({
+<div class="highlight highlight-source-js"><pre><span class="pl-smi">vitamin</span>.<span class="pl-en">model</span>(<span class="pl-s"><span class="pl-pds">'</span>product<span class="pl-pds">'</span></span>, {
 
-  $table<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>products<span class="pl-pds">'</span></span>,
+  tableName<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>products<span class="pl-pds">'</span></span>,
 
-  <span class="pl-en">categories</span><span class="pl-k">:</span> <span class="pl-k">function</span> () {
-    <span class="pl-k">return</span> <span class="pl-en">belongsToMany</span>(Category, <span class="pl-s"><span class="pl-pds">'</span>product_categories<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>category_id<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>product_id<span class="pl-pds">'</span></span>)
+  relations<span class="pl-k">:</span> {
+
+    <span class="pl-en">categories</span><span class="pl-k">:</span> <span class="pl-k">function</span> () {
+      <span class="pl-k">return</span> <span class="pl-en">belongsToMany</span>(<span class="pl-s"><span class="pl-pds">'</span>category<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>product_categories<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>category_id<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>product_id<span class="pl-pds">'</span></span>)
+    }
+
   }
 
 })
 
-<span class="pl-k">var</span> Category <span class="pl-k">=</span> <span class="pl-smi">Model</span>.<span class="pl-en">extend</span>({
+<span class="pl-smi">vitamin</span>.<span class="pl-en">model</span>(<span class="pl-s"><span class="pl-pds">'</span>category<span class="pl-pds">'</span></span>, {
 
-  $table<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>categories<span class="pl-pds">'</span></span>,
+  tableName<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>categories<span class="pl-pds">'</span></span>,
 
-  <span class="pl-en">products</span><span class="pl-k">:</span> <span class="pl-k">function</span> () {
-    <span class="pl-k">return</span> <span class="pl-en">belongsToMany</span>(Product, <span class="pl-s"><span class="pl-pds">'</span>product_categories<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>product_id<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>category_id<span class="pl-pds">'</span></span>)
+  relations<span class="pl-k">:</span> {
+
+    <span class="pl-en">products</span><span class="pl-k">:</span> <span class="pl-k">function</span> () {
+      <span class="pl-k">return</span> <span class="pl-en">belongsToMany</span>(<span class="pl-s"><span class="pl-pds">'</span>product<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>product_categories<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>product_id<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>category_id<span class="pl-pds">'</span></span>)
+    }
+
   }
 
 })</pre></div>
@@ -437,40 +420,36 @@ A pivot table, in this case <code>product_categories</code>, is used and contain
 <h4>
 <a id="lazy-loading" class="anchor" href="#lazy-loading" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Lazy loading</h4>
 
-<p>We will use the relations defined below, to lazy load the related model</p>
+<p>We will use the relations defined below, to lazy load the related models</p>
 
 <div class="highlight highlight-source-js"><pre><span class="pl-c">// load the related phone model of the person with the id 123</span>
 <span class="pl-c">// we access the relation via `phone()` which return a HasOne relation instance</span>
-<span class="pl-smi">person</span>.<span class="pl-c1">load</span>([<span class="pl-s"><span class="pl-pds">'</span>phone<span class="pl-pds">'</span></span>], <span class="pl-k">function</span> (<span class="pl-smi">error</span>, <span class="pl-smi">model</span>) {
-  <span class="pl-smi">assert</span>.<span class="pl-en">equal</span>(person, model)
-  <span class="pl-smi">assert</span>.<span class="pl-en">instanceOf</span>(<span class="pl-smi">model</span>.<span class="pl-en">related</span>(<span class="pl-s"><span class="pl-pds">'</span>phone<span class="pl-pds">'</span></span>), Phone)
-})
+<span class="pl-k">var</span> person <span class="pl-k">=</span> <span class="pl-smi">Person</span>.<span class="pl-en">make</span>({ id<span class="pl-k">:</span> <span class="pl-c1">123</span> })
 
-<span class="pl-c">// the same can be done to retrieve all the  author's posts</span>
-<span class="pl-smi">author</span>.<span class="pl-c1">load</span>([<span class="pl-s"><span class="pl-pds">'</span>posts<span class="pl-pds">'</span></span>]).<span class="pl-en">then</span>(<span class="pl-k">function</span> (<span class="pl-smi">model</span>) {
-  <span class="pl-smi">assert</span>.<span class="pl-en">equal</span>(author, model)
-  <span class="pl-smi">assert</span>.<span class="pl-en">instanceOf</span>(<span class="pl-smi">model</span>.<span class="pl-en">related</span>(<span class="pl-s"><span class="pl-pds">'</span>posts<span class="pl-pds">'</span></span>), Collection)
+<span class="pl-smi">person</span>.<span class="pl-c1">load</span>([<span class="pl-s"><span class="pl-pds">'</span>posts<span class="pl-pds">'</span></span>]).<span class="pl-en">then</span>(<span class="pl-k">function</span> (<span class="pl-smi">model</span>) {
+  <span class="pl-smi">assert</span>.<span class="pl-en">equal</span>(model, person)
+  <span class="pl-smi">assert</span>.<span class="pl-en">instanceOf</span>(<span class="pl-smi">person</span>.<span class="pl-en">getRelated</span>(<span class="pl-s"><span class="pl-pds">'</span>posts<span class="pl-pds">'</span></span>), Collection)
 })</pre></div>
 
 <h4>
 <a id="eager-loading" class="anchor" href="#eager-loading" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Eager loading</h4>
 
-<p>To load a model and its relationships in one call, you can use the static method <code>populate</code></p>
+<p>To load a model and its relationships in one call, you can use the query method <code>withRelated</code></p>
 
 <div class="highlight highlight-source-js"><pre><span class="pl-c">// fetch the first article and its author</span>
-<span class="pl-smi">Post</span>.<span class="pl-en">populate</span>(<span class="pl-s"><span class="pl-pds">'</span>author<span class="pl-pds">'</span></span>).<span class="pl-en">fetch</span>().<span class="pl-en">then</span>(<span class="pl-k">function</span> (<span class="pl-smi">post</span>) {
-  <span class="pl-smi">assert</span>.<span class="pl-en">instanceOf</span>(<span class="pl-smi">post</span>.<span class="pl-en">related</span>(<span class="pl-s"><span class="pl-pds">'</span>author<span class="pl-pds">'</span></span>), Author)
+<span class="pl-smi">Post</span>.<span class="pl-en">query</span>().<span class="pl-en">withRelated</span>(<span class="pl-s"><span class="pl-pds">'</span>author<span class="pl-pds">'</span></span>).<span class="pl-en">first</span>().<span class="pl-en">then</span>(<span class="pl-k">function</span> (<span class="pl-smi">post</span>) {
+  <span class="pl-smi">assert</span>.<span class="pl-en">instanceOf</span>(<span class="pl-smi">post</span>.<span class="pl-en">getRelated</span>(<span class="pl-s"><span class="pl-pds">'</span>author<span class="pl-pds">'</span></span>), User)
 })
 
-<span class="pl-c">// load all authors with their 3 first posts</span>
-Author
-  .<span class="pl-en">populate</span>({ <span class="pl-en">posts</span><span class="pl-k">:</span> <span class="pl-k">function</span> (<span class="pl-smi">query</span>) { <span class="pl-smi">query</span>.<span class="pl-en">limit</span>(<span class="pl-c1">3</span>) } })
-  .<span class="pl-en">fetchAll</span>(<span class="pl-k">function</span> (<span class="pl-smi">error</span>, <span class="pl-smi">authors</span>) {
-    <span class="pl-smi">authors</span>.<span class="pl-en">forEach</span>(<span class="pl-k">function</span> (<span class="pl-smi">author</span>) {
-      <span class="pl-smi">assert</span>.<span class="pl-en">instanceOf</span>(<span class="pl-smi">author</span>.<span class="pl-en">related</span>(<span class="pl-s"><span class="pl-pds">'</span>posts<span class="pl-pds">'</span></span>), Collection)
-      <span class="pl-smi">assert</span>.<span class="pl-en">instanceOf</span>(<span class="pl-smi">author</span>.<span class="pl-en">related</span>(<span class="pl-s"><span class="pl-pds">'</span>posts<span class="pl-pds">'</span></span>).<span class="pl-en">first</span>(), Post)
-    })
-  })</pre></div>
+<span class="pl-c">// load all authors with their posts</span>
+<span class="pl-smi">User</span>.<span class="pl-en">query</span>().<span class="pl-en">withRelated</span>(<span class="pl-s"><span class="pl-pds">'</span>posts<span class="pl-pds">'</span></span>).<span class="pl-en">fetch</span>().<span class="pl-en">asCallback</span>((<span class="pl-smi">error</span>, <span class="pl-smi">authors</span>) <span class="pl-k">=&gt;</span> {
+  <span class="pl-smi">assert</span>.<span class="pl-en">instanceOf</span>(authors, Collection)
+
+  <span class="pl-smi">authors</span>.<span class="pl-c1">forEach</span>(<span class="pl-k">function</span> (<span class="pl-smi">author</span>) {
+    <span class="pl-smi">assert</span>.<span class="pl-en">instanceOf</span>(<span class="pl-smi">author</span>.<span class="pl-en">getRelated</span>(<span class="pl-s"><span class="pl-pds">'</span>posts<span class="pl-pds">'</span></span>), Collection)
+    <span class="pl-smi">assert</span>.<span class="pl-en">instanceOf</span>(<span class="pl-smi">author</span>.<span class="pl-en">getRelated</span>(<span class="pl-s"><span class="pl-pds">'</span>posts<span class="pl-pds">'</span></span>).<span class="pl-en">first</span>(), Post)
+  })
+})</pre></div>
 
 <h3>
 <a id="saving-related-models" class="anchor" href="#saving-related-models" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Saving related models</h3>
@@ -481,14 +460,9 @@ Author
 <a id="save-and-savemany" class="anchor" href="#save-and-savemany" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><code>save()</code> and <code>saveMany()</code>
 </h4>
 
-<div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> comment <span class="pl-k">=</span> <span class="pl-smi">Comment</span>.<span class="pl-en">factory</span>({ body<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>Hello World !!<span class="pl-pds">"</span></span> })
+<div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> comment <span class="pl-k">=</span> <span class="pl-c1">Comment</span>.<span class="pl-en">make</span>({ body<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>Hello World !!<span class="pl-pds">"</span></span> })
 
-<span class="pl-c">// using callbacks</span>
-<span class="pl-smi">post</span>.<span class="pl-en">comments</span>().<span class="pl-en">save</span>(comment, <span class="pl-k">function</span> (<span class="pl-smi">error</span>, <span class="pl-smi">model</span>) {
-  <span class="pl-smi">assert</span>.<span class="pl-en">equal</span>(model, comment)
-})
-
-<span class="pl-c">// using promises</span>
+<span class="pl-c">// saving and attach one comment</span>
 <span class="pl-smi">post</span>.<span class="pl-en">comments</span>().<span class="pl-en">save</span>(comment).<span class="pl-en">then</span>(
   <span class="pl-k">function</span> (<span class="pl-smi">model</span>) {
     <span class="pl-smi">assert</span>.<span class="pl-en">equal</span>(model, comment)
@@ -496,24 +470,15 @@ Author
   <span class="pl-k">function</span> (<span class="pl-smi">error</span>) {
     <span class="pl-k">...</span>
   }
-)</pre></div>
+)
 
-<div class="highlight highlight-source-js"><pre><span class="pl-c">// save many using callbacks</span>
+<span class="pl-c">// saving many events</span>
 <span class="pl-smi">post</span>.<span class="pl-en">comments</span>().<span class="pl-en">saveMany</span>([
-  <span class="pl-smi">Comment</span>.<span class="pl-en">factory</span>({ body<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>first comment<span class="pl-pds">"</span></span> }),
-  <span class="pl-smi">Comment</span>.<span class="pl-en">factory</span>({ body<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>second comment<span class="pl-pds">"</span></span> })
-], <span class="pl-k">function</span> (<span class="pl-smi">error</span>, <span class="pl-smi">result</span>) {
-  <span class="pl-smi">assert</span>.<span class="pl-en">instanceOf</span>(result, Collection)
-  <span class="pl-smi">assert</span>.<span class="pl-en">instanceOf</span>(<span class="pl-smi">result</span>.<span class="pl-en">first</span>(), Comment)
-})
-
-<span class="pl-c">// using promises</span>
-<span class="pl-smi">post</span>.<span class="pl-en">comments</span>().<span class="pl-en">saveMany</span>([
-  <span class="pl-smi">Comment</span>.<span class="pl-en">factory</span>({ body<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>first comment<span class="pl-pds">"</span></span> }),
-  <span class="pl-smi">Comment</span>.<span class="pl-en">factory</span>({ body<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>second comment<span class="pl-pds">"</span></span> })
+  <span class="pl-c1">Comment</span>.<span class="pl-en">make</span>({ body<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>first comment<span class="pl-pds">"</span></span> }),
+  <span class="pl-c1">Comment</span>.<span class="pl-en">make</span>({ body<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>second comment<span class="pl-pds">"</span></span> })
 ]).<span class="pl-en">then</span>(<span class="pl-k">function</span> (<span class="pl-smi">result</span>) {
   <span class="pl-smi">assert</span>.<span class="pl-en">instanceOf</span>(result, Collection)
-  <span class="pl-smi">assert</span>.<span class="pl-en">instanceOf</span>(<span class="pl-smi">result</span>.<span class="pl-en">first</span>(), Comment)
+  <span class="pl-smi">assert</span>.<span class="pl-en">instanceOf</span>(<span class="pl-smi">result</span>.<span class="pl-en">first</span>(), <span class="pl-c1">Comment</span>)
 })</pre></div>
 
 <h4>
@@ -523,15 +488,17 @@ Author
 <p>In addition to the <code>save</code> and <code>saveMany</code> methods, you may also use the <code>create</code> method, 
 which accepts an array of attributes, creates a model, and inserts it into the database.</p>
 
-<div class="highlight highlight-source-js"><pre><span class="pl-smi">post</span>.<span class="pl-en">comments</span>().<span class="pl-en">create</span>(, <span class="pl-k">function</span> (<span class="pl-smi">error</span>, <span class="pl-smi">model</span>) {
-  <span class="pl-smi">assert</span>.<span class="pl-en">instanceOf</span>(model, Comment)
+<div class="highlight highlight-source-js"><pre><span class="pl-c">// create and attach a post comment</span>
+<span class="pl-smi">post</span>.<span class="pl-en">comments</span>().<span class="pl-en">create</span>({ body<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>Hello World !!<span class="pl-pds">"</span></span> }).<span class="pl-en">then</span>(<span class="pl-k">function</span> (<span class="pl-smi">error</span>, <span class="pl-smi">model</span>) {
+  <span class="pl-smi">assert</span>.<span class="pl-en">instanceOf</span>(model, <span class="pl-c1">Comment</span>)
 })
 
+<span class="pl-c">// create and attach the post comments</span>
 <span class="pl-smi">post</span>.<span class="pl-en">comments</span>().<span class="pl-en">createMany</span>([
   { body<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>first comment<span class="pl-pds">"</span></span> }, { body<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>second comment<span class="pl-pds">"</span></span> }
 ]).<span class="pl-en">then</span>(<span class="pl-k">function</span> (<span class="pl-smi">result</span>) {
   <span class="pl-smi">assert</span>.<span class="pl-en">instanceOf</span>(result, Collection)
-  <span class="pl-smi">assert</span>.<span class="pl-en">instanceOf</span>(<span class="pl-smi">result</span>.<span class="pl-en">first</span>(), Comment)
+  <span class="pl-smi">assert</span>.<span class="pl-en">instanceOf</span>(<span class="pl-smi">result</span>.<span class="pl-en">first</span>(), <span class="pl-c1">Comment</span>)
 })</pre></div>
 
 <h4>
@@ -540,13 +507,13 @@ which accepts an array of attributes, creates a model, and inserts it into the d
 
 <p>When updating a <code>belongsTo</code> relationship, you may use the <code>associate</code> method.</p>
 
-<div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> john <span class="pl-k">=</span> <span class="pl-smi">Person</span>.<span class="pl-en">factory</span>({ id<span class="pl-k">:</span> <span class="pl-c1">123</span> })
+<div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> john <span class="pl-k">=</span> <span class="pl-smi">Person</span>.<span class="pl-en">make</span>({ id<span class="pl-k">:</span> <span class="pl-c1">123</span> })
 
 <span class="pl-c">// set the foreign key `owner_id` and save the phone model</span>
-<span class="pl-smi">phone</span>.<span class="pl-en">owner</span>().<span class="pl-en">associate</span>(john).<span class="pl-en">save</span>()
+<span class="pl-smi">phone</span>.<span class="pl-en">owner</span>().<span class="pl-en">associate</span>(john).<span class="pl-en">save</span>().<span class="pl-en">then</span>(<span class="pl-k">...</span>)
 
 <span class="pl-c">// unset the foreign key, then save</span>
-<span class="pl-smi">phone</span>.<span class="pl-en">owner</span>().<span class="pl-en">dissociate</span>().<span class="pl-en">save</span>()</pre></div>
+<span class="pl-smi">phone</span>.<span class="pl-en">owner</span>().<span class="pl-en">dissociate</span>().<span class="pl-en">save</span>().<span class="pl-en">then</span>(<span class="pl-k">...</span>)</pre></div>
 
 <h4>
 <a id="attach-detach-and-updatepivot" class="anchor" href="#attach-detach-and-updatepivot" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><code>attach()</code>, <code>detach()</code> and <code>updatePivot()</code>
@@ -555,12 +522,6 @@ which accepts an array of attributes, creates a model, and inserts it into the d
 <p>When working with many-to-many relationships, Vitamin provides a few additional helper methods to make working with related models more convenient.</p>
 
 <div class="highlight highlight-source-js"><pre><span class="pl-c">// to attach a role to a user by inserting a record in the joining table</span>
-<span class="pl-c">// using callbacks</span>
-<span class="pl-smi">user</span>.<span class="pl-en">roles</span>().<span class="pl-en">attach</span>(roleId, <span class="pl-k">function</span> (<span class="pl-smi">error</span>, <span class="pl-smi">result</span>) {
-  <span class="pl-k">...</span>
-})
-
-<span class="pl-c">// or using promises</span>
 <span class="pl-smi">user</span>.<span class="pl-en">roles</span>().<span class="pl-en">attach</span>(roleId).<span class="pl-en">then</span>(
   <span class="pl-k">function</span> (<span class="pl-smi">result</span>) {
     <span class="pl-k">...</span>
@@ -573,15 +534,15 @@ which accepts an array of attributes, creates a model, and inserts it into the d
 <p>To remove a many-to-many relationship record, use the detach method.</p>
 
 <div class="highlight highlight-source-js"><pre><span class="pl-c">// detach all roles of the loaded user</span>
-<span class="pl-smi">user</span>.<span class="pl-en">roles</span>().<span class="pl-en">detach</span>(<span class="pl-k">function</span> (<span class="pl-smi">error</span>, <span class="pl-smi">result</span>) {
+<span class="pl-smi">user</span>.<span class="pl-en">roles</span>().<span class="pl-c1">detach</span>().<span class="pl-en">asCallback</span>(<span class="pl-k">function</span> (<span class="pl-smi">error</span>, <span class="pl-smi">result</span>) {
   <span class="pl-k">...</span>
 })
 
 <span class="pl-c">// detach only the role with the given id</span>
-<span class="pl-smi">user</span>.<span class="pl-en">roles</span>().<span class="pl-en">detach</span>(roleId).<span class="pl-en">then</span>(<span class="pl-k">...</span>)
+<span class="pl-smi">user</span>.<span class="pl-en">roles</span>().<span class="pl-c1">detach</span>(roleId).<span class="pl-en">then</span>(<span class="pl-k">...</span>)
 
 <span class="pl-c">// detach all roles with the given ids</span>
-<span class="pl-smi">user</span>.<span class="pl-en">roles</span>().<span class="pl-en">detach</span>([<span class="pl-c1">1</span>, <span class="pl-c1">2</span>, <span class="pl-c1">3</span>]).<span class="pl-en">then</span>(<span class="pl-k">...</span>)</pre></div>
+<span class="pl-smi">user</span>.<span class="pl-en">roles</span>().<span class="pl-c1">detach</span>([<span class="pl-c1">1</span>, <span class="pl-c1">2</span>, <span class="pl-c1">3</span>]).<span class="pl-en">then</span>(<span class="pl-k">...</span>)</pre></div>
 
 <p>If you need to update an existing row in your pivot table, you may use <code>updatePivot</code> method</p>
 
@@ -606,7 +567,7 @@ So, after this operation is complete, only the IDs in the array will exist in th
 
 <p>You may also pass additional intermediate table values with the IDs:</p>
 
-<div class="highlight highlight-source-js"><pre><span class="pl-smi">user</span>.<span class="pl-en">roles</span>().<span class="pl-en">sync</span>([{ <span class="pl-c1">1</span><span class="pl-k">:</span> { <span class="pl-s"><span class="pl-pds">'</span>expires<span class="pl-pds">'</span></span><span class="pl-k">:</span> <span class="pl-c1">true</span> } }, <span class="pl-c1">2</span>]).<span class="pl-en">then</span>(<span class="pl-k">...</span>)</pre></div>
+<div class="highlight highlight-source-js"><pre><span class="pl-smi">user</span>.<span class="pl-en">roles</span>().<span class="pl-en">sync</span>([[<span class="pl-c1">1</span>, { <span class="pl-s"><span class="pl-pds">'</span>expires<span class="pl-pds">'</span></span><span class="pl-k">:</span> <span class="pl-c1">true</span> }], <span class="pl-c1">2</span>]).<span class="pl-en">then</span>(<span class="pl-k">...</span>)</pre></div>
 
       <footer class="site-footer">
         <span class="site-footer-owner"><a href="https://github.com/vitaminjs/vitamin">Vitamin</a> is maintained by <a href="https://github.com/vitaminjs">vitaminjs</a>.</span>
