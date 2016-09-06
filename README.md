@@ -1,3 +1,5 @@
+> This is an alpha version, please help improving by testing and submitting issues. Many thanks
+
 ## Introduction
 Vitamin provides a simple and easy to use Data Mapper implementation for working with your relational database.
 
@@ -25,6 +27,7 @@ Vitamin is initialized by passing an initialized Knex client instance.
 The [knex documentation](//knexjs.org/#Installation) provides a number of examples for different use cases.
 
 ```js
+// file: app/config/database.js
 var knex = require('knex')({
   client: 'mysql',
   connection: {
@@ -36,20 +39,21 @@ var knex = require('knex')({
   }
 })
 
-module.exports = require('vitamin')(knex)
+// exports
+export default require('vitamin')(knex)
 ```
 ***
 
 ## Getting started
 
-### Defining data mappers
+### Defining models
 
-To get started, let's define a user data mapper by specifying both, the `primary key` name, and the `table` name
+To get started, let's define a user model by specifying both, the `primary key` name, and the `table` name
 
 ```js
 // using the previous initialized vitamin object,
-// we define a mapper called `user` using `mapper` method of vitamin object
-module.exports = vitamin.model('user', {
+// we define a model called `user` using `model` method of vitamin object
+export default vitamin.model('user', {
   
   // the primary key, default to `id`
   primaryKey: 'user_id',
@@ -57,7 +61,7 @@ module.exports = vitamin.model('user', {
   // the table name
   tableName: 'users',
   
-  // add default attributes
+  // set the default attributes
   defaults: {
     active: true,
     verified: false
@@ -83,13 +87,17 @@ var user = User.make({ name: "John", occupation: "Developer" })
 var user = new User({ name: "John", occupation: "Developer" })
 
 // then we save it
-user.save()
-.then(function (result) {
+user.save().then(result => {
   assert.equal(result, user)
   assert.instanceOf(result, User)
 })
-.catch(function (error) {
-  ...
+
+// or using callbacks
+user.save().asCallback((error, result) => {
+  if ( error ) throw error
+  
+  assert.equal(result, user)
+  assert.instanceOf(result, User)
 })
 ```
 Another shorthand to create and save a new user is the `create` static method
@@ -97,8 +105,10 @@ Another shorthand to create and save a new user is the `create` static method
 ```js
 var data = { name: "John", occupation: "Developer" }
 
-User.create(data).then(function (result) {
+User.create(data).then(result => {
   assert.instanceOf(result, User)
+}).catch(error => {
+  ...
 })
 ```
 
@@ -110,59 +120,50 @@ Below a few examples of different data access methods provided by Vitamin.
 
 ```js
 // get a collection of all users
-User.query().fetch().then(
-  function (result) {
-    assert.instanceOf(result, Collection)
-  },
-  function (error) {
-    ...
-  }
-)
+User.query().fetch().then(result => {
+  assert.instanceOf(result, Collection)
+})
 ```
-The `fetch` method will return all the rows in the `users` table as a collection of `User` models. 
-But, if you may also add constraints to queries, you can use the `where` method, which returns a `query builder` instance
+The `fetch` method will return all the rows in the `users` table as a collection of `User` models.
+But, if you may also add constraints to queries, you can use the `where` methods in the `query builder` object returned by the `query` method
 
 ```js
-User.query().where('role', "guest").offset(10).limit(15).fetch().then(
-  function (result) {
-    assert.instanceOf(result, Collection)
-  },
-  function (error) {
-    ...
-  }
-)
+User.query().where('role', "guest").offset(10).limit(15).fetch(['column1', 'column2', '...']).then(result => {
+  assert.instanceOf(result, Collection)
+  assert.instanceOf(result.first(), User)
+})
+```
+The `findMany` query method return a collection of models by their primary keys
+```js
+User.query().findMany([1, 2, 3]).then(function (result) {
+  assert.instanceOf(result, Collection)
+  assert.equal(result.length, 3) // as expected
+})
 ```
 
 * Retrieving single model
-Of course, in addition to retrieving all of the records for a given table, you may also retrieve single records using `find` and `first`.
+Of course, in addition to retrieve all records of a given table, you may also retrieve a single record using `find` or `first`.
 Instead of returning a collection of models, these methods return only a single model instance
 
 ```js
 // find a user by its primary key
-User.query().find(123).then(
-  function (result) {
-    assert.instanceOf(result, User)
-  },
-  function (error) {
-    ...
-  }
-)
-```
-To retrieve the first model matching the query constraints, use `first`
+User.query().find(123).then(result => {
+  assert.instanceOf(result, User)
+  assert.equal(result.getId(), 123)
+})
 
-```js
 // fetch the `id` and `email` of the first admin user
-User.query().where('is_admin', true).first('id', 'email').then(
-  function (result) {
-    assert.instanceOf(result, userMapper.modelClass)
-  },
-  function (error) {
-    ...
-  }
-)
+User.query().where('is_admin', true).first('id', 'email').then(result => {
+  assert.instanceOf(result, User)
+  assert.ok(result.get('is_admin'))
+})
 ```
+> `findOrFail`, `findOrNew`, `firstOrCreate`, `firstOrNew`, `firstOrFail` query methods are also available
+
+> `findOrFail` and `firstOrFail` throw a `ModelNotFoundError` if no result found
 
 #### 3 - Update
+
 The `save` method may also be used to update a single model that already exists in the database.
 To update a model, you should retrieve it, set any attributes you wish to update, and then call the `save` method.  
 ```js
@@ -170,54 +171,37 @@ To update a model, you should retrieve it, set any attributes you wish to update
 // then we modify the status attribute and save it
 var Post = vitamin.model('post')
 
-Post.query().find(1).then(function (post) {
-  return post.set('status', "draft").save()
-})
+Post.query().find(1).then(post => post.set('status', "draft").save())
 ```
 In case you have many attributes to edit, you may use the `update` method directly:
 ```js
 var data = { 'status': "published", 'published_at': new Date }
 
-post.update(data).then(
-  function (result) {
-    ...
-  },
-  function (error) {
-    ...
-  }
-)
+Post.query().find(1).then(post => post.update(data)).then(result => {
+  assert.equal(result, post)
+  assert.equal(result.get('status'), 'published')
+})
 ```
 
 #### 4 - Delete
+
 Likewise, once retrieved, a model can be destroyed which removes it from the database.
 To delete a model, call the `destroy` method on an existing model instance:
 ```js
-Post.make({ id : 45 }).destroy().then(
-  function (result) {
-    assert.equal(result, post)
-  },
-  function (error) {
-    ...
-  }
-)
+Post.make({ id : 45 }).destroy().then(result => {
+  assert.equal(result, post)
+})
 ```
 Of course, you may also run a delete query on a set of models.
 ```js
 // we will delete all posts that are marked as draft
-Post.query().where('status', 'draft').destroy().then(
-  function (result) {
-    ...
-  },
-  function (error) {
-    ...
-  }
-)
+Post.query().where('status', 'draft').destroy().then(...)
 ```
 
 ### Events
+
 Model events allow you to attach code to certain events in the lifecycle of yours models. 
-This enables you to add behaviors to your models when those built-in events 
-`ready`, `creating`, `created`, `saving`, `saved`, `updating`, `updated`, `deleting` or `deleted` occur.
+This enables you to add behaviors to your models when those built-in events `creating`, `created`, `saving`, `saved`, `updating`, `updated`, `deleting` or `deleted` occur.
 
 Events can be defined when you register the model
 ```js
@@ -227,7 +211,7 @@ vitamin.model('user', {
   
   events: {
     
-    'creating': _.noop,
+    'creating': handlerFn,
     
     'saved': [
       handler1,
@@ -251,7 +235,7 @@ You can also attach the same handler for many events separated by a white space
 ```js
 Post.on('creating updating', updateTimestamps)
 ```
-The built-in events are fired automatically by the mapper, but you can trigger manually those events, or any custom ones
+The built-in events are fired automatically by the mapper, but you can trigger manually those events, or any custom ones with `emit` method
 
 ```js
 Post.make().emit('saving')
@@ -266,6 +250,7 @@ Vitamin makes managing and working with relationships easy, and supports several
 * One To One
 * One To Many
 * Many To Many
+* Polymorphic relations
 
 ### Defining relations
 
@@ -280,8 +265,10 @@ var Phone = vitamin.model('phone', {
   relations: {
     
     owner: function () {
-      // we refer to`Person` mapper by its name
-      // `owner_id` is the foreign key of `users` in `phones` table
+      // BelongsTo is the inverse relation of HasOne and HasMany
+      // we refer to`Person` model by its name
+      // the `owner_id` is the foreign key in `phones` table
+      // the `id` is the primary key of the people table
       return this.belongsTo('person', 'owner_id', 'id')
     }
     
@@ -296,7 +283,7 @@ var Person = vitamin.model('person', {
   relations: {
     
     phone: function () {
-      // the first argument is the target mapper name
+      // the first argument is the target model name
       // the second is the foreign key in phones table
       // the third parameter is optional, it corresponds to the primary key of person model
       return this.hasOne('phone', 'owner_id', 'id')
@@ -309,7 +296,7 @@ var Person = vitamin.model('person', {
 
 #### One To Many
 
-An example for this type, is the relation between blog `post` and its `author`
+An example for this type, is the relation between blog `Post` and its `Author`
 ```js
 var User = vitamin.model('user', {
   
@@ -319,7 +306,7 @@ var User = vitamin.model('user', {
     
     posts: function () {
       // if the foreign key is not provided, 
-      // vitamin will use the parent mapper name suffixed by '_id',
+      // vitamin will use the parent model name suffixed by '_id',
       // as a foreign key in the `posts` table, in this case `author_id`
       return this.hasMany('post')
     }
@@ -335,7 +322,7 @@ var Post = vitamin.model('post', {
   relations: {
     
     author: function () {
-      return this.belongsTo('author', 'author_id')
+      return this.belongsTo('user', 'author_id')
     }
     
   }
@@ -378,6 +365,99 @@ vitamin.model('category', {
 })
 ```
 
+#### Polymorphic relations
+
+Polymorphic relations allow a model to belong to more than one other model on a single association.
+For example, the users of the application can like both comments and posts.
+Using polymorphic relationships, you can use a single `Like` model for the both scenarios.
+
+Here is the schema  of this example database:
+```
+posts (id, title, body)
+comments (id, post_id, body)
+likes (id, likeable_id, likeable_type)
+```
+The `likeable_id` column will contain the ID of the post or the comment, while the `likeable_type` will contain the name of the owning model.
+
+```js
+var Post = vitamin.model('post', {
+  
+  relations: {
+    
+    likes: function () {
+      return this.morphMany('like', 'likeable')
+    }
+    
+  }
+  
+})
+
+var comment = vitamin.model('', {
+  
+  relations: {
+    
+    likes: function () {
+      return this.morphMany('like', 'likeable')
+    }
+    
+  }
+  
+})
+
+var Like = vitamin.model('like', {
+  
+  relations: {
+    
+    likeable: function () {
+      // the inverse relation of `morphOne` and `morphMany`
+      return this.morphTo('likeable')
+    }
+    
+  }
+  
+})
+```
+
+In addition to those associations, you can also define many-to-many polymorphic relations.
+For example, a `Post` and `Video` models could share both a relation to `Tag` model.
+Using a polymorphic many-to-many relation, you can use a single list of unique tags that are shared across blog posts and videos, or any other model.
+
+```
+tags (id, name)
+posts (id, title, body)
+videos (id, name, filename)
+taggables (tag_id, taggable_id, taggable_type)
+```
+```js
+var Post = vitamin.model('post', {
+  
+  relations: {
+    
+    tags: function () {
+      return this.morphToMany('tag', 'taggable')
+    }
+    
+  }
+  
+})
+
+var Tag = vitamin.model('tag', {
+  
+  relations: {
+    
+    posts: function () {
+      return this.morphedByMany('post', 'taggable')
+    },
+    
+    videos: function () {
+      return this.morphedByMany('video', 'taggable')
+    }
+    
+  }
+  
+})
+```
+
 ### Querying relations
 
 #### Lazy loading
@@ -390,7 +470,7 @@ var person = Person.make({ id: 123 })
 
 person.load(['posts']).then(function (model) {
   assert.equal(model, person)
-  assert.instanceOf(person.getRelated('posts'), Collection)
+  assert.instanceOf(model.getRelated('posts'), Collection)
 })
 ```
 
@@ -464,7 +544,7 @@ post.comments().createMany([
 ```
 
 #### `associate()` and `dissociate()`
-When updating a `belongsTo` relationship, you may use the `associate` method.
+When updating a `belongsTo` or `morphTo` relationship, you may use the `associate` method.
 
 ```js
 var john = Person.make({ id: 123 })
@@ -473,7 +553,7 @@ var john = Person.make({ id: 123 })
 phone.owner().associate(john).save().then(...)
 
 // unset the foreign key, then save
-phone.owner().dissociate().save().then(...)
+like.likeable().dissociate().save().then(...)
 ```
 
 #### `attach()`, `detach()` and `updatePivot()`
