@@ -488,7 +488,7 @@ export default class {
       .tap(() => {
         return this
           .newQuery()
-          .insert(model.getData()) // TODO pick only the table columns
+          .insert(model.getData(), returning)
           .then(res => this._emulateReturning(model, res, returning))
           .then(res => model.setData(res, true))
       })
@@ -512,7 +512,7 @@ export default class {
         return this
           .newQuery()
           .where(this.primaryKey, model.getId())
-          .update(model.getDirty())
+          .update(model.getDirty(), returning)
           .then(res => this._emulateReturning(model, res, returning))
           .then(res => model.setData(res, true))
       })
