@@ -85,7 +85,7 @@ export default class extends mixin(Relation) {
    * @return promise
    */
   save(related, pivots = {}, returning = ['*']) {
-    return related.save(returning).then(model => {
+    return super.save(related, returning).then(model => {
       return this.attach(this.createPivotRecord(model.getId(), pivots))
     })
   }
