@@ -26,7 +26,7 @@ module.exports = function initialize(knex) {
         if ( options instanceof Mapper ) mapper = options
         else mapper = new Mapper(options)
         
-        return registry.set(name, mapper)
+        registry.set(name, mapper)
       }
       
       return registry.get(name).modelClass

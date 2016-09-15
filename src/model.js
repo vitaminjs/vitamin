@@ -133,7 +133,7 @@ class Model extends BaseModel {
    * @return promise
    */
   load(relations) {
-    return this.mapper.newQuery().withRelated(...arguments).loadRelated([this]).return(this)
+    return this.mapper.load(this, ...arguments)
   }
   
   /**

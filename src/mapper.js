@@ -27,7 +27,6 @@ export default class {
     this.defaults = null
     this.tableName = null
     this.primaryKey = 'id'
-    this.modelClass = Model
     this.timestamps = false
     this.connection = 'default'
     this.createdAtColumn = 'created_at'
@@ -35,8 +34,10 @@ export default class {
 
     _.extend(this, options)
     
-    this.modelClass = this._setupModel()
-
+    // set up the model class for this mapper
+    this._setupModel(options.modelClass || Model)
+    
+    // set up the event emitter
     this.emitter = new EventEmitter()
     this._registerEvents(this.events)
   }
@@ -94,6 +95,19 @@ export default class {
         return memo
       }, {})
     }
+  }
+  
+  /**
+   * Load the given relationships of a model
+   * 
+   * @param {Model} model
+   * @param {Array} relations
+   * @return promise
+   */
+  load(model, relations) {
+    relations = _.rest(arguments)
+    
+    return this.newQuery().withRelated(...relations).loadRelated([model]).return(model)
   }
 
   /**
@@ -564,10 +578,10 @@ export default class {
   /**
    * Set up the model class
    *
-   * @return model constructor
+   * @param {Model} model constructor
    * @private
    */
-  _setupModel() {
+  _setupModel(model) {
     var _this = this
     var proto = _.clone(this.methods)
 
@@ -583,7 +597,7 @@ export default class {
       }
     })
 
-    return this.modelClass.extend(proto, this.statics)
+    this.modelClass = model.extend(proto, this.statics)
   }
 
 }
