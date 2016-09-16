@@ -434,23 +434,26 @@ var Post = vitamin.model('post', {
   relations: {
     
     tags: function () {
-      return this.morphToMany('tag', 'taggable')
+      return this.morphToMany('tag', 'taggables', 'taggable')
     }
     
   }
   
 })
 
+// `taggables` is the pivot table name.
+// `taggable` will be used as a prefix for morph columns `taggable_id` and `taggable_type`
+
 var Tag = vitamin.model('tag', {
   
   relations: {
     
     posts: function () {
-      return this.morphedByMany('post', 'taggable')
+      return this.morphedByMany('post', 'taggables', 'taggable')
     },
     
     videos: function () {
-      return this.morphedByMany('video', 'taggable')
+      return this.morphedByMany('video', 'taggables', 'taggable')
     }
     
   }
