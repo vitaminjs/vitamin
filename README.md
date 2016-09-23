@@ -1,3 +1,4 @@
+[![Stories in Ready](https://badge.waffle.io/vitaminjs/vitamin.png?label=ready&title=Ready)](https://waffle.io/vitaminjs/vitamin)
 ## Introduction
 Vitamin provides a simple and easy to use Data Mapper implementation for working with your relational database.
 
