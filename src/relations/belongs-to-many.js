@@ -135,6 +135,50 @@ export default class extends mixin(Relation) {
   }
   
   /**
+   * Toggle the given IDs in the intermediate table
+   * 
+   * It will detach the existing given ids, and attach the new ones,
+   * In another words, it will only sync the given ids
+   * 
+   * @param {Any} ids
+   * @return promise
+   */
+  toggle(ids) {
+    var toDetach = [], toAttach = []
+    
+    if (! _.isArray(ids) ) ids = [ids]
+    
+    return this
+      .newPivotQuery()
+      .pluck(this.targetKey)
+      
+      // traversing
+      .then(oldIds => {
+        ids.forEach(_id => {
+          if ( _id instanceof Model ) _id = _id.getId()
+          
+          if ( _.isArray(_id) ) _id = _id[0]
+          
+          _.contains(oldIds, _id) ? toDetach.push(_id) : toAttach.push(_id)
+        })
+      })
+      
+      // detach
+      .then(() => _.isEmpty(toDetach) ? false : this.detach(toDetach))
+      
+      // attach
+      .then(() => _.isEmpty(toAttach) ? false : this.attach(toAttach))
+      
+      // return
+      .then(() => {
+        return {
+          'detached': toDetach.length,
+          'attached': toAttach.length,
+        }
+      })
+  }
+  
+  /**
    * Sync the intermediate table with a list of IDs
    * 
    * @param {Array} ids

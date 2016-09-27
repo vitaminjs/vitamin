@@ -615,3 +615,17 @@ You may also pass additional intermediate table values with the IDs:
 ```js
 user.roles().sync([[1, { 'expires': true }], 2]).then(...)
 ```
+
+#### `toggle`
+
+This method allows you toggle relationships without pain.
+It accepts a model, an ID or an array of IDs, and sync _only_ those ids without affecting the others.
+Useful for `likes`, `stars` or `following` relationships
+
+```js
+// grant or revoke the admin role to a specific user
+user.roles().toggle(adminRole).then(...)
+
+// add or remove a like on a project
+user.likes().toggle(someProjectId).then(...)
+```
