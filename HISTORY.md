@@ -1,6 +1,11 @@
 # Vitamin changes log
 
-### _**v0.8-alpha** - Septempber 3, 2016_
+### _**v0.8.3** - September 27, 2016_
+* Add the belongs-to-many relationship `toggle` method
+* Update README.md
+* Fix some bugs
+
+### _**v0.8-0** - Septempber 4, 2016_
 > This is a breaking changes version, Vitamin become a Data Mapper implementation instead of the Active Record. So the mapping logic was moved to the `Mapper` class
 
 * Export the `BaseModel`, `BaseQuery` and `Events` to separate projects
