@@ -68,13 +68,8 @@ class Query extends BaseQuery {
    * @return promise
    */
   fetch(columns) {
-    return super
-      .fetch(...arguments)
-      .then(res => {
-        return this.model.newCollection(_.map(res, data => {
-          return this.model.newInstance(data, true)
-        }))
-      })
+    return super.fetch(...arguments)
+      .then(res => this.model.createModels(res))
       .tap(res => this.loadRelated(res.toArray()))
   }
   

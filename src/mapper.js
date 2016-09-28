@@ -213,7 +213,7 @@ export default class {
    * @alias query
    */
   newQuery() {
-    var conn = registry.connection()
+    var conn = registry.connection(this.connection)
     var query = new Query(conn.queryBuilder())
     
     return query.from(this.tableName).setModel(this)
@@ -227,6 +227,16 @@ export default class {
    */
   newCollection(models = []) {
     return new Collection(models)
+  }
+  
+  /**
+   * Helper to create a collection of models
+   * 
+   * @param {Array} records
+   * @return collection
+   */
+  createModels(records) {
+    return this.newCollection(_.map(records, data => this.newInstance(data, true)))
   }
 
   /**

@@ -74,7 +74,7 @@ class Model extends BaseModel {
    * @return plain object
    */
   toJSON() {
-    var json = _.mapObject(this.related, function (related, name) {
+    var json = _.mapObject(this.related, (related, name) => {
       return (! related ) ? related : related.toJSON()
     })
     
@@ -175,7 +175,7 @@ class Model extends BaseModel {
    * @return boolean
    */
   hasRelated(name) {
-    return !!this.getRelated(name)
+    return !!this.related[name]
   }
   
   /**

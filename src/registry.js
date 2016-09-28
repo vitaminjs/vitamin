@@ -1,5 +1,5 @@
 
-var models = {}
+var mappers = {}
 var connections = {}
 
 // exports
@@ -29,40 +29,40 @@ export default {
   },
 
   /**
-   * Set a model in the registry
+   * Set a mapper in the registry
    *
    * @param {String} name
-   * @param {Function} model constructor
-   * @return model
+   * @param {Mapper} mapper
+   * @return mapper
    */
-  set(name, model) {
+  set(name, mapper) {
     if ( this.has(name) )
       throw new Error(name + " is already defined in the registry")
 
-    return models[model.name = name.toLowerCase()] = model
+    return mappers[mapper.name = name.toLowerCase()] = mapper
   },
 
   /**
-   * Get the model by name
+   * Get the mapper by name
    *
    * @param {String} name
-   * @return model constructor
+   * @return mapper
    */
   get(name) {
     if (! this.has(name) )
       throw new Error(name + " is not defined in the registry")
 
-    return models[name.toLowerCase()]
+    return mappers[name.toLowerCase()]
   },
 
   /**
-   * Determine if the model name exists in the registry
+   * Determine if the mapper name exists in the registry
    *
    * @param {String} name
    * @return boolean
    */
   has(name) {
-    return !!models[name.toLowerCase()]
+    return !!mappers[name.toLowerCase()]
   }
 
 }
