@@ -1,26 +1,47 @@
 
-import _ from 'underscore'
 import Model from './model'
 import Mapper from './mapper'
 import Promise from 'bluebird'
-import BaseQuery from 'vitamin-query'
 import NotFoundError from './errors/model-not-found'
+import { toArray, isArray, isEmpty, isString, isFunction, isObject, 
+         each, keys, uniq, reduce, extend, object } from 'underscore'
 
 /**
- * Model Query Class
+ * @class Query
  */
-class Query extends BaseQuery {
+export default class Query {
   
   /**
-   * Model Query constructor
+   * Query constructor
    * 
    * @param {Object} qb
    * @constructor
    */
   constructor(qb) {
-    super(qb)
-    
+    this.columns = []
+    this.table = null
+    this.alias = null
     this.rels = {}
+    
+    this._qb = qb
+  }
+  
+  /**
+   * Get the base query builder
+   * 
+   * @var {QueryBuilder}
+   */
+  get builder() {
+    return this.builder
+  }
+  
+  /**
+   * Get the base query builder
+   * 
+   * @return query builder
+   */
+  toBase() {
+    return this.builder
   }
   
   /**
@@ -41,9 +62,9 @@ class Query extends BaseQuery {
    * @return this query
    */
   withRelated(relations) {
-    if (! _.isArray(relations) ) relations = _.toArray(arguments)
+    if (! isArray(relations) ) relations = toArray(arguments)
     
-    _.extend(this.rels, this.parseWithRelated(relations))
+    extend(this.rels, this.parseWithRelated(relations))
     
     return this
   }
@@ -56,9 +77,9 @@ class Query extends BaseQuery {
    */
   loadRelated(models) {
     // no need to load related, if there is no parent models
-    if ( _.isEmpty(models) || _.isEmpty(this.rels) ) return Promise.resolve()
+    if ( isEmpty(models) || isEmpty(this.rels) ) return Promise.resolve()
     
-    return Promise.map(_.keys(this.rels), name => this.eagerLoad(name, models))
+    return Promise.map(keys(this.rels), name => this.eagerLoad(name, models))
   }
   
   /**
@@ -129,7 +150,7 @@ class Query extends BaseQuery {
    * @return promise
    */
   find(id, columns = ['*']) {
-    if ( _.isArray(id) ) return this.findMany(id, columns)
+    if ( isArray(id) ) return this.findMany(id, columns)
     
     var pk = this.getQualifiedColumn(this.model.primaryKey)
     
@@ -148,7 +169,7 @@ class Query extends BaseQuery {
       // it will throw a error if there is no result,
       // or the models found are different than the given ids,
       // in case of an array of ids passed in
-      if ( !res || _.isArray(id) && _.uniq(id).length === res.length ) 
+      if ( !res || isArray(id) && uniq(id).length === res.length ) 
         throw new NotFoundError()
       
       return res
@@ -177,7 +198,7 @@ class Query extends BaseQuery {
    * @return promise
    */
   findMany(ids, columns = ['*']) {
-    if ( _.isEmpty(ids) ) return Promise.resolve(this.model.newCollection())
+    if ( isEmpty(ids) ) return Promise.resolve(this.model.newCollection())
     
     var pk = this.getQualifiedColumn(this.model.primaryKey)
     
@@ -197,10 +218,10 @@ class Query extends BaseQuery {
     var relation = this.model.getRelation(name)
     
     // add custom constraints
-    if ( _.isFunction(config) ) relation.modify(config)
+    if ( isFunction(config) ) relation.modify(config)
     
     // set nested models
-    if ( _.isArray(config) ) relation.modify(q => q.withRelated(config))
+    if ( isArray(config) ) relation.modify(q => q.withRelated(config))
     
     return relation.eagerLoad(models)
   }
@@ -213,21 +234,21 @@ class Query extends BaseQuery {
    * @private
    */
   parseWithRelated(relations) {
-    return _.reduce(relations, function (memo, value) {
-      if ( _.isString(value) ) value = _.object([[value, _.noop]])
+    return reduce(relations, function (memo, value) {
+      if ( isString(value) ) value = object([[value, () => {}]])
       
-      if( _.isObject(value) ) {
-        _.each(value, function (val, key) {
+      if( isObject(value) ) {
+        each(value, (val, key) => {
           var parts = key.split('.')
           var parent = parts.shift()
           var child = parts.join('.')
           
-          if ( _.isEmpty(child) ) {
-            if (! _.isArray(val) ) memo[parent] = val
+          if ( isEmpty(child) ) {
+            if (! isArray(val) ) memo[parent] = val
             else memo[parent] = val.concat(memo[parent] || [])
           }
           else
-            (memo[parent] = memo[parent] || []).push(_.object([[child, val]]))
+            (memo[parent] = memo[parent] || []).push(object([[child, val]]))
         }) 
       } 
       
@@ -235,9 +256,4 @@ class Query extends BaseQuery {
     }, {})
   }
   
-  
-  
 }
-
-// exports
-export default Query
