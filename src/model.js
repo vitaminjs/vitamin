@@ -1,13 +1,13 @@
 
 import NotFoundError from './errors/model-not-found'
+import { extend, mapObject } from 'underscore'
 import BaseModel from 'vitamin-model'
 import Promise from 'bluebird'
-import _ from 'underscore'
 
 /**
- * Vitamin Model Class
+ * @class Model
  */
-class Model extends BaseModel {
+export default class extends BaseModel {
   
   /**
    * Model constructor
@@ -74,11 +74,11 @@ class Model extends BaseModel {
    * @return plain object
    */
   toJSON() {
-    var json = _.mapObject(this.related, (related, name) => {
+    var json = mapObject(this.related, (related, name) => {
       return (! related ) ? related : related.toJSON()
     })
     
-    return _.extend(super.toJSON(), json)
+    return extend(super.toJSON(), json)
   }
   
   /**
@@ -190,6 +190,3 @@ class Model extends BaseModel {
   }
   
 }
-
-// exports
-export default Model
