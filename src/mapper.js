@@ -7,9 +7,13 @@ import registry from './registry'
 import Promise from 'bluebird'
 import Model from './model'
 import Query from './query'
-import _ from 'underscore'
+import { 
+  has,  map,  each,  clone,  reduce,  extend,  result,  isArray,  isObject,  isString
+} from 'underscore'
 
-// exports
+/**
+ * @class Mapper
+ */
 export default class {
 
   /**
@@ -32,7 +36,7 @@ export default class {
     this.createdAtColumn = 'created_at'
     this.updatedAtColumn = 'updated_at'
 
-    _.extend(this, options)
+    extend(this, options)
     
     // set up the model class for this mapper
     this._setupModel(options.modelClass || Model)
@@ -48,13 +52,14 @@ export default class {
    * @param {Object} props
    * @param {Object} statics
    * @return constructor function
+   * @deprecated
    */
   static extend(props = {}, statics = {}) {
     var parent = this
     var child = function () { parent.apply(this, arguments) }
 
     // use custom constructor
-    if ( _.has(props, 'constructor') ) child = props.constructor
+    if ( has(props, 'constructor') ) child = props.constructor
 
     // set the prototype chain to inherit from `parent`
     child.prototype = Object.create(parent.prototype, {
@@ -62,8 +67,8 @@ export default class {
     })
 
     // add static and instance properties
-    _.extend(child, statics)
-    _.extend(child.prototype, props)
+    extend(child, statics)
+    extend(child.prototype, props)
 
     // fix extending static properties
     Object.setPrototypeOf ? Object.setPrototypeOf(child, parent) : child.__proto__ = parent
@@ -88,9 +93,9 @@ export default class {
    */
   getDefaults() {
     return this.defaults ? this.defaults : () => {
-      return _.reduce(this.attributes, (memo, config, attr) => {
-        if ( _.has(config, 'defaultValue') )
-          memo[attr] = _.result(config, 'defaultValue')
+      return reduce(this.attributes, (memo, config, attr) => {
+        if ( has(config, 'defaultValue') )
+          memo[attr] = result(config, 'defaultValue')
 
         return memo
       }, {})
@@ -104,9 +109,7 @@ export default class {
    * @param {Array} relations
    * @return promise
    */
-  load(model, relations) {
-    relations = _.rest(arguments)
-    
+  load(model, ...relations) {
     return this.newQuery().withRelated(...relations).loadRelated([model]).return(model)
   }
 
@@ -213,8 +216,8 @@ export default class {
    * @alias query
    */
   newQuery() {
-    var conn = registry.connection(this.connection)
-    var query = new Query(conn.queryBuilder())
+    var client = registry.connection(this.connection)
+    var query = new Query(client.queryBuilder())
     
     return query.from(this.tableName).setModel(this)
   }
@@ -236,7 +239,7 @@ export default class {
    * @return collection
    */
   createModels(records) {
-    return this.newCollection(_.map(records, data => this.newInstance(data, true)))
+    return this.newCollection(map(records, data => this.newInstance(data, true)))
   }
 
   /**
@@ -270,7 +273,7 @@ export default class {
 
     if (! fk ) fk = this.name + '_id'
 
-    if ( _.isString(related) ) related = this.mapper(related)
+    if ( isString(related) ) related = this.mapper(related)
 
     return new HasOne(this, related, fk, pk)
   }
@@ -294,7 +297,7 @@ export default class {
 
     if (! fk ) fk = name + '_id'
 
-    if ( _.isString(related) ) related = this.mapper(related)
+    if ( isString(related) ) related = this.mapper(related)
 
     return new MorphOne(this, related, type, fk, pk)
   }
@@ -314,7 +317,7 @@ export default class {
 
     if (! fk ) fk = this.name + '_id'
 
-    if ( _.isString(related) ) related = this.mapper(related)
+    if ( isString(related) ) related = this.mapper(related)
 
     return new HasMany(this, related, fk, pk)
   }
@@ -338,7 +341,7 @@ export default class {
 
     if (! fk ) fk = name + '_id'
 
-    if ( _.isString(related) ) related = this.mapper(related)
+    if ( isString(related) ) related = this.mapper(related)
 
     return new MorphMany(this, related, type, fk, pk)
   }
@@ -354,7 +357,7 @@ export default class {
   belongsTo(related, fk = null, pk = null) {
     var BelongsTo = require('./relations/belongs-to').default
 
-    if ( _.isString(related) ) related = this.mapper(related)
+    if ( isString(related) ) related = this.mapper(related)
 
     if (! pk ) pk = related.primaryKey
 
@@ -396,7 +399,7 @@ export default class {
   belongsToMany(related, pivot, pfk = null, tfk = null) {
     var BelongsToMany = require('./relations/belongs-to-many').default
 
-    if ( _.isString(related) ) related = this.mapper(related)
+    if ( isString(related) ) related = this.mapper(related)
 
     if (! pfk ) pfk = this.name + '_id'
 
@@ -419,7 +422,7 @@ export default class {
   morphToMany(related, pivot, name, type = null, pfk = null, tfk = null) {
     var MorphToMany = require('./relations/morph-to-many').default
 
-    if ( _.isString(related) ) related = this.mapper(related)
+    if ( isString(related) ) related = this.mapper(related)
 
     if (! pfk ) pfk = name + '_id'
     
@@ -491,8 +494,8 @@ export default class {
    * @private
    */
   _registerEvents(events = {}) {
-    _.each(events, (name, listener) => {
-      (_.isArray(listener) ? listener : [listener]).forEach(fn => this.emitter.on(name, fn))
+    each(events, (listener, name) => {
+      (isArray(listener) ? listener : [listener]).forEach(fn => this.emitter.on(name, fn))
     })
   }
 
@@ -554,7 +557,7 @@ export default class {
   _emulateReturning(model, result, columns = ['*']) {
     var id = result[0]
 
-    if ( _.isObject(id) ) return id
+    if ( isObject(id) ) return id
     else {
       let qb = this.newQuery().toBase()
 
@@ -593,7 +596,7 @@ export default class {
    */
   _setupModel(model) {
     var _this = this
-    var proto = _.clone(this.methods)
+    var proto = clone(this.methods)
 
     // add prototype properties
     proto.mapper = this
@@ -601,7 +604,7 @@ export default class {
     proto.idAttribute = this.primaryKey
 
     // add relationship accessors
-    _.each(this.relations, (_, name) => {
+    each(this.relations, (_, name) => {
       proto[name] = function () {
         return _this.getRelation(name).addConstraints(this)
       }
