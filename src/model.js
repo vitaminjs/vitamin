@@ -133,7 +133,7 @@ export default class extends BaseModel {
    * @return promise
    */
   load(relations) {
-    return this.mapper.load(this, ...arguments)
+    return this.mapper.load([this], ...arguments).return(this)
   }
   
   /**

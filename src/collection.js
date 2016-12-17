@@ -1,20 +1,38 @@
 
-import _ from 'underscore'
+import { invoke, first, last, groupBy, indexBy, isString } from 'underscore'
 
 /**
- * Model Collection Class
+ * @class Collection
  */
-class Collection {
+export default class Collection {
   
   /**
-   * Model Collection constructor
+   * Collection constructor
    * 
    * @param {Array} models
    * @constructor
    */
   constructor(models = []) {
     this.models = models
-    this.length = models.length
+  }
+  
+  /**
+   * Get the length of the collection
+   * 
+   * @var int
+   */
+  get length() {
+    return this.models.length
+  }
+  
+  /**
+   * Set the collection mapper
+   * 
+   * @param {Mapper} mapper
+   * @return this collection
+   */
+  setMapper(mapper) {
+    this.mapper = mapper
   }
   
   /**
@@ -23,7 +41,7 @@ class Collection {
    * @return array
    */
   toJSON() {
-    return _.invoke(this.models, 'toJSON')
+    return invoke(this.models, 'toJSON')
   }
   
   /**
@@ -42,7 +60,7 @@ class Collection {
    * @return array
    */
   pluck(key) {
-    return _.invoke(this.models, 'get', key)
+    return invoke(this.models, 'get', key)
   }
   
   /**
@@ -60,10 +78,10 @@ class Collection {
    * 
    * @param {Function} fn
    * @param {Object} context
-   * @return Collection
+   * @return a new collection
    */
   map(fn, context) {
-    return new Collection(_.map(this.models, fn, context))
+    return new Collection(this.models.map(fn, context))
   }
   
   /**
@@ -74,7 +92,7 @@ class Collection {
    * @return this collection
    */
   forEach(fn, context) {
-    _.each(this.models, fn, context)
+    this.models.forEach(fn, context)
     return this
   }
   
@@ -84,7 +102,7 @@ class Collection {
    * @return array
    */
   keys() {
-    return _.invoke(this.models, 'getId')
+    return invoke(this.models, 'getId')
   }
   
   /**
@@ -93,7 +111,7 @@ class Collection {
    * @return Model
    */
   first() { 
-    return _.first(this.models)
+    return first(this.models)
   }
   
   /**
@@ -102,7 +120,7 @@ class Collection {
    * @return Model
    */
   last() {
-    return _.last(this.models)
+    return last(this.models)
   }
   
   /**
@@ -110,18 +128,18 @@ class Collection {
    * 
    * @param {String|Function} iteratee
    * @param {Object} context
-   * @return object
+   * @return plain object
    */
   groupBy(iteratee, context) {
-    if ( _.isString(iteratee) ) {
-      var key = iteratee
+    if ( isString(iteratee) ) {
+      let key = iteratee
       
       iteratee = function (model) {
         return model.get(key)
       }
     }
     
-    return _.groupBy(this.models, iteratee, context)
+    return groupBy(this.models, iteratee, context)
   }
   
   /**
@@ -129,21 +147,69 @@ class Collection {
    * 
    * @param {String|Function} iteratee
    * @param {Object} context
-   * @return Object
+   * @return plain object
    */
   keyBy(iteratee, context) {
-    if ( _.isString(iteratee) ) {
-      var key = iteratee
+    if ( isString(iteratee) ) {
+      let key = iteratee
       
       iteratee = function (model) {
         return model.get(key)
       }
     }
     
-    return _.indexBy(this.models, iteratee, context)
+    return indexBy(this.models, iteratee, context)
+  }
+  
+  /**
+   * Save the collection models in the database
+   * 
+   * @param {Array} returning
+   * @return promise
+   */
+  save(returning = ['*']) {
+    if (! this.mapper )
+      throw new ReferenceError("Collection mapper is not defined")
+    
+    return this.mapper.saveMany(this.models, returning).return(this)
+  }
+  
+  /**
+   * Delete the collection models from the database
+   * 
+   * @return promise
+   */
+  destroy() {
+    if (! this.mapper )
+      throw new ReferenceError("Collection mapper is not defined")
+    
+    return this.mapper.destroyMany(this.models).return(this)
+  }
+  
+  /**
+   * Touch the collection models
+   * 
+   * @return promise
+   */
+  touch() {
+    if (! this.mapper )
+      throw new ReferenceError("Collection mapper is not defined")
+    
+    return this.mapper.touchMany(this.models).return(this)
+  }
+  
+  /**
+   * Trigger an event with arguments
+   * 
+   * @param {String} event
+   * @param {Array} args
+   * @return promise
+   */
+  emit(event, ...args) {
+    if (! this.mapper )
+      throw new ReferenceError("Collection mapper is not defined")
+    
+    return this.mapper.emit(...arguments)
   }
   
 }
-
-// exports
-export default Collection

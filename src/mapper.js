@@ -7,8 +7,9 @@ import registry from './registry'
 import Promise from 'bluebird'
 import Model from './model'
 import Query from './query'
-import { 
-  has,  map,  each,  clone,  reduce,  extend,  result,  isArray,  isObject,  isString
+import {
+  has, map, each, clone, reduce, extend,
+  result, isArray, isObject, isString
 } from 'underscore'
 
 /**
@@ -103,14 +104,17 @@ export default class {
   }
   
   /**
-   * Load the given relationships of a model
+   * Load the given relationships of the given models
    * 
-   * @param {Model} model
+   * @param {Model|Array} model
    * @param {Array} relations
    * @return promise
    */
   load(model, ...relations) {
-    return this.newQuery().withRelated(...relations).loadRelated([model]).return(model)
+    // TODO deprecate the use of single model, always call it with an array
+    var models = isArray(model) ? model : [model]
+    
+    return this.newQuery().withRelated(...relations).loadRelated(models).return(model)
   }
 
   /**
@@ -143,15 +147,14 @@ export default class {
    * @return promise
    */
   save(model, returning = ['*']) {
-    return Promise
-      .resolve(model)
+    return Promise.resolve(model)
       .tap(() => this.emitter.emit('saving', model))
       .tap(() => model.exists ? this._update(...arguments) : this._insert(...arguments))
       .tap(() => this.emitter.emit('saved', model))
   }
 
   /**
-   * Save the related models
+   * Save the given models
    *
    * @param {Array} models
    * @parma {Array} returning
@@ -168,11 +171,20 @@ export default class {
    * @return promise
    */
   destroy(model) {
-    return Promise
-      .resolve(model)
+    return Promise.resolve(model)
       .tap(() => this.emitter.emit('deleting', model))
       .tap(() => this.newQuery().where(this.primaryKey, model.getId()).destroy())
       .tap(() => this.emitter.emit('deleted', model))
+  }
+  
+  /**
+   * Delete the given models from the database
+   * 
+   * @param {Array} models
+   * @return promise
+   */
+  destroyMany(models) {
+    return Promise.map(models, model => this.destroy(model))
   }
 
   /**
@@ -196,6 +208,16 @@ export default class {
     }
 
     return Promise.resolve(model)
+  }
+  
+  /**
+   * Touch the given models
+   *
+   * @param {Array} models
+   * @return promise
+   */
+  touchMany(models) {
+    return Promise.map(models, model => this.touch(model))
   }
 
   /**
@@ -228,7 +250,7 @@ export default class {
    * @return Collection instance
    */
   newCollection(models = []) {
-    return new Collection(models)
+    return new Collection(models).setMapper(this)
   }
   
   /**
