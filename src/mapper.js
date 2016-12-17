@@ -213,7 +213,6 @@ export default class {
    * Get the model query builder
    *
    * @return Query instance
-   * @alias query
    */
   newQuery() {
     var client = registry.connection(this.connection)

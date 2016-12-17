@@ -325,7 +325,7 @@ export default class extends mixin(Relation) {
       return this._through.getQualifiedColumn(col) + ' as pivot_' + col
     })
     
-    this.query.toBase().select(columns)
+    this.query.select(columns)
   }
   
   /**
