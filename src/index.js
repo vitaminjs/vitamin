@@ -1,17 +1,15 @@
 
-import knex from 'knex'
 import Mapper from './mapper'
 import registry from './registry'
-import { isString, isPlainObject, forOwn } from 'lodash'
 
-// 
+// vitamin object
 const vitamin = {
   
   /**
    * Set/Get a model constructor
    * 
    * @param {String} name
-   * @param {Object} options object or a mapper instance
+   * @param {Object|Mapper} options
    * @return model constructor
    */
   model: function(name, options = null) {
@@ -30,28 +28,13 @@ const vitamin = {
 }
 
 /**
- * Initialize Vitamin
+ * Usage
+ * 
+ * export default require('vitamin')(knex(dbConfig))
  */
-function initialize(name, config = {}) {
-  // define single database client
-  if ( isString(name) ) {
-    registry.connection(name, knex(config))
-  }
-  
-  // register multiple database connections
-  if ( isPlainObject(name) ) {
-    forOwn(name, (val, key) => registry.connection(key, knex(val)))
-  }
+module.exports = function initialize(knex) {
+  // register the default database connection
+  registry.connection('default', knex)
   
   return vitamin
 }
-
-/**
- * Usage
- * 
- * export default require('vitamin')('default', {
- *   client: 'mysql',
- *   connection: { ... },
- * })
- */
-module.exports = initialize
