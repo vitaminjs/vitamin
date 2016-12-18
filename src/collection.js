@@ -1,5 +1,8 @@
 
-import { invoke, first, last, groupBy, indexBy, isString } from 'underscore'
+import {
+  invoke, first, last, find, filter, reduce,
+  groupBy, indexBy, isString, isObject, isFunction
+} from 'underscore'
 
 /**
  * @class Collection
@@ -23,6 +26,15 @@ export default class {
    */
   get length() {
     return this.models.length
+  }
+  
+  /**
+   * Determine if the collection is empty
+   * 
+   * @return boolean
+   */
+  isEmpty() {
+    return this.length === 0
   }
   
   /**
@@ -81,10 +93,22 @@ export default class {
    * @param {Object} context
    * @return a new collection
    */
-  map(fn, context) {
+  map(fn, context = null) {
     this.ensureMapper()
     
     return this.mapper.newCollection(this.models.map(fn, context))
+  }
+  
+  /**
+   * Reduce the collection to a single value
+   * 
+   * @param {Function} fn
+   * @param {Any} initial
+   * @param {Object} context
+   * @return any
+   */
+  reduce(fn, initial = null, context = null) {
+    return reduce(this.models, fn, initial, context)
   }
   
   /**
@@ -94,7 +118,7 @@ export default class {
    * @param {Object} context
    * @return this collection
    */
-  forEach(fn, context) {
+  forEach(fn, context = null) {
     this.models.forEach(fn, context)
     return this
   }
@@ -133,7 +157,7 @@ export default class {
    * @param {Object} context
    * @return plain object
    */
-  groupBy(iteratee, context) {
+  groupBy(iteratee, context = null) {
     if ( isString(iteratee) ) {
       let key = iteratee
       
@@ -152,7 +176,7 @@ export default class {
    * @param {Object} context
    * @return plain object
    */
-  keyBy(iteratee, context) {
+  keyBy(iteratee, context = null) {
     if ( isString(iteratee) ) {
       let key = iteratee
       
@@ -162,6 +186,69 @@ export default class {
     }
     
     return indexBy(this.models, iteratee, context)
+  }
+  
+  /**
+   * Find a model in the collection by key
+   * 
+   * @param {String} key
+   * @return model
+   */
+  find(id) {
+    return find(this.models, model => model.getId() == id)
+  }
+  
+  /**
+   * Run a filter over each of the models
+   * 
+   * @param {Function} fn
+   * @param {Object} context
+   * @return a new collection
+   */
+  filter(fn, context = null) {
+    this.ensureMapper()
+    
+    return this.mapper.newCollection(filter(this.models, fn, context))
+  }
+  
+  /**
+   * Filter items by the given key value pair
+   * 
+   * @param {String|Object} key
+   * @param {Any} value
+   * @return a new collection
+   */
+  where(key, value = null) {
+    function iteratee(model) {
+      if ( isObject(key) ) {
+        let keys = Object.keys(key)
+        
+        for ( let i = 0; i < keys.length; i++ ) {
+          let attr = keys[i]
+          
+          if ( model.get(attr) != key[attr] ) return false
+        }
+        
+        return true
+      }
+      
+      return model.get(key) == value
+    }
+    
+    return this.filter(iteratee)
+  }
+  
+  /**
+   * Determine if a key/value pair exists in the collection
+   * 
+   * @param {String|Object|Function} key
+   * @param {Any} value
+   * @return boolean
+   */
+  contains(key, value = null) {
+    if ( isFunction(key) ) return !this.filter(key).isEmpty()
+    
+    return !this.where(key, value).isEmpty()
   }
   
   /**
@@ -209,6 +296,18 @@ export default class {
     this.ensureMapper()
     
     return this.mapper.emit(...arguments)
+  }
+  
+  /**
+   * Load a set of relationships onto the collection
+   * 
+   * @param {Array} relations
+   * @return promise
+   */
+  load(...relations) {
+    this.ensureMapper()
+    
+    return this.mapper.load(this.models, ...relations).return(this)
   }
   
   /**
