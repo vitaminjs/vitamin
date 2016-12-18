@@ -4,7 +4,7 @@ import { invoke, first, last, groupBy, indexBy, isString } from 'underscore'
 /**
  * @class Collection
  */
-export default class Collection {
+export default class {
   
   /**
    * Collection constructor
@@ -33,6 +33,7 @@ export default class Collection {
    */
   setMapper(mapper) {
     this.mapper = mapper
+    return this
   }
   
   /**
@@ -81,7 +82,9 @@ export default class Collection {
    * @return a new collection
    */
   map(fn, context) {
-    return new Collection(this.models.map(fn, context))
+    this.ensureMapper()
+    
+    return this.mapper.newCollection(this.models.map(fn, context))
   }
   
   /**
@@ -168,8 +171,7 @@ export default class Collection {
    * @return promise
    */
   save(returning = ['*']) {
-    if (! this.mapper )
-      throw new ReferenceError("Collection mapper is not defined")
+    this.ensureMapper()
     
     return this.mapper.saveMany(this.models, returning).return(this)
   }
@@ -180,8 +182,7 @@ export default class Collection {
    * @return promise
    */
   destroy() {
-    if (! this.mapper )
-      throw new ReferenceError("Collection mapper is not defined")
+    this.ensureMapper()
     
     return this.mapper.destroyMany(this.models).return(this)
   }
@@ -192,8 +193,7 @@ export default class Collection {
    * @return promise
    */
   touch() {
-    if (! this.mapper )
-      throw new ReferenceError("Collection mapper is not defined")
+    this.ensureMapper()
     
     return this.mapper.touchMany(this.models).return(this)
   }
@@ -206,10 +206,20 @@ export default class Collection {
    * @return promise
    */
   emit(event, ...args) {
-    if (! this.mapper )
-      throw new ReferenceError("Collection mapper is not defined")
+    this.ensureMapper()
     
     return this.mapper.emit(...arguments)
+  }
+  
+  /**
+   * Throw an Error if the mapper is not defined
+   * 
+   * @throws ReferenceError
+   * @private
+   */
+  ensureMapper() {
+    if (! this.mapper )
+      throw new ReferenceError("Collection mapper is not defined")
   }
   
 }
