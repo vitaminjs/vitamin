@@ -1,6 +1,6 @@
 {
   "name": "vitamin",
-  "version": "0.8.3",
+  "version": "0.8.4",
   "description": "Data Mapper library for Node.js applications",
   "main": "lib/index.js",
   "directories": {
