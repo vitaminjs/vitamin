@@ -1,5 +1,9 @@
 # Vitamin changes log
 
+### _**v0.8.4** - December 20, 2016_
+- Remove `vitamin-query` dependency
+- Update the `Collection` API (add search, promise and other methods)
+
 ### _**v0.8.3** - September 27, 2016_
 * Add the belongs-to-many relationship `toggle` method
 * Update README.md
