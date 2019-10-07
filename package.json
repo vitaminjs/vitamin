@@ -9,7 +9,7 @@
   "dependencies": {
     "bluebird": "^3.4.1",
     "es6-error": "^3.0.1",
-    "knex": "^0.11.9",
+    "knex": "^0.19.5",
     "underscore": "^1.8.3",
     "vitamin-events": "^0.1.2",
     "vitamin-model": "0.0.4"
