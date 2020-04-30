@@ -12,7 +12,8 @@
     "knex": "^0.20.0",
     "underscore": "^1.8.3",
     "vitamin-events": "^0.1.2",
-    "vitamin-model": "0.0.4"
+    "vitamin-model": "0.0.4",
+    "snyk": "^1.316.1"
   },
   "devDependencies": {
     "babel-cli": "^6.11.4",
@@ -23,8 +24,9 @@
   },
   "scripts": {
     "build": "babel -q -L -D src -d lib --presets es2015",
-    "prepublish": "npm run build",
-    "test": "npm run build && mocha --recursive"
+    "prepublish": "npm run snyk-protect && npm run build",
+    "test": "npm run build && mocha --recursive",
+    "snyk-protect": "snyk protect"
   },
   "repository": {
     "type": "git",
@@ -49,5 +51,6 @@
   "bugs": {
     "url": "https://github.com/vitaminjs/vitamin/issues"
   },
-  "homepage": "http://vitaminjs.github.io/vitamin/"
+  "homepage": "http://vitaminjs.github.io/vitamin/",
+  "snyk": true
 }
